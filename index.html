@@ -498,6 +498,20 @@
     .d-foot { flex-direction: column; padding: .7em 1em 1em; }
   }
 
+  /* Members needed */
+  .slots { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .slot-boxes { display: flex; gap: 4px; flex-wrap: wrap; }
+  .slot { width: 18px; height: 18px; border-radius: 3px; border: 2px solid var(--muted); background: transparent; padding: 0; display: inline-block; }
+  button.slot { cursor: pointer; }
+  button.slot:hover { border-color: var(--ink); }
+  .slot.on { background: var(--ink); border-color: var(--ink); }
+  .slot-text { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .slots.full .slot.on { background: var(--red); border-color: var(--red); }
+  .slots.full .slot-text { color: var(--red); font-weight: 700; }
+  .need-sel { font-size: 13px; }
+  .d-need { color: #f5d36a; font-weight: 600; }
+  .d-full { color: #ef6461; font-weight: 700; }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -680,8 +694,11 @@ const DEFAULT_TEAMS = [
   { id: "business",    name: "Business",    leads: [], categories: ["Sponsorship", "Grants", "Budget", "Awards", "Other"] },
   { id: "outreach",    name: "Outreach",    leads: [], categories: ["Events", "FLL", "Community", "Other"] },
   { id: "media",       name: "Media",       leads: [], categories: ["Photos", "Video", "Social media", "Branding", "Other"] },
-  { id: "inventory",   name: "Inventory & Logistics", leads: [], categories: ["Ordering", "Inventory", "Shop", "Travel", "Other"] }
+  { id: "inventory",   name: "Inventory & Logistics", leads: [], categories: ["Ordering", "Inventory", "Shop", "Travel", "Other"] },
+  { id: "captains",    name: "Captains",    leads: [], categories: ["Planning", "Communication", "Events", "Admin", "Other"], calendar: false }
 ];
+// Subteams with calendar: false (Captains) never appear on the calendar or the shop display
+const inCal = id => (data.teams.find(t => t.id === id) || {}).calendar !== false;
 const PRIORITIES = ["High", "Med", "Low"];
 const PRI_RANK   = { High: 0, Med: 1, Low: 2 };
 const STATUSES   = [["todo", "To do"], ["doing", "In progress"], ["blocked", "Blocked"], ["done", "Done"]];
@@ -1104,6 +1121,8 @@ function describeChanges(b, a) {
       else if (!deepEq(y, x)) out.push(`edited part ${q(x.name)}`);
     });
     op.forEach((x, pid) => { if (!np.has(pid)) out.push(`removed part ${q(x.name)} from ${q(t.title)}`); });
+    if ((o.needed || 0) !== (t.needed || 0)) out.push(t.needed ? `set ${q(t.title)} to need ${t.needed} member${t.needed === 1 ? "" : "s"}` : `removed the member count from ${q(t.title)}`);
+    else if (t.needed && (o.filled || 0) !== (t.filled || 0)) out.push((t.filled || 0) >= t.needed ? `filled every slot on ${q(t.title)}` : `${t.filled || 0} of ${t.needed} slots filled on ${q(t.title)}`);
     const rest = ["owner", "subsystem", "priority", "due", "notes"].filter(k => (o[k] || "") !== (t[k] || ""));
     if (rest.length && o.done === t.done && o.title === t.title && o.team === t.team) out.push(`edited ${q(t.title)} (${rest.join(", ")})`);
   });
@@ -1655,6 +1674,7 @@ function dTask(t, ts) {
     if (d.cls) meta.append(el("span", "d-due " + d.cls, d.text));
   }
   if (st === "blocked") meta.append(el("span", "d-wait", t.blockedBy ? `Waiting on ${teamName(t.blockedBy)}` : "Blocked"));
+  if (t.needed) { const f = Math.min(t.filled || 0, t.needed); meta.append(el("span", f >= t.needed ? "d-full" : "d-need", f >= t.needed ? "Full" : `Needs ${t.needed - f} more`)); }
   const need = (t.parts || []).filter(p => (p.status || "need") !== "arrived").length;
   if (need) meta.append(el("span", "", `${need} part${need === 1 ? "" : "s"} not here`));
   if (meta.childNodes.length) r.append(meta);
@@ -1712,7 +1732,7 @@ function renderDisplay() {
 
   // Main: one column per subteam active today (or every subteam with open work)
   const main = el("section", "d-main");
-  let teams = m && activeOf(m).length ? activeOf(m) : data.teams.map(t => t.id).filter(id => data.tasks.some(t => t.team === id && !t.done));
+  let teams = m && activeOf(m).length ? activeOf(m) : data.teams.map(t => t.id).filter(id => inCal(id) && data.tasks.some(t => t.team === id && !t.done));
   const heading = el("div", "d-label", m && activeOf(m).length ? "Active subteams" : "Open work");
   main.append(heading);
   if (!teams.length) main.append(el("div", "d-empty", m ? "No subteams marked active yet." : "No open tasks. Nice."));
@@ -1921,7 +1941,7 @@ function sbox(id, cls = "") {
   a.onclick = e => e.stopPropagation();
   return a;
 }
-const activeOf = m => m ? (m.active || []).filter(id => data.teams.some(t => t.id === id)) : [];
+const activeOf = m => m ? (m.active || []).filter(id => data.teams.some(t => t.id === id) && inCal(id)) : [];
 
 function renderCalendar() {
   const { view, date } = calState();
@@ -1978,7 +1998,7 @@ function monthView(D, sel, t0) {
   const weeks = Math.ceil((first.getDay() + new Date(y, mo + 1, 0).getDate()) / 7);
   for (let i = 0; i < weeks * 7; i++) {
     const d = addDays(start, i), ds = iso(d), m = meetingOn(ds), act = activeOf(m);
-    const due = data.tasks.filter(t => t.due === ds && !t.done);
+    const due = data.tasks.filter(t => t.due === ds && !t.done && inCal(t.team));
     const cell = div("day" + (d.getMonth() !== mo ? " out" : "") + (ds === t0 ? " today" : "") + (m ? " meet" : ""));
     cell.tabIndex = 0; cell.setAttribute("role", "link");
     cell.setAttribute("aria-label", `${d.toDateString()}${m ? ", meeting" : ""}. Open week`);
@@ -2009,7 +2029,7 @@ function weekView(start, sel, t0) {
   const grid = div("week");
   for (let i = 0; i < 7; i++) {
     const d = addDays(start, i), ds = iso(d), m = meetingOn(ds), act = activeOf(m);
-    const due = sortTasks(data.tasks.filter(t => t.due === ds && !t.done));
+    const due = sortTasks(data.tasks.filter(t => t.due === ds && !t.done && inCal(t.team)));
     const col = div("wk" + (ds === t0 ? " today" : "") + (m ? " meet" : "") + (ds === sel ? " sel" : ""));
     col.tabIndex = 0; col.setAttribute("role", "link");
     col.setAttribute("aria-label", `${d.toDateString()}. Open day`);
@@ -2092,7 +2112,7 @@ function dayView(ds, t0) {
       const h5 = document.createElement("h4"); h5.textContent = "Mark subteams active (tap to toggle)";
       const g = div("teams-grid");
       const active = m.active || (m.active = []);
-      data.teams.forEach(t => {
+      data.teams.filter(t => t.calendar !== false).forEach(t => {
         const b = document.createElement("button");
         const on = active.includes(t.id);
         b.className = "tchip" + (on ? " on" : "");
@@ -2118,7 +2138,7 @@ function dayView(ds, t0) {
     }
   }
 
-  const due = sortTasks(data.tasks.filter(t => t.due === ds && !t.done));
+  const due = sortTasks(data.tasks.filter(t => t.due === ds && !t.done && inCal(t.team)));
   if (due.length) {
     const h4 = document.createElement("h4"); h4.textContent = "Tasks due";
     const dl = div("due-list");
@@ -2347,12 +2367,22 @@ function taskEl(t) {
     stSel.setAttribute("aria-label", "Status"); stSel.className = "st-sel";
     STATUSES.forEach(([v, l]) => stSel.add(new Option(l, v, false, v === st)));
     stSel.onchange = () => { setSt(t, stSel.value); markDirty(); render(); };
+    const need = document.createElement("select");
+    need.setAttribute("aria-label", "Members needed"); need.className = "need-sel";
+    need.add(new Option("Members needed", "0", false, !t.needed));
+    for (let i = 1; i <= 12; i++) need.add(new Option(`${i} member${i === 1 ? "" : "s"} needed`, String(i), false, t.needed === i));
+    need.onchange = () => {
+      const n = +need.value;
+      if (n) { t.needed = n; t.filled = Math.min(t.filled || 0, n); } else { delete t.needed; delete t.filled; }
+      markDirty(); render();
+    };
     meta.append(
       stSel,
       field("Owner", t.owner, v => t.owner = v),
       teamSel,
       selectField(t.subsystem, teamOf(t).categories || [], v => { t.subsystem = v; }),
-      dateField(t.due, v => t.due = v)
+      dateField(t.due, v => t.due = v),
+      need
     );
   } else {
     if (st === "doing" || st === "blocked") meta.append(Object.assign(document.createElement("span"), { className: "stp stp-" + st, textContent: ST_LABEL[st] }));
@@ -2364,6 +2394,7 @@ function taskEl(t) {
     meta.append(tag, who, ds);
   }
   mid.append(title, meta);
+  if (t.needed) mid.append(slotsEl(t));
 
   // Blocked: what it's waiting on
   if (st === "blocked") {
@@ -2413,6 +2444,29 @@ function taskEl(t) {
 
   el.append(cb, mid, right);
   return el;
+}
+
+/* ---------- Members needed: one box per slot, red once every slot is filled ---------- */
+function slotsEl(t) {
+  const n = t.needed, f = Math.min(t.filled || 0, n), full = f >= n;
+  const box = div("slots" + (full ? " full" : ""));
+  const boxes = div("slot-boxes");
+  for (let i = 0; i < n; i++) {
+    const b = document.createElement(editing ? "button" : "span");
+    b.className = "slot" + (i < f ? " on" : "");
+    if (editing) {
+      b.type = "button";
+      b.setAttribute("aria-label", `Slot ${i + 1} of ${n}, ${i < f ? "filled" : "open"}`);
+      b.onclick = () => { t.filled = i < f ? i : i + 1; markDirty(); render(); };
+    }
+    boxes.append(b);
+  }
+  const left = n - f;
+  box.append(boxes, Object.assign(document.createElement("span"), {
+    className: "slot-text",
+    textContent: full ? `Full (${n} of ${n})` : `${f} of ${n} members. Needs ${left} more`
+  }));
+  return box;
 }
 
 /* ---------- Parts on a task ---------- */
