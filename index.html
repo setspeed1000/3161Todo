@@ -188,13 +188,13 @@ const HIDE_KEY       = "pages-edit-hide-done";
 
 // Used when data.json has no "teams" yet. Edit names and categories in data.json.
 const DEFAULT_TEAMS = [
-  { id: "mechanical", name: "Mechanical", leads: [{ role: "Lead", name: "Max Girardin" }, { role: "Jr. lead", name: "Matthew Alphonso" }],
+  { id: "mechanical", name: "Mechanical", leads: [],
     categories: ["Drivetrain", "Intake", "Shooter", "Climber", "Elevator", "Frame", "Field elements", "Other"] },
-  { id: "design", name: "Design", leads: [{ role: "Lead", name: "Julia Kalbfleisch" }, { role: "Co-lead", name: "Siddhesh Rajarajan" }],
+  { id: "design", name: "Design", leads: [],
     categories: ["CAD", "Prototyping", "Drawings", "Other"] },
-  { id: "programming", name: "Programming", leads: [{ role: "Lead", name: "Mathias Turiga" }],
+  { id: "programming", name: "Programming", leads: [],
     categories: ["Drive", "Autonomous", "Vision", "Subsystems", "Dashboard", "Other"] },
-  { id: "electrical", name: "Electrical", leads: [{ role: "Lead", name: "Neel Sunil" }, { role: "Co-lead", name: "Daniel Bruce" }],
+  { id: "electrical", name: "Electrical", leads: [],
     categories: ["Wiring", "Power", "Sensors", "CAN", "Pneumatics", "Other"] }
 ];
 const PRIORITIES = ["High", "Med", "Low"];
@@ -467,7 +467,8 @@ function teamEl(team) {
     s.append(l.role + " ", b);
     leads.append(s);
   });
-  head.append(h2, count, leads);
+  head.append(h2, count);
+  if (leads.childNodes.length) head.append(leads);
   sec.append(head);
 
   const tl = div("team-list");

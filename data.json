@@ -6,16 +6,7 @@
     {
       "id": "mechanical",
       "name": "Mechanical",
-      "leads": [
-        {
-          "role": "Lead",
-          "name": "Max Girardin"
-        },
-        {
-          "role": "Jr. lead",
-          "name": "Matthew Alphonso"
-        }
-      ],
+      "leads": [],
       "categories": [
         "Drivetrain",
         "Intake",
@@ -30,16 +21,7 @@
     {
       "id": "design",
       "name": "Design",
-      "leads": [
-        {
-          "role": "Lead",
-          "name": "Julia Kalbfleisch"
-        },
-        {
-          "role": "Co-lead",
-          "name": "Siddhesh Rajarajan"
-        }
-      ],
+      "leads": [],
       "categories": [
         "CAD",
         "Prototyping",
@@ -50,12 +32,7 @@
     {
       "id": "programming",
       "name": "Programming",
-      "leads": [
-        {
-          "role": "Lead",
-          "name": "Mathias Turiga"
-        }
-      ],
+      "leads": [],
       "categories": [
         "Drive",
         "Autonomous",
@@ -68,16 +45,7 @@
     {
       "id": "electrical",
       "name": "Electrical",
-      "leads": [
-        {
-          "role": "Lead",
-          "name": "Neel Sunil"
-        },
-        {
-          "role": "Co-lead",
-          "name": "Daniel Bruce"
-        }
-      ],
+      "leads": [],
       "categories": [
         "Wiring",
         "Power",
