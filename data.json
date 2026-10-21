@@ -382,7 +382,16 @@
       "time": "3:00PM",
       "where": "",
       "notes": ""
+    },
+    {
+      "id": "09aea6a6-29e2-4eb0-8a37-5dd0c3998dfb",
+      "team": "captains",
+      "date": "2026-10-22",
+      "title": "STIMS workshop",
+      "time": "4",
+      "where": "Shop",
+      "notes": ""
     }
   ],
-  "updated": "2026-10-21T13:51:03.683Z"
+  "updated": "2026-10-21T13:52:47.310Z"
 }
