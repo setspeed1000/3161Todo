@@ -174,8 +174,10 @@
     {
       "date": "2026-10-29",
       "note": "",
-      "agenda": "",
-      "active": []
+      "agenda": "- CAD and Design Workshop",
+      "active": [
+        "design"
+      ]
     },
     {
       "date": "2026-10-31",
@@ -184,6 +186,12 @@
       "active": []
     }
   ],
-  "deadlines": [],
-  "updated": "2026-10-21T12:41:40.055Z"
+  "deadlines": [
+    {
+      "id": "7ab91b76-1c5a-4418-af84-f9c43ddcbcb7",
+      "date": "2026-11-05",
+      "title": "Create new members roster"
+    }
+  ],
+  "updated": "2026-10-21T12:45:59.061Z"
 }
