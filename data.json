@@ -266,7 +266,8 @@
       "active": [
         "mechanical",
         "programming",
-        "electrical"
+        "electrical",
+        "business"
       ]
     },
     {
@@ -423,7 +424,7 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T15:08:14.801Z",
+  "updated": "2026-10-21T15:13:21.812Z",
   "events": [],
   "checklists": [
     {
