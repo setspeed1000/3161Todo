@@ -32,7 +32,8 @@
   :focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 
   /* Layout: grey sidebar + one page per subteam */
-  .app { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; }
+  .app { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh;
+    background: linear-gradient(to right, var(--plate) 239px, var(--line) 239px 240px, transparent 240px); }
   .side { background: var(--plate); color: var(--plate-ink); position: sticky; top: 0; height: 100vh;
     display: flex; flex-direction: column; padding: 24px 12px 20px; overflow-y: auto;
     border-right: 1px solid var(--line); }
@@ -66,6 +67,7 @@
   .scrim { display: none; }
   @media (max-width: 700px) {
     .app { grid-template-columns: 1fr; }
+    .app { background: none; }
     .side { position: fixed; z-index: 20; left: 0; top: 0; bottom: 0; width: 250px; height: auto;
       transform: translateX(-100%); transition: transform .2s ease; box-shadow: 4px 0 24px rgba(0,0,0,.2); }
     .side.open { transform: none; }
@@ -227,6 +229,78 @@
   .mrow.dl .note-cell { color: var(--red); font-weight: 600; }
   .agenda-edit { margin: 0 0 6px; }
   .tbtn.small { font-size: 13px; padding: 3px 9px; }
+
+  /* Home */
+  body.on-home .wrap { max-width: 1000px; }
+  .hero { padding: 6px 0 26px; }
+  .hero-date { margin: 0 0 6px; color: var(--muted); font-weight: 500; }
+  .hero-title { margin: 0; font: 700 clamp(44px, 8vw, 84px)/0.9 "Barlow Condensed", sans-serif; letter-spacing: -0.015em; }
+  .hero-stats { display: flex; gap: 10px 34px; flex-wrap: wrap; margin-top: 22px; }
+  .stat { display: grid; }
+  .stat b { font: 700 34px/1 "Barlow Condensed", sans-serif; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 14px; }
+  .stat.bad b { color: var(--red); }
+
+  .home-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; margin-bottom: 34px; }
+  .home-side { display: grid; gap: 14px; align-content: start; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px; color: var(--ink);
+    text-decoration: none; display: block; }
+  .card-label { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--muted); display: block; text-decoration: none; }
+  a.card-label.link:hover { color: var(--ink); }
+  a.card:hover { border-color: var(--muted); }
+
+  .card.next { background: var(--plate); border-color: transparent; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .card.next::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px;
+    background: repeating-linear-gradient(-45deg, var(--yellow) 0 12px, #1f2328 12px 24px); }
+  .card.next .card-label { color: var(--nav-muted); margin-top: 6px; }
+  .next-date { display: flex; align-items: center; gap: 14px; }
+  .nd-day { font: 700 96px/0.8 "Barlow Condensed", sans-serif; letter-spacing: -0.03em; }
+  .nd-rest { white-space: pre-line; font: 600 22px/1.05 "Barlow Condensed", sans-serif; color: var(--nav-ink); }
+  .next-note { margin: 14px 0 0; color: var(--nav-ink); }
+  .next-boxes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+  .next-boxes .sbox, .next-boxes .dlbox { font-size: 13px; padding: 4px 9px; }
+  .card.next .sbox { background: var(--nav-active); }
+  .next-agenda { margin-top: 16px; white-space: pre-line; font-size: 14px; line-height: 1.5; color: var(--nav-ink);
+    border-left: 2px solid var(--btn-line); padding-left: 12px; }
+  .next-none { font: 600 24px/1.2 "Barlow Condensed", sans-serif; margin: 8px 0 0; }
+  .card-go { margin-top: auto; padding-top: 18px; font-weight: 600; font-size: 14px; }
+  .card.next:hover .card-go { text-decoration: underline; }
+
+  .dl-line { display: grid; grid-template-columns: 9ch 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line);
+    text-decoration: none; color: var(--ink); font-size: 14px; }
+  .dl-line:hover .dl-what { text-decoration: underline; }
+  .dl-when { color: var(--red); font-weight: 700; }
+  .dl-what { font-weight: 500; }
+
+  .strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .sday { display: grid; justify-items: center; gap: 2px; padding: 8px 0 9px; border-radius: 4px; text-decoration: none;
+    color: var(--ink); background: var(--bg); border-top: 3px solid transparent; }
+  .sday:hover { outline: 1px solid var(--muted); }
+  .sd-dow { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .sd-num { font: 700 20px/1 "Barlow Condensed", sans-serif; }
+  .sday.meet { border-top-color: var(--yellow); }
+  .sday.dl .sd-num { color: var(--red); }
+  .sday.today { background: var(--ink); color: var(--bg); }
+  .sday.today .sd-dow { color: inherit; opacity: .7; }
+
+  .home-h h3 { margin: 0 0 12px; font: 700 28px/1 "Barlow Condensed", sans-serif; }
+  .team-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+  .tcard { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 14px 12px;
+    text-decoration: none; color: var(--ink); display: grid; gap: 4px; }
+  .tcard:hover { border-color: var(--ink); }
+  .tc-name { font: 700 21px/1.05 "Barlow Condensed", sans-serif; }
+  .tc-open { color: var(--muted); font-size: 14px; }
+  .tc-open b { font: 700 30px/1 "Barlow Condensed", sans-serif; color: var(--ink); margin-right: 2px; }
+  .tc-meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); min-height: 1.4em; }
+  .tc-meta .bad { color: var(--red); font-weight: 600; }
+  .tc-track { height: 4px; background: var(--sunk); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+  .tc-fill { display: block; height: 100%; background: var(--green); }
+
+  @media (max-width: 860px) { .home-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 700px) {
+    .nd-day { font-size: 76px; }
+    .team-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
 
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
@@ -603,7 +677,8 @@ function currentPage() {
   const id = decodeURIComponent(location.hash.slice(1));
   if (id.split("/")[0] === "calendar") return "calendar";
   if (id === "captain") return editing ? "captain" : "calendar";
-  return null;
+  if (data.teams.some(t => t.id === id)) return null;
+  return "home";   // empty or unknown link: the landing page
 }
 function currentTeam() {
   const id = decodeURIComponent(location.hash.slice(1));
@@ -642,6 +717,7 @@ function render(focusId) {
   // Sidebar: calendar, Captain stuff (editing only), then one link per subteam
   const nav = $("nav");
   nav.innerHTML = "";
+  nav.append(navLink("#home", "Home", "", page === "home"));
   nav.append(navLink("#calendar", "Calendar", "", page === "calendar"));
   if (editing) nav.append(navLink("#captain", "Captain stuff", "", page === "captain", "hidden-tab"));
   nav.append(div("nav-sep"));
@@ -650,12 +726,14 @@ function render(focusId) {
   const allOpen = data.tasks.filter(t => !t.done).length;
   $("overall").textContent = `${allOpen} open across all subteams`;
 
-  const label = page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : team.name;
+  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : team.name;
   $("mtopTitle").textContent = label;
   document.title = `${label} · ${data.title || "Tasks"}`;
   $("tools").hidden = !!page;
   $("footer").textContent = data.updated ? `Last saved ${new Date(data.updated).toLocaleString()}` : "";
 
+  document.body.classList.toggle("on-home", page === "home");
+  if (page === "home") return renderHome();
   if (page === "calendar") return renderCalendar();
   if (page === "captain") return renderCaptain();
 
@@ -704,6 +782,125 @@ function render(focusId) {
     const el = list.querySelector(`[data-id="${CSS.escape(focusId)}"] .title`);
     if (el) { el.focus(); document.getSelection().selectAllChildren(el); }
   }
+}
+
+/* ---------- Home: the landing page ---------- */
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+function renderHome() {
+  const t0 = today(), ts = iso(t0);
+  $("pageHead").replaceChildren();
+  const list = $("list");
+  list.innerHTML = "";
+
+  // Hero
+  const hero = el("section", "hero");
+  hero.append(el("p", "hero-date", t0.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })));
+  const h = el("h2", "hero-title", data.title || "Team 3161");
+  hero.append(h);
+  const open = data.tasks.filter(t => !t.done);
+  const overdue = open.filter(t => t.due && t.due < ts).length;
+  const stats = el("div", "hero-stats");
+  [[open.length, "open tasks"], [overdue, "overdue"], [data.meetings.filter(m => m.date >= ts).length, "meetings scheduled"]]
+    .forEach(([n, l], i) => { const st = el("div", "stat" + (i === 1 && n ? " bad" : "")); st.append(el("b", "", n), el("span", "", l)); stats.append(st); });
+  hero.append(stats);
+  list.append(hero);
+
+  const grid = el("div", "home-grid");
+
+  // Next meeting: the main card
+  const nm = data.meetings.filter(m => m.date >= ts).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const card = el("a", "card next" + (nm ? "" : " empty"));
+  card.href = nm ? calHref("day", nm.date) : "#calendar";
+  card.append(el("p", "card-label", nm && nm.date === ts ? "Meeting today" : "Next meeting"));
+  if (nm) {
+    const d = parseDate(nm.date);
+    const big = el("div", "next-date");
+    big.append(el("span", "nd-day", d.getDate()),
+      el("span", "nd-rest", d.toLocaleDateString(undefined, { weekday: "long" }) + "\n" + d.toLocaleDateString(undefined, { month: "long" })));
+    card.append(big);
+    if (nm.note) card.append(el("p", "next-note", nm.note));
+    const dls = deadlinesOn(nm.date);
+    const act = activeOf(nm);
+    if (dls.length || act.length) {
+      const bx = el("div", "next-boxes");
+      dls.forEach(x => bx.append(dlbox(x)));
+      act.forEach(id => bx.append(sbox(id)));
+      card.append(bx);
+    } else {
+      card.append(el("p", "muted", "No subteams marked active yet."));
+    }
+    if (nm.agenda) {
+      const lines = nm.agenda.split("\n").filter(Boolean);
+      const ag = el("div", "next-agenda", lines.slice(0, 4).join("\n") + (lines.length > 4 ? "\n…" : ""));
+      card.append(ag);
+    }
+    card.append(el("span", "card-go", "Open day"));
+  } else {
+    card.append(el("p", "next-none", "No meetings scheduled yet."));
+    card.append(el("span", "card-go", "Open calendar"));
+  }
+  grid.append(card);
+
+  // Right column: deadlines and this week
+  const side = el("div", "home-side");
+
+  const dc = el("div", "card");
+  dc.append(el("p", "card-label", "Team deadlines"));
+  const upD = data.deadlines.filter(d => d.date >= ts).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4);
+  if (!upD.length) dc.append(el("p", "muted", "Nothing coming up."));
+  upD.forEach(d => {
+    const a = el("a", "dl-line"); a.href = calHref("day", d.date);
+    const days = Math.round((parseDate(d.date) - t0) / 86400000);
+    a.append(el("span", "dl-when", days === 0 ? "Today" : days === 1 ? "Tomorrow" : days < 7 ? `${days} days` : niceDate(d.date, { month: "short", day: "numeric" })),
+      el("span", "dl-what", d.title));
+    dc.append(a);
+  });
+  side.append(dc);
+
+  const wc = el("div", "card");
+  const wl = el("a", "card-label link", "This week"); wl.href = calHref("week", ts);
+  wc.append(wl);
+  const strip = el("div", "strip");
+  const ws = addDays(t0, -t0.getDay());
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(ws, i), ds = iso(d), m = meetingOn(ds), dl = deadlinesOn(ds).length;
+    const c = el("a", "sday" + (ds === ts ? " today" : "") + (m ? " meet" : "") + (dl ? " dl" : ""));
+    c.href = calHref("day", ds);
+    c.title = d.toDateString() + (m ? ", meeting" : "") + (dl ? ", deadline" : "");
+    c.append(el("span", "sd-dow", WEEKDAYS[d.getDay()][0]), el("span", "sd-num", d.getDate()));
+    strip.append(c);
+  }
+  wc.append(strip);
+  side.append(wc);
+  grid.append(side);
+  list.append(grid);
+
+  // Subteams
+  const sh = el("div", "home-h");
+  sh.append(el("h3", "", "Subteams"));
+  list.append(sh);
+  const tg = el("div", "team-cards");
+  data.teams.forEach(tm => {
+    const mine = data.tasks.filter(t => t.team === tm.id);
+    const op = mine.filter(t => !t.done);
+    const high = op.filter(t => t.priority === "High").length;
+    const od = op.filter(t => t.due && t.due < ts).length;
+    const a = el("a", "tcard"); a.href = "#" + encodeURIComponent(tm.id);
+    a.append(el("span", "tc-name", tm.name));
+    const n = el("span", "tc-open"); n.append(el("b", "", op.length), document.createTextNode(op.length === 1 ? " open" : " open"));
+    a.append(n);
+    const meta = el("span", "tc-meta");
+    if (od) meta.append(el("span", "bad", `${od} overdue`));
+    if (high) meta.append(el("span", "", `${high} high priority`));
+    if (!od && !high) meta.append(el("span", "", op.length ? "On track" : mine.length ? "All done" : "No tasks yet"));
+    a.append(meta);
+    const tr = el("span", "tc-track"); const f = el("span", "tc-fill");
+    f.style.width = mine.length ? ((mine.length - op.length) / mine.length * 100) + "%" : "0";
+    tr.append(f); a.append(tr);
+    tg.append(a);
+  });
+  list.append(tg);
 }
 
 /* ---------- Calendar: month, week and day views ----------
