@@ -226,6 +226,21 @@
       "status": "todo",
       "notes": "",
       "parts": []
+    },
+    {
+      "id": "9329bf84-a64f-487a-8d8a-50509f140ac3",
+      "team": "business",
+      "title": "WCP Sponsorship",
+      "owner": "DB, JK",
+      "subsystem": "Sponsorship",
+      "priority": "High",
+      "due": "2026-10-31",
+      "done": false,
+      "status": "doing",
+      "notes": "",
+      "parts": [],
+      "needed": 2,
+      "filled": 2
     }
   ],
   "meetings": [
@@ -393,5 +408,143 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T14:53:05.002Z"
+  "updated": "2026-10-21T14:59:18.747Z",
+  "events": [],
+  "checklists": [
+    {
+      "id": "tpl-pit",
+      "name": "Pit packing list",
+      "items": [
+        {
+          "id": "pit-0",
+          "text": "Batteries, charged and numbered"
+        },
+        {
+          "id": "pit-1",
+          "text": "Battery chargers and power bar"
+        },
+        {
+          "id": "pit-2",
+          "text": "Extension cords"
+        },
+        {
+          "id": "pit-3",
+          "text": "Toolbox: hex keys, wrenches, screwdrivers"
+        },
+        {
+          "id": "pit-4",
+          "text": "Drill, driver and bits"
+        },
+        {
+          "id": "pit-5",
+          "text": "Zip ties, electrical tape, Velcro"
+        },
+        {
+          "id": "pit-6",
+          "text": "Spare parts bin"
+        },
+        {
+          "id": "pit-7",
+          "text": "Spare bumper covers in both colours"
+        },
+        {
+          "id": "pit-8",
+          "text": "Driver station laptop and charger"
+        },
+        {
+          "id": "pit-9",
+          "text": "Controllers"
+        },
+        {
+          "id": "pit-10",
+          "text": "Safety glasses for everyone"
+        },
+        {
+          "id": "pit-11",
+          "text": "Robot cart"
+        },
+        {
+          "id": "pit-12",
+          "text": "Team banner and pit display"
+        }
+      ]
+    },
+    {
+      "id": "tpl-insp",
+      "name": "Robot inspection prep",
+      "items": [
+        {
+          "id": "insp-0",
+          "text": "Weigh the robot without bumpers and battery"
+        },
+        {
+          "id": "insp-1",
+          "text": "Measure the frame perimeter and height"
+        },
+        {
+          "id": "insp-2",
+          "text": "Bumpers fit, numbers visible, both colours"
+        },
+        {
+          "id": "insp-3",
+          "text": "Main breaker easy to reach"
+        },
+        {
+          "id": "insp-4",
+          "text": "Battery strapped down"
+        },
+        {
+          "id": "insp-5",
+          "text": "Radio powered and configured"
+        },
+        {
+          "id": "insp-6",
+          "text": "Robot signal light visible"
+        },
+        {
+          "id": "insp-7",
+          "text": "No sharp edges or loose wires"
+        },
+        {
+          "id": "insp-8",
+          "text": "Robot runs enable and disable cleanly"
+        }
+      ]
+    },
+    {
+      "id": "tpl-clean",
+      "name": "End of meeting cleanup",
+      "items": [
+        {
+          "id": "clean-0",
+          "text": "Tools back where they belong"
+        },
+        {
+          "id": "clean-1",
+          "text": "Batteries on chargers"
+        },
+        {
+          "id": "clean-2",
+          "text": "Machines off and cleaned"
+        },
+        {
+          "id": "clean-3",
+          "text": "Scrap in the bins"
+        },
+        {
+          "id": "clean-4",
+          "text": "Floor swept"
+        },
+        {
+          "id": "clean-5",
+          "text": "Robot powered off"
+        },
+        {
+          "id": "clean-6",
+          "text": "Lights off and door locked"
+        }
+      ]
+    }
+  ],
+  "runs": []
 }
