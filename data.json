@@ -239,7 +239,7 @@
       "status": "doing",
       "notes": "",
       "parts": [],
-      "needed": 2,
+      "needed": 4,
       "filled": 2
     },
     {
@@ -254,7 +254,7 @@
       "status": "doing",
       "notes": "",
       "parts": [],
-      "needed": 2,
+      "needed": 4,
       "filled": 2
     },
     {
@@ -600,5 +600,5 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T16:49:53.542Z"
+  "updated": "2026-10-21T16:52:24.410Z"
 }
