@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
   "subtitle": "Unlock to edit. Every save is a commit.",
-  "updated": "2026-10-21T02:12:16.198Z",
+  "updated": "2026-10-21T02:16:04.694Z",
   "teams": [
     {
       "id": "mechanical",
@@ -214,6 +214,17 @@
       "due": "2026-11-19",
       "done": false,
       "notes": "GTA 6 BABYYYY"
+    },
+    {
+      "id": "ab2a2172-75a3-4e17-a242-a486dea324d4",
+      "team": "scouting",
+      "title": "torture training",
+      "owner": "",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "2026-10-22",
+      "done": false,
+      "notes": "(i think i dont acc know the date ok?)"
     }
   ],
   "meetings": [
