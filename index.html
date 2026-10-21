@@ -63,7 +63,7 @@
   .sub { margin: 6px 0 0; color: var(--nav-muted); font-size: 13px; }
   .nav { display: flex; flex-direction: column; gap: 2px; }
   .nav a { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
-    padding: 9px 10px; border-radius: 4px; color: var(--nav-ink); text-decoration: none; font-weight: 500;
+    padding: 7px 10px; border-radius: 4px; color: var(--nav-ink); text-decoration: none; font-weight: 500;
     border-left: 4px solid transparent; }
   .nav a:hover { background: var(--nav-hover); color: var(--plate-ink); }
   .nav a[aria-current="page"] { background: var(--nav-active); color: var(--plate-ink); font-weight: 600;
@@ -116,7 +116,7 @@
   @media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
 
   /* Sidebar extras */
-  .nav-sep { height: 1px; background: var(--btn-line); opacity: .5; margin: 10px 10px; }
+  .nav-sep { height: 1px; background: var(--btn-line); opacity: .5; margin: 8px 10px; }
   .nav a.hidden-tab { font-style: italic; }
 
   /* Calendar */
@@ -344,6 +344,27 @@
   .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
   @media (max-width: 700px) { .set-group { grid-template-columns: 1fr; } }
 
+  /* History */
+  .hist { display: grid; gap: 6px; }
+  .hrow { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px 14px; }
+  .hrow-top { display: grid; grid-template-columns: minmax(0, 9ch) minmax(0, 1fr) auto; gap: 12px; align-items: baseline; }
+  .h-who { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .h-who.anon { color: var(--muted); font-weight: 500; }
+  .h-what { min-width: 0; }
+  .h-when { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .h-actions { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+  .h-tag { font-size: 12px; font-weight: 600; color: var(--green); }
+  .h-detail ul { margin: 8px 0 2px; padding-left: 20px; font-size: 14px; color: var(--ink); }
+  .h-detail li + li { margin-top: 2px; }
+  .hist > .tbtn { justify-self: start; margin-top: 6px; }
+  .dlg-field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+  .dlg-field input { padding: 9px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 15px; }
+  .name-in { padding: 7px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); max-width: 260px; }
+  @media (max-width: 700px) {
+    .hrow-top { grid-template-columns: 1fr auto; }
+    .h-what { grid-column: 1 / -1; order: 3; }
+  }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -462,7 +483,9 @@
 <dialog id="tokenDlg">
   <form method="dialog">
     <h2>Unlock editing</h2>
-    <p id="pwHint">Enter the editor password, or paste a GitHub token directly.</p>
+    <p id="pwHint">Your name goes on every change you save, so the team can see who did what.</p>
+    <label class="dlg-field">Your name<input id="nameInput" type="text" autocomplete="name" placeholder="e.g. Max"></label>
+    <label class="dlg-field" for="tokenInput">Password</label>
     <div class="pw">
       <input id="tokenInput" type="password" autocomplete="off" placeholder="Password" aria-label="Password">
       <button type="button" id="showPw">Show</button>
@@ -470,6 +493,18 @@
     <div class="dlg-bar">
       <button value="cancel">Cancel</button>
       <button class="go" id="tokenOk" value="ok">Unlock</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="nameDlg">
+  <form method="dialog">
+    <h2>Who's saving?</h2>
+    <p>Your name goes on every change you save. You only need to enter it once on this device.</p>
+    <label class="dlg-field">Your name<input id="nameOnly" type="text" autocomplete="name" placeholder="e.g. Max"></label>
+    <div class="dlg-bar">
+      <button value="cancel">Cancel</button>
+      <button class="go" value="ok">Continue</button>
     </div>
   </form>
 </dialog>
@@ -483,6 +518,8 @@ const DATA_PATH      = "data.json";
 const TOKEN_KEY      = "pages-edit-token";
 const HIDE_KEY       = "pages-edit-hide-done";
 const SETTINGS_KEY   = "pages-edit-settings";
+const NAME_KEY       = "pages-edit-name";
+let base = null;         // the document as last loaded or saved; the starting point for merging
 
 // Used when data.json has no "teams" yet. Edit names and categories in data.json.
 const DEFAULT_TEAMS = [
@@ -565,25 +602,46 @@ async function load() {
     sha = null;
     setStatus("Showing the published copy. It can lag the latest save by about a minute.");
   }
-  normalize();
+  normalize(data);
+  base = structuredClone(data);
   dirty = false;
   render();
 }
 
 // Fill in teams and give every task a team, so older data.json files keep working.
-function normalize() {
-  if (!Array.isArray(data.teams)) data.teams = [];
-  DEFAULT_TEAMS.forEach(d => { if (!data.teams.some(t => t.id === d.id)) data.teams.push(structuredClone(d)); });
-  if (!Array.isArray(data.tasks)) data.tasks = [];
-  if (!Array.isArray(data.meetings)) data.meetings = [];
-  if (!Array.isArray(data.deadlines)) data.deadlines = [];
-  const ids = data.teams.map(t => t.id);
-  data.tasks.forEach(t => { if (!ids.includes(t.team)) t.team = ids[0]; });
+function normalize(d) {
+  if (!Array.isArray(d.teams)) d.teams = [];
+  DEFAULT_TEAMS.forEach(x => { if (!d.teams.some(t => t.id === x.id)) d.teams.push(structuredClone(x)); });
+  if (!Array.isArray(d.tasks)) d.tasks = [];
+  if (!Array.isArray(d.meetings)) d.meetings = [];
+  if (!Array.isArray(d.deadlines)) d.deadlines = [];
+  const ids = d.teams.map(t => t.id);
+  d.tasks.forEach(t => { if (!ids.includes(t.team)) t.team = ids[0]; });
+  return d;
 }
 const teamOf = t => data.teams.find(x => x.id === t.team) || data.teams[0];
 
 /* ---------- Auth ---------- */
+function myName() { try { return (localStorage.getItem(NAME_KEY) || "").trim(); } catch { return ""; } }
+function setMyName(n) { try { n ? localStorage.setItem(NAME_KEY, n.trim()) : localStorage.removeItem(NAME_KEY); } catch {} }
+
+// Resolves to the saver's name, asking once per device if it isn't known yet
+function askName() {
+  if (myName()) return Promise.resolve(myName());
+  return new Promise(res => {
+    const d = $("nameDlg");
+    $("nameOnly").value = "";
+    d.showModal();
+    d.addEventListener("close", function once() {
+      d.removeEventListener("close", once);
+      const n = $("nameOnly").value.trim();
+      if (d.returnValue === "ok" && n) { setMyName(n); res(n); } else res(null);
+    });
+  });
+}
+
 async function unlock() {
+  $("nameInput").value = myName();
   $("tokenInput").value = "";
   $("tokenInput").type = "password";
   $("showPw").textContent = "Show";
@@ -591,6 +649,7 @@ async function unlock() {
   $("tokenDlg").addEventListener("close", async function once() {
     $("tokenDlg").removeEventListener("close", once);
     if ($("tokenDlg").returnValue !== "ok") return;
+    if ($("nameInput").value.trim()) setMyName($("nameInput").value);
     const pw = $("tokenInput").value.trim();
     if (!pw) return;
     // A raw GitHub token still works as a fallback.
@@ -643,33 +702,193 @@ function lock() {
   token = null; saveToken(null); editing = false; load();
 }
 
-/* ---------- Save ---------- */
+/* ---------- Save: merge with whatever others saved since we loaded ----------
+   base   = the document as it was when this browser last loaded or saved
+   data   = base plus this person's edits
+   remote = the latest version on GitHub
+   Each of this person's changes is applied on top of remote, so two people editing
+   different things never lose each other's work. If both changed the same field,
+   the person saving now wins, and the earlier value is still in History. */
+function isObj(v) { return v && typeof v === "object" && !Array.isArray(v); }
+function deepEq(a, b) {
+  if (a === b) return true;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => deepEq(x, b[i]));
+  if (isObj(a) && isObj(b)) {
+    const ka = Object.keys(a).filter(k => a[k] !== undefined), kb = Object.keys(b).filter(k => b[k] !== undefined);
+    return ka.length === kb.length && ka.every(k => deepEq(a[k], b[k]));
+  }
+  return (a == null || a === "") && (b == null || b === "");   // treat missing, null and "" as the same
+}
+const prim = a => Array.isArray(a) && a.every(x => x === null || typeof x !== "object");
+
+function merge3(b, l, r, st) {
+  if (deepEq(l, b)) return structuredClone(r);
+  if (deepEq(r, b) || deepEq(l, r)) return structuredClone(l);
+  if (prim(l) && prim(r) && (b === undefined || prim(b))) {
+    // Lists like "active subteams": apply this person's additions and removals to the latest list
+    const B = b || [], add = l.filter(x => !B.includes(x)), del = B.filter(x => !l.includes(x));
+    return [...r.filter(x => !del.includes(x)), ...add.filter(x => !r.includes(x))];
+  }
+  if (isObj(l) && isObj(r)) {
+    const out = {}, B = isObj(b) ? b : {};
+    new Set([...Object.keys(r), ...Object.keys(l)]).forEach(k => {
+      const v = merge3(B[k], l[k], r[k], st);
+      if (v !== undefined) out[k] = v;
+    });
+    return out;
+  }
+  st.conflicts++;
+  return structuredClone(l);
+}
+
+function mergeList(b = [], l = [], r = [], key, st) {
+  const mb = new Map(b.map(x => [key(x), x])), ml = new Map(l.map(x => [key(x), x])), mr = new Map(r.map(x => [key(x), x]));
+  const out = [];
+  const take = k => {
+    const B = mb.get(k), L = ml.get(k), R = mr.get(k);
+    if (!B) return L && R ? merge3(undefined, L, R, st) : structuredClone(L || R);
+    if (!L) { if (!R || deepEq(R, B)) return undefined; st.kept++; return structuredClone(R); }   // deleted here, but someone edited it
+    if (!R) return deepEq(L, B) ? undefined : structuredClone(L);                                  // deleted there, unless edited here
+    return merge3(B, L, R, st);
+  };
+  const seen = new Set();
+  [...r, ...l].forEach(x => {
+    const k = key(x); if (seen.has(k)) return; seen.add(k);
+    const v = take(k); if (v !== undefined) out.push(v);
+  });
+  return out;
+}
+
+const LISTS = { tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id };
+function mergeDoc(b, l, r) {
+  const st = { conflicts: 0, kept: 0 };
+  const out = {};
+  new Set([...Object.keys(r), ...Object.keys(l)]).forEach(k => {
+    if (k === "updated") return;
+    const v = LISTS[k] ? mergeList(b[k], l[k], r[k], LISTS[k], st) : merge3(b[k], l[k], r[k], st);
+    if (v !== undefined) out[k] = v;
+  });
+  out.meetings && out.meetings.sort((a, c) => a.date.localeCompare(c.date));
+  return { doc: out, st };
+}
+
+async function fetchLatest(ref) {
+  const r = await fetch(`${API}/contents/${DATA_PATH}?ref=${encodeURIComponent(ref || branch || "main")}`, { headers: headers(), cache: "no-store" });
+  if (!r.ok) throw new Error(r.status);
+  const j = await r.json();
+  return { sha: j.sha, doc: normalize(JSON.parse(fromB64(j.content))) };
+}
+
+async function putDoc(doc, prevSha, message) {
+  return fetch(`${API}/contents/${DATA_PATH}`, {
+    method: "PUT", headers: headers({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ message, content: toB64(JSON.stringify(doc, null, 2) + "\n"), branch, sha: prevSha })
+  });
+}
+
+/* ---------- Describing changes (used for commit messages and History) ---------- */
+function describeChanges(b, a) {
+  const out = [];
+  const q = t => `"${(t || "untitled").slice(0, 40)}"`;
+  const short = d => parseDate(d) ? niceDate(d, { month: "short", day: "numeric" }) : d;
+  const tn = id => ((a.teams || []).find(t => t.id === id) || (b.teams || []).find(t => t.id === id) || {}).name || id;
+  const byKey = (arr, k) => new Map((arr || []).map(x => [k(x), x]));
+
+  if ((b.title || "") !== (a.title || "")) out.push(`renamed the site to ${q(a.title)}`);
+  const bT = byKey(b.teams, x => x.id), aT = byKey(a.teams, x => x.id);
+  aT.forEach((t, id) => { const o = bT.get(id); if (o && o.name !== t.name) out.push(`renamed ${o.name} to ${t.name}`); });
+
+  const bk = byKey(b.tasks, x => x.id), ak = byKey(a.tasks, x => x.id);
+  ak.forEach((t, id) => {
+    const o = bk.get(id);
+    if (!o) return out.push(`added ${q(t.title)} to ${tn(t.team)}`);
+    if (deepEq(o, t)) return;
+    if (!o.done && t.done) out.push(`completed ${q(t.title)}`);
+    else if (o.done && !t.done) out.push(`reopened ${q(t.title)}`);
+    if (o.team !== t.team) out.push(`moved ${q(t.title)} to ${tn(t.team)}`);
+    if (o.title !== t.title) out.push(`renamed ${q(o.title)} to ${q(t.title)}`);
+    const rest = ["owner", "subsystem", "priority", "due", "notes"].filter(k => (o[k] || "") !== (t[k] || ""));
+    if (rest.length && o.done === t.done && o.title === t.title && o.team === t.team) out.push(`edited ${q(t.title)} (${rest.join(", ")})`);
+  });
+  bk.forEach((t, id) => { if (!ak.has(id)) out.push(`deleted ${q(t.title)}`); });
+
+  const bm = byKey(b.meetings, x => x.date), am = byKey(a.meetings, x => x.date);
+  const newM = [...am.keys()].filter(d => !bm.has(d)), goneM = [...bm.keys()].filter(d => !am.has(d));
+  if (newM.length > 2) out.push(`added ${newM.length} meetings`); else newM.forEach(d => out.push(`added a meeting on ${short(d)}`));
+  if (goneM.length > 2) out.push(`removed ${goneM.length} meetings`); else goneM.forEach(d => out.push(`removed the meeting on ${short(d)}`));
+  am.forEach((m, d) => {
+    const o = bm.get(d); if (!o) return;
+    const A = m.active || [], B = o.active || [];
+    A.filter(x => !B.includes(x)).forEach(x => out.push(`marked ${tn(x)} active on ${short(d)}`));
+    B.filter(x => !A.includes(x)).forEach(x => out.push(`marked ${tn(x)} inactive on ${short(d)}`));
+    if ((o.agenda || "") !== (m.agenda || "")) out.push(`${o.agenda ? "updated" : "added"} the agenda for ${short(d)}`);
+    if ((o.note || "") !== (m.note || "")) out.push(`changed the time for ${short(d)}`);
+  });
+
+  const bd = byKey(b.deadlines, x => x.id), ad = byKey(a.deadlines, x => x.id);
+  ad.forEach((x, id) => { const o = bd.get(id); if (!o) out.push(`added deadline ${q(x.title)} on ${short(x.date)}`); else if (!deepEq(o, x)) out.push(`edited deadline ${q(x.title)}`); });
+  bd.forEach((x, id) => { if (!ad.has(id)) out.push(`removed deadline ${q(x.title)}`); });
+  return out;
+}
+
+function commitMessage(who, changes) {
+  const list = changes.length ? changes : ["saved without changes"];
+  let head = `${who}: ${list[0]}`;
+  if (list.length === 2) head += `; ${list[1]}`;
+  if (list.length > 2) head += ` and ${list.length - 1} more change${list.length === 2 ? "" : "s"}`;
+  return list.length > 1 ? `${head}\n\n${list.map(c => "- " + c).join("\n")}` : head;
+}
+
 async function save() {
   if (!dirty) return;
+  const who = await askName();
+  if (!who) return setStatus("Add your name to save.", "err");
   $("saveBtn").disabled = true;
   setStatus("Saving…");
-  data.updated = new Date().toISOString();
-  const body = {
-    message: `Update tasks via site`,
-    content: toB64(JSON.stringify(data, null, 2) + "\n"),
-    branch,
-    ...(sha ? { sha } : {})
-  };
-  const r = await fetch(`${API}/contents/${DATA_PATH}`, { method: "PUT", headers: headers({ "Content-Type": "application/json" }), body: JSON.stringify(body) });
-  if (r.ok) {
-    const j = await r.json();
-    sha = j.content.sha;
-    dirty = false;
-    setStatus("Saved. The public page updates in about a minute.", "ok");
-    render();
-  } else if (r.status === 409 || r.status === 422) {
-    setStatus("Someone else saved first. Their version is loaded; redo your change.", "err");
-    await load();
-  } else {
-    setStatus(`Save failed (${r.status}).`, "err");
-    $("saveBtn").disabled = false;
+  const mine = describeChanges(base, data);
+  const message = commitMessage(who, mine);
+  for (let attempt = 0; attempt < 4; attempt++) {
+    let latest;
+    try { latest = await fetchLatest(); }
+    catch (e) { setStatus(`Couldn't reach GitHub (${e.message}). Your changes are still here; try Save again.`, "err"); $("saveBtn").disabled = false; return; }
+    const changed = latest.sha !== sha;
+    const { doc, st } = changed ? mergeDoc(base, data, latest.doc) : { doc: structuredClone(data), st: { conflicts: 0, kept: 0 } };
+    doc.updated = new Date().toISOString();
+    const r = await putDoc(doc, latest.sha, message);
+    if (r.ok) {
+      const j = await r.json();
+      sha = j.content.sha;
+      data = doc; base = structuredClone(doc); dirty = false;
+      historyCache = null;
+      const notes = [];
+      if (changed) notes.push("Merged with changes someone else saved");
+      if (st.conflicts) notes.push(`${st.conflicts} field${st.conflicts === 1 ? " was" : "s were"} edited by both of you, so yours ${st.conflicts === 1 ? "was" : "were"} kept`);
+      if (st.kept) notes.push(`${st.kept} item${st.kept === 1 ? "" : "s"} you deleted had been edited by someone else, so ${st.kept === 1 ? "it was" : "they were"} kept`);
+      setStatus(notes.length ? `Saved. ${notes.join(". ")}.` : "Saved. The public page updates in about a minute.", "ok");
+      render();
+      return;
+    }
+    if (r.status !== 409 && r.status !== 422) {
+      setStatus(`Save failed (${r.status}). Your changes are still here; try Save again.`, "err");
+      $("saveBtn").disabled = false;
+      return;
+    }
+    // Someone saved between our read and write: read again and re-merge
   }
+  setStatus("Several people are saving at once. Wait a few seconds and press Save again.", "err");
+  $("saveBtn").disabled = false;
 }
+
+// While editing with nothing unsaved, quietly pick up other people's saves
+setInterval(async () => {
+  if (!editing || dirty || document.hidden || !data) return;
+  const a = document.activeElement;
+  if (a && (a.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(a.tagName))) return;
+  try {
+    const latest = await fetchLatest();
+    if (latest.sha !== sha && !dirty) { sha = latest.sha; data = latest.doc; base = structuredClone(data); historyCache = null; render(); }
+  } catch {}
+}, 45000);
 
 function markDirty() { dirty = true; $("saveBtn").disabled = false; setStatus("Unsaved changes."); }
 
@@ -721,6 +940,7 @@ function currentPage() {
   if (id.split("/")[0] === "calendar") return "calendar";
   if (id === "captain") return editing ? "captain" : "calendar";
   if (id === "settings") return "settings";
+  if (id === "history") return "history";
   if (data.teams.some(t => t.id === id)) return null;
   return "home";   // empty or unknown link: the landing page
 }
@@ -765,14 +985,18 @@ function render(focusId) {
   nav.append(navLink("#calendar", "Calendar", "", page === "calendar"));
   if (editing) nav.append(navLink("#captain", "Captain stuff", "", page === "captain", "hidden-tab"));
   nav.append(div("nav-sep"));
-  const navTail = () => { nav.append(div("nav-sep")); nav.append(navLink("#settings", "Settings", "", page === "settings")); };
+  const navTail = () => {
+    nav.append(div("nav-sep"));
+    nav.append(navLink("#history", "History", "", page === "history"));
+    nav.append(navLink("#settings", "Settings", "", page === "settings"));
+  };
   data.teams.forEach(t => nav.append(navLink("#" + encodeURIComponent(t.id), t.name,
     data.tasks.filter(x => x.team === t.id && !x.done).length, team && t.id === team.id)));
   navTail();
   const allOpen = data.tasks.filter(t => !t.done).length;
   $("overall").textContent = `${allOpen} open across all subteams`;
 
-  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : team.name;
+  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : page === "history" ? "History" : team.name;
   $("mtopTitle").textContent = label;
   document.title = `${label} · ${data.title || "Tasks"}`;
   $("tools").hidden = !!page;
@@ -781,6 +1005,7 @@ function render(focusId) {
   document.body.classList.toggle("on-home", page === "home");
   if (page === "home") return renderHome();
   if (page === "settings") return renderSettings();
+  if (page === "history") return renderHistory();
   if (page === "calendar") return renderCalendar();
   if (page === "captain") return renderCaptain();
 
@@ -829,6 +1054,147 @@ function render(focusId) {
     const el = list.querySelector(`[data-id="${CSS.escape(focusId)}"] .title`);
     if (el) { el.focus(); document.getSelection().selectAllChildren(el); }
   }
+}
+
+/* ---------- History: every save is a commit; list them and restore old versions ---------- */
+let historyCache = null;     // { at, items, page, more }
+
+async function fetchHistory(page) {
+  const r = await fetch(`${API}/commits?path=${DATA_PATH}&per_page=25&page=${page}`, { headers: headers(), cache: "no-store" });
+  if (!r.ok) throw new Error(r.status);
+  return (await r.json()).map(c => {
+    const msg = c.commit.message || "";
+    const first = msg.split("\n")[0];
+    const m = first.match(/^([^:\n]{1,40}): (.+)$/);
+    const legacy = first === "Update tasks via site";
+    return {
+      sha: c.sha, parent: (c.parents[0] || {}).sha, url: c.html_url,
+      when: new Date(c.commit.committer.date),
+      who: m ? m[1] : legacy ? "" : "",
+      what: m ? m[2] : legacy ? "Saved from the site" : first,
+      details: msg.split("\n").filter(l => l.startsWith("- ")).map(l => l.slice(2)),
+      legacy: legacy || !m,
+      label: m ? m[1] : legacy ? "Someone" : "GitHub"   // old site saves had no name; others were made on GitHub directly
+    };
+  });
+}
+
+function ago(d) {
+  const s = (Date.now() - d) / 1000;
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  if (s < 86400 * 7) return `${Math.round(s / 86400)} days ago`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function renderHistory() {
+  const head = div("page-head");
+  const h2 = document.createElement("h2"); h2.className = "page-title"; h2.textContent = "History";
+  const sub = div("muted", editing
+    ? "Every save, newest first. Restoring puts the whole list back to that point; later changes stay here so nothing is lost."
+    : "Every save, newest first. Unlock editing to restore an older version.");
+  sub.style.marginTop = "8px";
+  head.append(h2, sub);
+  $("pageHead").replaceChildren(head);
+  const list = $("list");
+  list.innerHTML = "";
+  const box = div("hist");
+  list.append(box);
+
+  const draw = () => {
+    if (currentPage() !== "history") return;
+    box.innerHTML = "";
+    const c = historyCache;
+    if (!c.items.length) box.append(div("muted", "No saves yet."));
+    c.items.forEach((it, i) => box.append(histRow(it, i === 0)));
+    if (c.more) {
+      const more = document.createElement("button"); more.className = "tbtn"; more.textContent = "Show older";
+      more.onclick = async () => {
+        more.disabled = true;
+        try { const next = await fetchHistory(c.page + 1); c.items.push(...next); c.page++; c.more = next.length === 25; }
+        catch (e) { setStatus(`Couldn't load more history (${e.message}).`, "err"); }
+        draw();
+      };
+      box.append(more);
+    }
+  };
+
+  if (historyCache && Date.now() - historyCache.at < 30000) return draw();
+  box.append(div("muted", "Loading history…"));
+  fetchHistory(1).then(items => { historyCache = { at: Date.now(), items, page: 1, more: items.length === 25 }; draw(); })
+    .catch(e => { box.innerHTML = ""; box.append(div("muted", `Couldn't load history (${e.message}). GitHub limits how often a device can ask without editing unlocked; try again in a few minutes.`)); });
+}
+
+function histRow(it, isLatest) {
+  const row = div("hrow");
+  const top = div("hrow-top");
+  const who = div("h-who", it.label);
+  if (!it.who) who.classList.add("anon");
+  const what = div("h-what", it.what);
+  const when = div("h-when", ago(it.when));
+  when.title = it.when.toLocaleString();
+  top.append(who, what, when);
+  row.append(top);
+
+  const actions = div("h-actions");
+  const detail = div("h-detail"); detail.hidden = true;
+  if (it.details.length) { const ul = document.createElement("ul"); it.details.forEach(d => ul.append(Object.assign(document.createElement("li"), { textContent: d }))); detail.append(ul); }
+  if (it.details.length || (it.legacy && it.parent)) {
+    const show = document.createElement("button"); show.className = "tbtn small"; show.textContent = "Show changes";
+    show.onclick = async () => {
+      if (!detail.hidden) { detail.hidden = true; show.textContent = "Show changes"; return; }
+      if (!it.details.length && !detail.dataset.done) {
+        show.disabled = true; show.textContent = "Loading…";
+        try {
+          const [a, b] = await Promise.all([fetchLatest(it.sha), fetchLatest(it.parent)]);
+          const ch = describeChanges(b.doc, a.doc);
+          const ul = document.createElement("ul");
+          (ch.length ? ch : ["No changes to tasks, meetings or deadlines"]).forEach(d => ul.append(Object.assign(document.createElement("li"), { textContent: d })));
+          detail.append(ul); detail.dataset.done = "1";
+        } catch (e) { detail.append(div("muted", `Couldn't compare (${e.message}).`)); detail.dataset.done = "1"; }
+        show.disabled = false;
+      }
+      detail.hidden = false; show.textContent = "Hide changes";
+    };
+    actions.append(show);
+  }
+  if (editing && !isLatest) {
+    const rb = document.createElement("button"); rb.className = "tbtn small"; rb.textContent = "Restore this version";
+    rb.onclick = () => restoreVersion(it);
+    actions.append(rb);
+  }
+  if (isLatest) actions.append(div("h-tag", "Current"));
+  if (actions.childNodes.length) row.append(actions);
+  row.append(detail);
+  return row;
+}
+
+async function restoreVersion(it) {
+  const when = it.when.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  if (dirty && !confirm("You have unsaved changes. Discard them and restore this version?")) return;
+  if (!confirm(`Put the whole list back to how it was on ${when}?\n\nEverything saved after that is undone, but stays in History so it can be brought back.`)) return;
+  const who = await askName();
+  if (!who) return setStatus("Add your name to restore.", "err");
+  setStatus("Restoring…");
+  try {
+    const old = await fetchLatest(it.sha);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const latest = await fetchLatest();
+      const doc = structuredClone(old.doc);
+      doc.updated = new Date().toISOString();
+      const r = await putDoc(doc, latest.sha, `${who}: restored the version from ${when}`);
+      if (r.ok) {
+        const j = await r.json();
+        sha = j.content.sha; data = doc; base = structuredClone(doc); dirty = false; historyCache = null;
+        setStatus(`Restored the version from ${when}.`, "ok");
+        render();
+        return;
+      }
+      if (r.status !== 409 && r.status !== 422) throw new Error(r.status);
+    }
+    throw new Error("busy");
+  } catch (e) { setStatus(`Restore failed (${e.message}). Nothing was changed.`, "err"); }
 }
 
 /* ---------- Settings: visual options saved in this browser only ---------- */
@@ -893,6 +1259,14 @@ function renderSettings() {
     try { localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem(HIDE_KEY); } catch {}
     hideDone = false; applySettings({}); render();
   };
+  const ng = div("set-group");
+  const nn = div("set-name", "Your name");
+  const nsm = document.createElement("small"); nsm.textContent = "Shown on changes you save from this device."; nn.append(nsm);
+  const ni = document.createElement("input"); ni.type = "text"; ni.value = myName(); ni.placeholder = "e.g. Max"; ni.className = "name-in";
+  ni.setAttribute("aria-label", "Your name");
+  ni.onchange = () => { setMyName(ni.value); setStatus(ni.value.trim() ? "Name saved on this device." : "Name cleared.", "ok"); };
+  ng.append(nn, ni);
+  box.prepend(ng);
   list.append(box, reset);
 }
 
