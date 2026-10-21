@@ -1890,8 +1890,25 @@ async function keepAwake() {
 }
 function releaseWake() { try { wakeLock && wakeLock.release(); } catch {} wakeLock = null; }
 
+// The display is left running for days, so it reloads itself when a new version of the site is published.
+// Baseline is taken at load; afterwards the page is re-checked every 5 minutes.
+const pageHash = async () => {
+  const r = await fetch(`${location.pathname}?v=${Date.now()}`, { cache: "no-store" });
+  if (!r.ok) throw new Error(r.status);
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(await r.text()));
+  return Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, "0")).join("");
+};
+let pageBase = null, pageChecked = 0;
+pageHash().then(h => pageBase = h).catch(() => {});
+async function checkForNewVersion() {
+  if (!pageBase || Date.now() - pageChecked < 5 * 60000 || dirty || editing || agendaDlg) return;
+  pageChecked = Date.now();
+  try { if (await pageHash() !== pageBase) location.reload(); } catch {}
+}
+
 async function refreshDisplay() {
   if (currentPage() !== "display" || dirty) return;
+  checkForNewVersion();
   try {
     let doc;
     if (editing) { const l = await fetchLatest(); sha = l.sha; doc = l.doc; }
