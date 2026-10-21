@@ -256,6 +256,19 @@
       "parts": [],
       "needed": 2,
       "filled": 2
+    },
+    {
+      "id": "f2a84351-fa5d-4c0c-8774-6b74623baad5",
+      "team": "inventory",
+      "title": "Clean/Organize Toolchest",
+      "owner": "Daniel",
+      "subsystem": "Shop",
+      "priority": "Med",
+      "due": "2026-10-21",
+      "done": false,
+      "status": "doing",
+      "notes": "",
+      "parts": []
     }
   ],
   "meetings": [
@@ -413,7 +426,7 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T16:13:51.056Z",
+  "updated": "2026-10-21T16:19:41.085Z",
   "events": [
     {
       "id": "53da8034-bf96-4981-932b-69a7260e917e",
