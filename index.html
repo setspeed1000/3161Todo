@@ -365,6 +365,55 @@
     .h-what { grid-column: 1 / -1; order: 3; }
   }
 
+  /* Status, blocked, parts, orders */
+  .stp { font-size: 12px; font-weight: 700; padding: 1px 7px; border-radius: 3px; }
+  .stp-doing { background: color-mix(in srgb, var(--yellow) 30%, transparent); color: var(--ink); }
+  .stp-blocked { background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red); }
+  .task.s-blocked { background-image: repeating-linear-gradient(-45deg, transparent 0 14px, color-mix(in srgb, var(--red) 5%, transparent) 14px 28px); }
+  .blocked { margin-top: 7px; font-size: 14px; color: var(--red); display: flex; gap: 6px 8px; flex-wrap: wrap; align-items: center; }
+  .blocked b { font-weight: 700; }
+  .blocked select, .blocked .bl-note { font-size: 13px; padding: 3px 6px; border: 1px dashed #c9a227; border-radius: 3px; background: var(--edit); color: var(--ink); }
+  .blocked .bl-note { flex: 1 1 220px; }
+  .st-sel { font-weight: 600; }
+  .chip.warn .n { color: var(--red); font-weight: 700; }
+  .chip.on.warn .n { color: inherit; }
+
+  .parts { margin-top: 8px; display: grid; gap: 4px; }
+  .pt-row { display: flex; gap: 8px; align-items: baseline; font-size: 14px; min-width: 0; }
+  .pt { font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 3px; white-space: nowrap; flex: none; }
+  .pt-need { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); }
+  .pt-ordered { background: color-mix(in srgb, var(--yellow) 28%, transparent); color: var(--ink); }
+  .pt-arrived { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+  .pt-name { color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+  a.pt-name { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 2px; }
+  .pt-head { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .pt-edit { display: grid; grid-template-columns: minmax(0, 1.4fr) 4.2em auto minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+  .pt-edit input, .pt-edit select { font-size: 13px; padding: 4px 6px; border: 1px dashed #c9a227; border-radius: 3px; background: var(--edit); color: var(--ink); min-width: 0; }
+  .pt-add { justify-self: start; border: 1px dashed var(--line); background: transparent; color: var(--muted); border-radius: 3px; padding: 3px 10px; font-size: 13px; cursor: pointer; }
+  .pt-add:hover { color: var(--ink); border-color: var(--muted); }
+
+  .waiting { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--red); border-radius: 4px; padding: 14px 16px; margin-bottom: 16px; display: grid; gap: 6px; }
+  .waiting .sec-title { margin-bottom: 4px; }
+  .wait-row { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 14px; }
+  .wait-row a { color: var(--ink); font-weight: 600; }
+
+  .orders { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; margin-bottom: 16px; }
+  .orders-head { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
+  .orders details { border-top: 1px solid var(--line); padding: 8px 0 4px; }
+  .orders summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--ink); margin: 0 0 4px; }
+  .ord-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 5px 0; font-size: 14px; }
+  .ord-for { color: var(--muted); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ord-for:hover { color: var(--ink); text-decoration: underline; }
+  .ord-row select { font-size: 13px; padding: 3px 6px; border: 1px dashed #c9a227; border-radius: 3px; background: var(--edit); color: var(--ink); }
+
+  @media (max-width: 700px) {
+    .pt-edit { grid-template-columns: 4.6em minmax(0, 1fr) auto; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+    .pt-edit .pt-in-name { grid-column: 1 / -1; }
+    .pt-edit .pt-in-link { grid-column: 1 / 3; }
+    .ord-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .ord-for { grid-column: 1 / -1; order: 3; white-space: normal; }
+  }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -471,7 +520,7 @@
     <div id="status" class="status" role="status"></div>
     <div id="pageHead"></div>
     <div class="tools" id="tools">
-      <span></span>
+      <div class="filters" id="stFilters"></div>
       <label class="toggle"><input type="checkbox" id="hideDone"> Hide done</label>
     </div>
     <div id="list"></div>
@@ -536,6 +585,20 @@ const DEFAULT_TEAMS = [
 ];
 const PRIORITIES = ["High", "Med", "Low"];
 const PRI_RANK   = { High: 0, Med: 1, Low: 2 };
+const STATUSES   = [["todo", "To do"], ["doing", "In progress"], ["blocked", "Blocked"], ["done", "Done"]];
+const ST_RANK    = { doing: 0, todo: 1, blocked: 2, done: 3 };
+const ST_LABEL   = Object.fromEntries(STATUSES);
+const PART_ST    = [["need", "Need to order"], ["ordered", "Ordered"], ["arrived", "Arrived"]];
+const PART_LABEL = { need: "To order", ordered: "Ordered", arrived: "Arrived" };
+let statusFilter = "all";
+
+// A task's status; "done" stays in sync with the old done checkbox field
+const stOf = t => t.done ? "done" : (t.status && t.status !== "done" ? t.status : "todo");
+function setSt(t, st) {
+  t.status = st; t.done = st === "done";
+  if (st !== "blocked") { delete t.blockedBy; delete t.blockedNote; }
+}
+const newId = () => crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 
 const { owner: OWNER, repo: REPO } = detectRepo();
 const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
@@ -616,7 +679,11 @@ function normalize(d) {
   if (!Array.isArray(d.meetings)) d.meetings = [];
   if (!Array.isArray(d.deadlines)) d.deadlines = [];
   const ids = d.teams.map(t => t.id);
-  d.tasks.forEach(t => { if (!ids.includes(t.team)) t.team = ids[0]; });
+  d.tasks.forEach(t => {
+    if (!ids.includes(t.team)) t.team = ids[0];
+    if (t.done) t.status = "done"; else if (!t.status || t.status === "done") t.status = "todo";
+    if (!Array.isArray(t.parts)) t.parts = [];
+  });
   return d;
 }
 const teamOf = t => data.teams.find(x => x.id === t.team) || data.teams[0];
@@ -724,6 +791,8 @@ const prim = a => Array.isArray(a) && a.every(x => x === null || typeof x !== "o
 function merge3(b, l, r, st) {
   if (deepEq(l, b)) return structuredClone(r);
   if (deepEq(r, b) || deepEq(l, r)) return structuredClone(l);
+  const keyed = a => Array.isArray(a) && a.every(x => isObj(x) && x.id);
+  if (keyed(l) && keyed(r) && (b === undefined || keyed(b))) return mergeList(b || [], l, r, x => x.id, st);
   if (prim(l) && prim(r) && (b === undefined || prim(b))) {
     // Lists like "active subteams": apply this person's additions and removals to the latest list
     const B = b || [], add = l.filter(x => !B.includes(x)), del = B.filter(x => !l.includes(x));
@@ -807,6 +876,21 @@ function describeChanges(b, a) {
     else if (o.done && !t.done) out.push(`reopened ${q(t.title)}`);
     if (o.team !== t.team) out.push(`moved ${q(t.title)} to ${tn(t.team)}`);
     if (o.title !== t.title) out.push(`renamed ${q(o.title)} to ${q(t.title)}`);
+    const so = stOf(o), sn = stOf(t);
+    if (so !== sn && so !== "done" && sn !== "done") {
+      if (sn === "doing") out.push(`started ${q(t.title)}`);
+      else if (sn === "blocked") out.push(`marked ${q(t.title)} blocked${t.blockedBy ? ` (waiting on ${tn(t.blockedBy)})` : ""}`);
+      else out.push(`moved ${q(t.title)} back to To do`);
+    } else if (sn === "blocked" && so === "blocked" && ((o.blockedBy || "") !== (t.blockedBy || "") || (o.blockedNote || "") !== (t.blockedNote || "")))
+      out.push(`updated what ${q(t.title)} is waiting on`);
+    const op = new Map((o.parts || []).map(x => [x.id, x])), np = new Map((t.parts || []).map(x => [x.id, x]));
+    np.forEach((x, pid) => {
+      const y = op.get(pid);
+      if (!y) return out.push(`added part ${q(x.name)} to ${q(t.title)}`);
+      if ((y.status || "need") !== (x.status || "need")) out.push(x.status === "need" ? `marked ${q(x.name)} as needed` : `marked ${q(x.name)} ${(x.status || "").toLowerCase()}`);
+      else if (!deepEq(y, x)) out.push(`edited part ${q(x.name)}`);
+    });
+    op.forEach((x, pid) => { if (!np.has(pid)) out.push(`removed part ${q(x.name)} from ${q(t.title)}`); });
     const rest = ["owner", "subsystem", "priority", "due", "notes"].filter(k => (o[k] || "") !== (t[k] || ""));
     if (rest.length && o.done === t.done && o.title === t.title && o.team === t.team) out.push(`edited ${q(t.title)} (${rest.join(", ")})`);
   });
@@ -910,6 +994,7 @@ function dueInfo(t) {
 function sortTasks(arr) {
   return [...arr].sort((a, b) =>
     (PRI_RANK[a.priority] ?? 3) - (PRI_RANK[b.priority] ?? 3) ||
+    (ST_RANK[stOf(a)] ?? 1) - (ST_RANK[stOf(b)] ?? 1) ||
     (a.due || "9999") .localeCompare(b.due || "9999") ||
     (a.title || "").localeCompare(b.title || ""));
 }
@@ -1033,12 +1118,29 @@ function render(focusId) {
   $("pageHead").replaceChildren(head);
   requestAnimationFrame(() => { fill.style.width = mine.length ? (doneTasks.length / mine.length * 100) + "%" : "0"; });
 
+  // Status filter chips (open tasks)
+  const sf = $("stFilters"); sf.innerHTML = "";
+  [["all", "All open"], ["doing", "In progress"], ["todo", "To do"], ["blocked", "Blocked"]].forEach(([v, l]) => {
+    const n = v === "all" ? openTasks.length : openTasks.filter(t => stOf(t) === v).length;
+    const b = document.createElement("button");
+    b.className = "chip" + (statusFilter === v ? " on" : "") + (v === "blocked" && n ? " warn" : "");
+    b.innerHTML = `<span></span><span class="n"></span>`;
+    b.firstChild.textContent = l; b.lastChild.textContent = n;
+    b.setAttribute("aria-pressed", statusFilter === v);
+    b.onclick = () => { statusFilter = v; render(); };
+    sf.append(b);
+  });
+  const shown = statusFilter === "all" ? openTasks : openTasks.filter(t => stOf(t) === statusFilter);
+
   const list = $("list");
   list.innerHTML = "";
+  const waiting = waitingEl(team);
+  if (waiting) list.append(waiting);
+  if (team.id === "inventory") list.append(ordersEl());
   const tl = div("team-list");
-  if (!openTasks.length) tl.append(div("empty", editing ? "Nothing open. Add a task below." : "Nothing open."));
-  openTasks.forEach(t => tl.append(taskEl(t)));
-  if (doneTasks.length && !hideDone) {
+  if (!shown.length) tl.append(div("empty", statusFilter !== "all" ? `No ${ST_LABEL[statusFilter].toLowerCase()} tasks.` : editing ? "Nothing open. Add a task below." : "Nothing open."));
+  shown.forEach(t => tl.append(taskEl(t)));
+  if (doneTasks.length && !hideDone && statusFilter === "all") {
     tl.append(div("donehead", `Done (${doneTasks.length})`));
     doneTasks.forEach(t => tl.append(taskEl(t)));
   }
@@ -1287,8 +1389,8 @@ function renderHome() {
   const open = data.tasks.filter(t => !t.done);
   const overdue = open.filter(t => t.due && t.due < ts).length;
   const stats = el("div", "hero-stats");
-  [[open.length, "open tasks"], [overdue, "overdue"], [data.meetings.filter(m => m.date >= ts).length, "meetings scheduled"]]
-    .forEach(([n, l], i) => { const st = el("div", "stat" + (i === 1 && n ? " bad" : "")); st.append(el("b", "", n), el("span", "", l)); stats.append(st); });
+  [[open.length, "open tasks"], [overdue, "overdue"], [open.filter(t => stOf(t) === "blocked").length, "blocked"], [data.meetings.filter(m => m.date >= ts).length, "meetings scheduled"]]
+    .forEach(([n, l], i) => { const st = el("div", "stat" + ((i === 1 || i === 2) && n ? " bad" : "")); st.append(el("b", "", n), el("span", "", l)); stats.append(st); });
   hero.append(stats);
   list.append(hero);
 
@@ -1377,9 +1479,15 @@ function renderHome() {
     const n = el("span", "tc-open"); n.append(el("b", "", op.length), document.createTextNode(op.length === 1 ? " open" : " open"));
     a.append(n);
     const meta = el("span", "tc-meta");
+    const blk = op.filter(t => stOf(t) === "blocked").length;
+    const waitOn = data.tasks.filter(t => !t.done && stOf(t) === "blocked" && t.blockedBy === tm.id).length;
+    const toOrder = tm.id === "inventory" ? allParts().filter(x => (x.pt.status || "need") === "need").length : 0;
     if (od) meta.append(el("span", "bad", `${od} overdue`));
+    if (waitOn) meta.append(el("span", "bad", `${waitOn} waiting on them`));
+    if (blk) meta.append(el("span", "", `${blk} blocked`));
+    if (toOrder) meta.append(el("span", "bad", `${toOrder} part${toOrder === 1 ? "" : "s"} to order`));
     if (high) meta.append(el("span", "", `${high} high priority`));
-    if (!od && !high) meta.append(el("span", "", op.length ? "On track" : mine.length ? "All done" : "No tasks yet"));
+    if (!meta.childNodes.length) meta.append(el("span", "", op.length ? "On track" : mine.length ? "All done" : "No tasks yet"));
     a.append(meta);
     const tr = el("span", "tc-track"); const f = el("span", "tc-fill");
     f.style.width = mine.length ? ((mine.length - op.length) / mine.length * 100) + "%" : "0";
@@ -1770,14 +1878,15 @@ function meetingRow(m) {
 }
 
 function taskEl(t) {
+  const st = stOf(t);
   const el = document.createElement("div");
-  el.className = `task p-${t.priority}` + (t.done ? " done" : "");
+  el.className = `task p-${t.priority} s-${st}` + (t.done ? " done" : "");
   el.dataset.id = t.id;
 
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.className = "check"; cb.checked = !!t.done; cb.disabled = !editing;
   cb.setAttribute("aria-label", "Done");
-  cb.onchange = () => { t.done = cb.checked; markDirty(); render(); };
+  cb.onchange = () => { setSt(t, cb.checked ? "done" : "todo"); markDirty(); render(); };
 
   const mid = document.createElement("div");
   const title = div("title", t.title);
@@ -1792,15 +1901,22 @@ function taskEl(t) {
       t.team = teamSel.value;
       const cats = teamOf(t).categories || [];
       if (!cats.includes(t.subsystem)) t.subsystem = cats.includes("Other") ? "Other" : (cats[0] || "");
+      if (t.blockedBy === t.team) delete t.blockedBy;
       markDirty(); render();
     };
+    const stSel = document.createElement("select");
+    stSel.setAttribute("aria-label", "Status"); stSel.className = "st-sel";
+    STATUSES.forEach(([v, l]) => stSel.add(new Option(l, v, false, v === st)));
+    stSel.onchange = () => { setSt(t, stSel.value); markDirty(); render(); };
     meta.append(
+      stSel,
       field("Owner", t.owner, v => t.owner = v),
       teamSel,
       selectField(t.subsystem, teamOf(t).categories || [], v => { t.subsystem = v; }),
       dateField(t.due, v => t.due = v)
     );
   } else {
+    if (st === "doing" || st === "blocked") meta.append(Object.assign(document.createElement("span"), { className: "stp stp-" + st, textContent: ST_LABEL[st] }));
     const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = t.subsystem;
     const who = document.createElement("span"); who.innerHTML = "<b></b>";
     who.firstChild.textContent = t.owner || "Unassigned";
@@ -1808,11 +1924,37 @@ function taskEl(t) {
     const ds = document.createElement("span"); ds.className = "due " + due.cls; ds.textContent = due.text;
     meta.append(tag, who, ds);
   }
+  mid.append(title, meta);
+
+  // Blocked: what it's waiting on
+  if (st === "blocked") {
+    const bl = div("blocked");
+    if (editing) {
+      const lab = document.createElement("span"); lab.textContent = "Waiting on";
+      const sel = document.createElement("select"); sel.setAttribute("aria-label", "Waiting on");
+      sel.add(new Option("Something else", "", false, !t.blockedBy));
+      data.teams.filter(x => x.id !== t.team).forEach(x => sel.add(new Option(x.name, x.id, false, x.id === t.blockedBy)));
+      sel.onchange = () => { sel.value ? t.blockedBy = sel.value : delete t.blockedBy; markDirty(); };
+      const note = document.createElement("input"); note.type = "text"; note.value = t.blockedNote || "";
+      note.placeholder = "What exactly? e.g. CAD for the bumper brackets"; note.className = "bl-note";
+      note.oninput = () => { t.blockedNote = note.value; markDirty(); };
+      bl.append(lab, sel, note);
+    } else {
+      const line = document.createElement("span");
+      const strong = document.createElement("b");
+      strong.textContent = t.blockedBy ? `Waiting on ${teamName(t.blockedBy)}` : "Blocked";
+      line.append(strong);
+      if (t.blockedNote) line.append(": " + t.blockedNote);
+      bl.append(line);
+    }
+    mid.append(bl);
+  }
 
   const notes = div("notes", t.notes || "");
   makeEditable(notes, v => t.notes = v);
   if (!editing && !t.notes) notes.hidden = true;
-  mid.append(title, meta, notes);
+  mid.append(notes);
+  if (editing || (t.parts && t.parts.length)) mid.append(partsEl(t));
 
   const right = div("right");
   if (editing) {
@@ -1832,6 +1974,123 @@ function taskEl(t) {
 
   el.append(cb, mid, right);
   return el;
+}
+
+/* ---------- Parts on a task ---------- */
+function partLink(pt) {
+  const n = document.createElement(pt.link ? "a" : "span");
+  n.className = "pt-name";
+  n.textContent = `${pt.qty > 1 ? pt.qty + " × " : ""}${pt.name || "Unnamed part"}`;
+  if (pt.link) { n.href = pt.link; n.target = "_blank"; n.rel = "noopener"; }
+  return n;
+}
+
+function partsEl(t) {
+  const box = div("parts");
+  if (!editing) {
+    t.parts.forEach(pt => {
+      const r = div("pt-row");
+      r.append(Object.assign(document.createElement("span"), { className: "pt pt-" + (pt.status || "need"), textContent: PART_LABEL[pt.status || "need"] }), partLink(pt));
+      box.append(r);
+    });
+    return box;
+  }
+  if (t.parts.length) box.append(div("pt-head", "Parts"));
+  t.parts.forEach(pt => {
+    const r = div("pt-edit");
+    const name = document.createElement("input"); name.type = "text"; name.value = pt.name || ""; name.placeholder = "Part name";
+    name.setAttribute("aria-label", "Part name"); name.className = "pt-in-name";
+    name.oninput = () => { pt.name = name.value; markDirty(); };
+    const qty = document.createElement("input"); qty.type = "number"; qty.min = "1"; qty.value = pt.qty || 1;
+    qty.setAttribute("aria-label", "Quantity"); qty.className = "pt-in-qty";
+    qty.oninput = () => { pt.qty = Math.max(1, parseInt(qty.value) || 1); markDirty(); };
+    const sel = document.createElement("select"); sel.setAttribute("aria-label", "Part status");
+    PART_ST.forEach(([v, l]) => sel.add(new Option(l, v, false, v === (pt.status || "need"))));
+    sel.onchange = () => { pt.status = sel.value; markDirty(); };
+    const link = document.createElement("input"); link.type = "url"; link.value = pt.link || ""; link.placeholder = "Link (optional)";
+    link.setAttribute("aria-label", "Link"); link.className = "pt-in-link";
+    link.oninput = () => { pt.link = link.value.trim(); markDirty(); };
+    const del = document.createElement("button"); del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", "Remove part");
+    del.onclick = () => { t.parts.splice(t.parts.indexOf(pt), 1); markDirty(); render(); };
+    r.append(name, qty, sel, link, del);
+    box.append(r);
+  });
+  const add = document.createElement("button"); add.className = "pt-add"; add.textContent = "Add part";
+  add.onclick = () => {
+    t.parts.push({ id: newId(), name: "", qty: 1, status: "need", link: "" });
+    markDirty(); render();
+    const rows = document.querySelectorAll(`[data-id="${CSS.escape(t.id)}"] .pt-in-name`);
+    rows.length && rows[rows.length - 1].focus();
+  };
+  box.append(add);
+  return box;
+}
+
+/* ---------- Orders: every part on every open task, for Inventory & Logistics ---------- */
+function allParts() {
+  const out = [];
+  data.tasks.filter(t => !t.done).forEach(t => (t.parts || []).forEach(pt => out.push({ pt, t })));
+  return out;
+}
+
+function ordersEl() {
+  const box = div("orders");
+  const items = allParts();
+  const by = st => items.filter(x => (x.pt.status || "need") === st);
+  const need = by("need"), ord = by("ordered"), arr = by("arrived");
+  const head = div("orders-head");
+  head.append(Object.assign(document.createElement("h3"), { className: "sec-title", textContent: "Orders" }));
+  if (need.length) {
+    const copy = document.createElement("button"); copy.className = "tbtn small"; copy.textContent = "Copy to-order list";
+    copy.onclick = async () => {
+      const txt = need.map(({ pt, t }) => `${pt.qty || 1} × ${pt.name || "Unnamed part"}${pt.link ? " " + pt.link : ""} (for ${t.title}, ${teamName(t.team)})`).join("\n");
+      try { await navigator.clipboard.writeText(txt); setStatus(`Copied ${need.length} part${need.length === 1 ? "" : "s"} to the clipboard.`, "ok"); }
+      catch { setStatus("Couldn't copy. Select the list and copy it by hand.", "err"); }
+    };
+    head.append(copy);
+  }
+  box.append(head);
+  if (!items.length) { box.append(div("muted", "No parts listed on any open task. Parts added to tasks on any subteam page show up here.")); return box; }
+
+  const group = (label, rows, open) => {
+    const d = document.createElement("details"); d.open = open;
+    const sm = document.createElement("summary"); sm.textContent = `${label} (${rows.length})`;
+    d.append(sm);
+    if (!rows.length) d.append(div("muted small", "None."));
+    rows.forEach(({ pt, t }) => {
+      const r = div("ord-row");
+      const what = div("ord-what"); what.append(partLink(pt));
+      const forT = document.createElement("a"); forT.className = "ord-for"; forT.href = "#" + encodeURIComponent(t.team);
+      forT.textContent = `${t.title} (${teamName(t.team)})`;
+      r.append(what, forT);
+      if (editing) {
+        const sel = document.createElement("select"); sel.setAttribute("aria-label", "Part status");
+        PART_ST.forEach(([v, l]) => sel.add(new Option(l, v, false, v === (pt.status || "need"))));
+        sel.onchange = () => { pt.status = sel.value; markDirty(); render(); };
+        r.append(sel);
+      }
+      d.append(r);
+    });
+    return d;
+  };
+  box.append(group("To order", need, true), group("Ordered, not arrived", ord, true), group("Arrived", arr, false));
+  return box;
+}
+
+/* ---------- Other subteams waiting on this one ---------- */
+function waitingEl(team) {
+  const w = data.tasks.filter(t => !t.done && stOf(t) === "blocked" && t.blockedBy === team.id);
+  if (!w.length) return null;
+  const box = div("waiting");
+  box.append(Object.assign(document.createElement("h3"), { className: "sec-title", textContent: `Waiting on ${team.name} (${w.length})` }));
+  sortTasks(w).forEach(t => {
+    const r = div("wait-row");
+    const a = document.createElement("a"); a.href = "#" + encodeURIComponent(t.team); a.textContent = t.title;
+    r.append(Object.assign(document.createElement("span"), { className: "tag", textContent: teamName(t.team) }), a);
+    if (t.blockedNote) r.append(Object.assign(document.createElement("span"), { className: "muted", textContent: t.blockedNote }));
+    box.append(r);
+  });
+  return box;
 }
 
 function div(cls, text) { const d = document.createElement("div"); d.className = cls; if (text != null) d.textContent = text; return d; }
@@ -1876,7 +2135,7 @@ function addTask(teamId) {
   data.tasks.push({
     id, team: team.id, title: "New task", owner: "",
     subsystem: cats.includes("Other") ? "Other" : (cats[0] || ""),
-    priority: "High", due: "", done: false, notes: ""
+    priority: "High", due: "", done: false, status: "todo", notes: "", parts: []
   });
   markDirty(); render(id);
 }
@@ -1896,7 +2155,7 @@ function setMenu(open) {
 $("menuBtn").onclick = () => setMenu(!$("side").classList.contains("open"));
 $("scrim").onclick = () => setMenu(false);
 document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
-window.addEventListener("hashchange", () => { setMenu(false); render(); window.scrollTo(0, 0); });
+window.addEventListener("hashchange", () => { setMenu(false); statusFilter = "all"; render(); window.scrollTo(0, 0); });
 $("hideDone").onchange = e => {
   hideDone = e.target.checked;
   try { localStorage.setItem(HIDE_KEY, hideDone ? "1" : "0"); } catch {}
