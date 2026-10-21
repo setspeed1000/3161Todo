@@ -262,9 +262,12 @@
     {
       "date": "2026-10-29",
       "note": "",
-      "agenda": "- CAD and Design Workshop",
+      "agenda": "October 29th Meeting Agenda:\n- 2:45 - 8:00 PM (Late meeting)\n- STEMly on Saturday (31st)\n- Make sure robot is ready\n- CAD and Design Workshop\n-",
       "active": [
-        "design"
+        "mechanical",
+        "design",
+        "programming",
+        "electrical"
       ]
     },
     {
@@ -289,6 +292,48 @@
     {
       "date": "2026-11-05",
       "note": "Parent Information Night",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-11-09",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-11-12",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-11-16",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-11-19",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-11-23",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-11-26",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-11-30",
+      "note": "",
       "agenda": "",
       "active": []
     }
@@ -321,5 +366,5 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T13:26:05.604Z"
+  "updated": "2026-10-21T13:41:19.788Z"
 }
