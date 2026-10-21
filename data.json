@@ -241,6 +241,21 @@
       "parts": [],
       "needed": 2,
       "filled": 2
+    },
+    {
+      "id": "c351f00c-dfd3-4614-82ed-9d624184302c",
+      "team": "business",
+      "title": "REV Sponsorship",
+      "owner": "DB, JK",
+      "subsystem": "Sponsorship",
+      "priority": "High",
+      "due": "2026-11-03",
+      "done": false,
+      "status": "doing",
+      "notes": "",
+      "parts": [],
+      "needed": 2,
+      "filled": 2
     }
   ],
   "meetings": [
@@ -408,7 +423,7 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T14:59:18.747Z",
+  "updated": "2026-10-21T15:00:02.078Z",
   "events": [],
   "checklists": [
     {
