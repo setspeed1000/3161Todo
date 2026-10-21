@@ -277,7 +277,7 @@
       "owner": "",
       "subsystem": "Video",
       "priority": "High",
-      "due": "2026-10-21",
+      "due": "",
       "done": false,
       "status": "todo",
       "notes": "",
@@ -294,8 +294,8 @@
       "active": [
         "mechanical",
         "programming",
-        "electrical",
-        "business"
+        "business",
+        "media"
       ]
     },
     {
@@ -599,5 +599,5 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T16:48:14.880Z"
+  "updated": "2026-10-21T16:49:23.470Z"
 }
