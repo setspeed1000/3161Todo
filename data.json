@@ -150,7 +150,9 @@
       "done": false,
       "status": "todo",
       "notes": "",
-      "parts": []
+      "parts": [],
+      "needed": 4,
+      "filled": 0
     },
     {
       "id": "634c12f5-be0d-477c-a056-5dd1a946f515",
@@ -308,5 +310,5 @@
       "title": "Complete STIMS"
     }
   ],
-  "updated": "2026-10-21T13:10:50.439Z"
+  "updated": "2026-10-21T13:11:28.587Z"
 }
