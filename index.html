@@ -262,7 +262,7 @@
   .stat span { color: var(--muted); font-size: 14px; }
   .stat.bad b { color: var(--red); }
 
-  .home-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; margin-bottom: 34px; }
+  .home-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; margin-bottom: 34px; align-items: start; }
   .home-side { display: grid; gap: 14px; align-content: start; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px; color: var(--ink);
     text-decoration: none; display: block; }
@@ -526,8 +526,8 @@
   .wsbox.lg .ws-notes { display: block; font-size: 13px; font-weight: 500; opacity: .85; margin-top: 6px; white-space: pre-line; }
   .boxes.ws-row { margin-bottom: 10px; }
   .next-boxes .wsbox { font-size: 13px; padding: 4px 9px; }
-  .sday.wk { box-shadow: inset 0 -3px 0 var(--ink); }
-  .sday.today.wk { box-shadow: inset 0 -3px 0 var(--yellow); }
+  .sday.wsd { box-shadow: inset 0 -3px 0 var(--ink); }
+  .sday.today.wsd { box-shadow: inset 0 -3px 0 var(--yellow); }
   .workshops { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--ink); border-radius: 4px; padding: 14px 16px; margin-bottom: 16px; display: grid; gap: 6px; }
   .workshops .sec-title { margin-bottom: 4px; }
   .ws-row { display: grid; grid-template-columns: 9ch minmax(0, 1fr) auto auto; gap: 4px 12px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line); }
@@ -549,6 +549,40 @@
     .ws-m { grid-column: 1 / -1; flex-wrap: wrap; }
     .ws-n { grid-column: 1 / -1; }
   }
+
+  /* Events and countdown */
+  .evbox { display: block; background: var(--yellow); color: var(--yellow-ink); text-decoration: none; font-size: 11.5px; font-weight: 800;
+    line-height: 1.3; padding: 2px 6px; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .evbox:hover { filter: brightness(1.08); }
+  .day.has-ev { border-color: var(--yellow); }
+  .ev-banner { display: grid; gap: 2px; background: var(--yellow); color: var(--yellow-ink); border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; }
+  .ev-banner small { font-size: 12px; font-weight: 700; opacity: .75; }
+  .ev-banner strong { font: 700 26px/1.05 "Barlow Condensed", sans-serif; }
+  .ev-banner span { font-size: 14px; font-weight: 500; }
+  .evcard { border-top: 5px solid var(--yellow); }
+  .ev-row { display: flex; align-items: baseline; gap: 8px; }
+  .ev-n { font: 700 64px/.9 "Barlow Condensed", sans-serif; letter-spacing: -0.02em; }
+  .ev-unit { font: 600 20px/1 "Barlow Condensed", sans-serif; color: var(--muted); }
+  .ev-name { font: 700 22px/1.1 "Barlow Condensed", sans-serif; margin-top: 8px; }
+  .ev-meta { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .ev-dl { font-size: 13px; color: var(--red); font-weight: 600; margin-top: 8px; }
+  .mrow.ev { border-left: 4px solid var(--yellow); }
+  .ev-loc { padding: 4px 8px; border: 1px dashed #c9a227; border-radius: 3px; background: var(--edit); color: var(--ink); font-size: 13px; width: 12em; }
+  .form-row select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); font: inherit; }
+  .d-ev { margin-top: .35em; color: #f5b700; font: 700 1.25em/1.1 "Barlow Condensed", sans-serif; }
+
+  /* My tasks */
+  .page-head a { color: var(--ink); }
+  .mine-h { display: block; margin: 18px 0 8px; font: 700 22px/1 "Barlow Condensed", sans-serif; color: var(--ink); text-decoration: none; }
+  .mine-h:first-child { margin-top: 4px; }
+  .mine-h:hover { text-decoration: underline; }
+  .my-line { display: grid; gap: 1px; padding: 8px 0; border-top: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+  .my-line:hover .my-t { text-decoration: underline; }
+  .my-t { font-weight: 600; font-size: 14px; }
+  .my-m { font-size: 12.5px; color: var(--muted); }
+  .my-m.bad { color: var(--red); font-weight: 600; }
+  .my-more { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--ink); }
+  @media (max-width: 700px) { .ev-loc { width: 100%; } }
 
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
@@ -852,6 +886,7 @@ function normalize(d) {
   if (!Array.isArray(d.meetings)) d.meetings = [];
   if (!Array.isArray(d.deadlines)) d.deadlines = [];
   if (!Array.isArray(d.workshops)) d.workshops = [];
+  if (!Array.isArray(d.events)) d.events = [];
   const ids = d.teams.map(t => t.id);
   d.tasks.forEach(t => {
     if (!ids.includes(t.team)) t.team = ids[0];
@@ -1002,7 +1037,7 @@ function mergeList(b = [], l = [], r = [], key, st) {
   return out;
 }
 
-const LISTS = { tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id, workshops: x => x.id };
+const LISTS = { tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id, workshops: x => x.id, events: x => x.id };
 function mergeDoc(b, l, r) {
   const st = { conflicts: 0, kept: 0 };
   const out = {};
@@ -1096,6 +1131,9 @@ function describeChanges(b, a) {
   const bd = byKey(b.deadlines, x => x.id), ad = byKey(a.deadlines, x => x.id);
   ad.forEach((x, id) => { const o = bd.get(id); if (!o) out.push(`added deadline ${q(x.title)} on ${short(x.date)}`); else if (!deepEq(o, x)) out.push(`edited deadline ${q(x.title)}`); });
   bd.forEach((x, id) => { if (!ad.has(id)) out.push(`removed deadline ${q(x.title)}`); });
+  const be = byKey(b.events, x => x.id), ae = byKey(a.events, x => x.id);
+  ae.forEach((x, id) => { const o = be.get(id); if (!o) out.push(`added the event ${q(x.name)} on ${short(x.start)}`); else if (!deepEq(o, x)) out.push(`edited the event ${q(x.name)}`); });
+  be.forEach((x, id) => { if (!ae.has(id)) out.push(`removed the event ${q(x.name)}`); });
   const bw = byKey(b.workshops, x => x.id), aw = byKey(a.workshops, x => x.id);
   aw.forEach((x, id) => { const o = bw.get(id); if (!o) out.push(`scheduled the ${tn(x.team)} workshop ${q(x.title)} for ${short(x.date)}`); else if (!deepEq(o, x)) out.push(`edited the workshop ${q(x.title)}`); });
   bw.forEach((x, id) => { if (!aw.has(id)) out.push(`cancelled the workshop ${q(x.title)}`); });
@@ -1214,12 +1252,52 @@ function wsbox(w, cls = "") {
 }
 
 // Team-wide deadline: red box above the subteams on that day; links to the day view
+/* ---------- Competitions and events ---------- */
+const eventsOn = ds => (data.events || []).filter(e => e.start && e.start <= ds && ds <= (e.end || e.start));
+const eventName = id => ((data.events || []).find(e => e.id === id) || {}).name || "";
+function nextEvent() {
+  const ts = iso(today());
+  return (data.events || []).filter(e => e.start && (e.end || e.start) >= ts).sort((a, b) => a.start.localeCompare(b.start))[0];
+}
+// { n, unit, text } for a countdown, or "on now" while the event is running
+function countdown(e) {
+  const t0 = today(), s = parseDate(e.start), end = parseDate(e.end || e.start);
+  const days = Math.round((s - t0) / 86400000);
+  if (days > 0) return { n: days, unit: days === 1 ? "day" : "days", text: days === 1 ? "Tomorrow" : `In ${days} days` };
+  const total = Math.round((end - s) / 86400000) + 1, day = Math.round((t0 - s) / 86400000) + 1;
+  return { n: "Now", unit: total > 1 ? `day ${day} of ${total}` : "today", text: total > 1 ? `Day ${day} of ${total}` : "Today" };
+}
+function eventDates(e) {
+  const o = { weekday: "short", month: "short", day: "numeric" };
+  return e.end && e.end !== e.start ? `${niceDate(e.start, o)} to ${niceDate(e.end, o)}` : niceDate(e.start, o);
+}
+function evbox(e, cls = "") {
+  const a = document.createElement("a");
+  a.className = "evbox " + cls;
+  a.href = calHref("day", e.start);
+  a.textContent = e.name || "Event";
+  a.title = `${e.name || "Event"}${e.location ? `, ${e.location}` : ""}`;
+  a.onclick = ev => ev.stopPropagation();
+  return a;
+}
+
+/* ---------- My tasks: tasks whose owner matches the name saved on this device ---------- */
+function ownerMatches(owner, name) {
+  if (!owner || !name) return false;
+  const n = name.trim().toLowerCase(), first = n.split(/\s+/)[0];
+  return owner.split(/\s*(?:,|&|\/|\+|\band\b)\s*/i).some(tok => {
+    const t = tok.trim().toLowerCase();
+    return t && (t === n || t === first || t.split(/\s+/)[0] === first);
+  });
+}
+const myTasks = () => data.tasks.filter(t => ownerMatches(t.owner, myName()));
+
 function dlbox(d, cls = "") {
   const a = document.createElement("a");
   a.className = "dlbox " + cls;
   a.href = calHref("day", d.date);
   a.textContent = d.title || "Deadline";
-  a.title = "Team deadline: " + (d.title || "");
+  a.title = "Team deadline: " + (d.title || "") + (d.event && eventName(d.event) ? ` (${eventName(d.event)})` : "");
   a.onclick = e => e.stopPropagation();
   return a;
 }
@@ -1231,6 +1309,7 @@ function currentPage() {
   if (id.split("/")[0] === "calendar") return "calendar";
   if (id === "captain") return editing ? "captain" : "calendar";
   if (id === "settings") return "settings";
+  if (id === "mine") return "mine";
   if (id === "history") return "history";
   if (id === "display") return "display";
   if (data.teams.some(t => t.id === id)) return null;
@@ -1279,6 +1358,7 @@ function render(focusId) {
   const nav = $("nav");
   nav.innerHTML = "";
   nav.append(navLink("#home", "Home", "", page === "home"));
+  nav.append(navLink("#mine", "My tasks", myName() ? myTasks().filter(t => !t.done).length : "", page === "mine"));
   nav.append(navLink("#calendar", "Calendar", "", page === "calendar"));
   nav.append(navLink("#display", "Shop display", "", false));
   if (editing) nav.append(navLink("#captain", "Captain stuff", "", page === "captain", "hidden-tab"));
@@ -1294,7 +1374,7 @@ function render(focusId) {
   const allOpen = data.tasks.filter(t => !t.done).length;
   $("overall").textContent = `${allOpen} open across all subteams`;
 
-  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : page === "history" ? "History" : team.name;
+  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : page === "mine" ? "My tasks" : page === "history" ? "History" : team.name;
   $("mtopTitle").textContent = label;
   document.title = `${label} · ${data.title || "Tasks"}`;
   $("tools").hidden = !!page;
@@ -1303,6 +1383,7 @@ function render(focusId) {
   document.body.classList.toggle("on-home", page === "home");
   if (page === "home") return renderHome();
   if (page === "settings") return renderSettings();
+  if (page === "mine") return renderMine();
   if (page === "history") return renderHistory();
   if (page === "calendar") return renderCalendar();
   if (page === "captain") return renderCaptain();
@@ -1653,6 +1734,8 @@ function renderDisplay() {
   const left = el("div", "d-brand");
   left.append(el("div", "d-team", data.title || "Team 3161"),
     el("div", "d-date", now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })));
+  const nev = nextEvent();
+  if (nev) { const cd = countdown(nev); left.append(el("div", "d-ev", `${nev.name}: ${cd.n === "Now" ? (cd.unit === "today" ? "today" : cd.unit) : `${cd.n} ${cd.unit}`}`)); }
   const clock = el("div", "d-clock"); clock.id = "dClock";
   clock.textContent = now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   const ctr = el("div", "d-ctrl");
@@ -1757,6 +1840,55 @@ document.addEventListener("mousemove", () => {
   idleTimer = setTimeout(() => document.body.classList.add("idle"), 3000);
 });
 
+function nameAsk(box, after) {
+  box.append(div("muted", "Enter your name as it appears in the Owner field on tasks. It's saved on this device only."));
+  const r = div("form-row"); r.style.marginTop = "10px";
+  r.innerHTML = `<label>Your name<input type="text" class="mn-in" autocomplete="name"></label><button class="tbtn go mn-go">Show my tasks</button>`;
+  const go = () => { const v = r.querySelector(".mn-in").value.trim(); if (v) { setMyName(v); after ? after() : render(); } };
+  r.querySelector(".mn-go").onclick = go;
+  r.querySelector(".mn-in").onkeydown = e => { if (e.key === "Enter") go(); };
+  box.append(r);
+}
+
+function renderMine() {
+  const name = myName();
+  const head = div("page-head");
+  const h2 = document.createElement("h2"); h2.className = "page-title"; h2.textContent = "My tasks";
+  head.append(h2);
+  $("pageHead").replaceChildren(head);
+  const list = $("list"); list.innerHTML = "";
+  if (!name) { const b = div("detail"); nameAsk(b); list.append(b); return; }
+
+  const mine = myTasks(), open = sortTasks(mine.filter(t => !t.done)), done = sortTasks(mine.filter(t => t.done));
+  const ts = iso(today());
+  const sub = div("muted", `Tasks with ${name} as the owner, across every subteam. `);
+  const change = document.createElement("a"); change.href = "#settings"; change.textContent = "Change name";
+  sub.append(change); sub.style.marginTop = "8px";
+  head.append(sub);
+  const stats = div("page-meta");
+  const od = open.filter(t => t.due && t.due < ts).length, wk = open.filter(t => t.due && t.due >= ts && t.due <= iso(addDays(today(), 7))).length;
+  stats.innerHTML = `<span><b></b> open</span><span></span>`;
+  stats.querySelector("b").textContent = open.length;
+  stats.lastChild.textContent = [od ? `${od} overdue` : "", wk ? `${wk} due this week` : ""].filter(Boolean).join(", ") || (open.length ? "Nothing due this week" : "");
+  head.append(stats);
+
+  if (!mine.length) { list.append(div("empty", `No tasks have ${name} as the owner yet.`)); return; }
+  data.teams.forEach(tm => {
+    const ts2 = open.filter(t => t.team === tm.id);
+    if (!ts2.length) return;
+    const h = document.createElement("a"); h.className = "mine-h"; h.href = "#" + encodeURIComponent(tm.id); h.textContent = tm.name;
+    list.append(h);
+    const tl = div("team-list");
+    ts2.forEach(t => tl.append(taskEl(t)));
+    list.append(tl);
+  });
+  if (!open.length) list.append(div("empty", "Nothing open. Nice."));
+  if (done.length && !hideDone) {
+    list.append(div("donehead", `Done (${done.length})`));
+    const tl = div("team-list"); done.forEach(t => tl.append(taskEl(t))); list.append(tl);
+  }
+}
+
 /* ---------- Home: the landing page ---------- */
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
@@ -1817,8 +1949,40 @@ function renderHome() {
   }
   grid.append(card);
 
-  // Right column: deadlines and this week
+  // Right column: next event, your tasks, deadlines, this week
   const side = el("div", "home-side");
+
+  const ev = nextEvent();
+  if (ev) {
+    const cd = countdown(ev);
+    const ec = el("a", "card evcard"); ec.href = calHref("day", ev.start);
+    ec.append(el("p", "card-label", "Next event"));
+    const row = el("div", "ev-row");
+    row.append(el("span", "ev-n", cd.n), el("span", "ev-unit", cd.unit));
+    ec.append(row, el("div", "ev-name", ev.name || "Event"), el("div", "ev-meta", [eventDates(ev), ev.location].filter(Boolean).join(", ")));
+    const tied = data.deadlines.filter(d => d.event === ev.id && d.date >= ts).length;
+    if (tied) ec.append(el("div", "ev-dl", `${tied} deadline${tied === 1 ? "" : "s"} before it`));
+    side.append(ec);
+  }
+
+  const yc = el("div", "card");
+  const yl = el("a", "card-label link", "Your tasks"); yl.href = "#mine";
+  yc.append(yl);
+  if (!myName()) {
+    const a = el("a", "muted", "Add your name to see your tasks"); a.href = "#mine"; yc.append(a);
+  } else {
+    const mine = sortTasks(myTasks().filter(t => !t.done));
+    if (!mine.length) yc.append(el("p", "muted", "Nothing assigned to you."));
+    mine.slice(0, 4).forEach(t => {
+      const a = el("a", "my-line"); a.href = "#" + encodeURIComponent(t.team);
+      a.onclick = () => { flashId = t.id; };
+      const due = dueInfo(t);
+      a.append(el("span", "my-t", t.title), el("span", "my-m" + (due.cls === "over" ? " bad" : ""), `${teamName(t.team)}${t.due ? `, ${due.text}` : ""}`));
+      yc.append(a);
+    });
+    if (mine.length > 4) { const m = el("a", "my-more", `See all ${mine.length}`); m.href = "#mine"; yc.append(m); }
+  }
+  side.append(yc);
 
   const dc = el("div", "card");
   dc.append(el("p", "card-label", "Team deadlines"));
@@ -1828,7 +1992,7 @@ function renderHome() {
     const a = el("a", "dl-line"); a.href = calHref("day", d.date);
     const days = Math.round((parseDate(d.date) - t0) / 86400000);
     a.append(el("span", "dl-when", days === 0 ? "Today" : days === 1 ? "Tomorrow" : days < 7 ? `${days} days` : niceDate(d.date, { month: "short", day: "numeric" })),
-      el("span", "dl-what", d.title));
+      el("span", "dl-what", d.title + (d.event && eventName(d.event) ? ` (${eventName(d.event)})` : "")));
     dc.append(a);
   });
   side.append(dc);
@@ -1840,7 +2004,7 @@ function renderHome() {
   const ws = addDays(t0, -t0.getDay());
   for (let i = 0; i < 7; i++) {
     const d = addDays(ws, i), ds = iso(d), m = meetingOn(ds), dl = deadlinesOn(ds).length, wk = workshopsOn(ds).length;
-    const c = el("a", "sday" + (ds === ts ? " today" : "") + (m ? " meet" : "") + (dl ? " dl" : "") + (wk ? " wk" : ""));
+    const c = el("a", "sday" + (ds === ts ? " today" : "") + (m ? " meet" : "") + (dl ? " dl" : "") + (wk ? " wsd" : ""));
     c.href = calHref("day", ds);
     c.title = d.toDateString() + (m ? ", meeting" : "") + (wk ? `, ${wk} workshop${wk === 1 ? "" : "s"}` : "") + (dl ? ", deadline" : "");
     c.append(el("span", "sd-dow", WEEKDAYS[d.getDay()][0]), el("span", "sd-num", d.getDate()));
@@ -1972,6 +2136,8 @@ function monthView(D, sel, t0) {
     cell.onclick = () => goCal("week", ds);
     cell.onkeydown = e => { if (e.key === "Enter") goCal("week", ds); };
     cell.append(div("num", d.getDate()));
+    const evs = eventsOn(ds);
+    if (evs.length) { const eb = div("boxes txt"); evs.forEach(e => eb.append(evbox(e))); cell.append(eb); cell.classList.add("has-ev"); }
     const wks = workshopsOn(ds);
     if (wks.length) { const wb = div("boxes txt"); wks.slice(0, 2).forEach(w => wb.append(wsbox(w))); if (wks.length > 2) wb.append(Object.assign(document.createElement("span"), { className: "muted small", textContent: `+${wks.length - 2} workshops` })); cell.append(wb); }
     const dls = deadlinesOn(ds);
@@ -2007,6 +2173,8 @@ function weekView(start, sel, t0) {
     const hd = div("wk-head");
     hd.append(div("wk-dow", WEEKDAYS[d.getDay()]), div("wk-num", d.getDate()));
     col.append(hd);
+    const evs = eventsOn(ds);
+    if (evs.length) { const eb = div("boxes"); evs.forEach(e => eb.append(evbox(e))); col.append(eb); }
     const wks = workshopsOn(ds);
     if (wks.length) { const wb = div("boxes"); wks.forEach(w => { const b = wsbox(w); b.textContent = `${w.title || "Workshop"}${w.time ? `, ${w.time}` : ""}`; b.append(Object.assign(document.createElement("small"), { textContent: teamName(w.team) })); wb.append(b); }); col.append(wb); }
     const dls = deadlinesOn(ds);
@@ -2041,6 +2209,16 @@ function dayView(ds, t0) {
   const m = meetingOn(ds);
   const act = activeOf(m);
 
+  eventsOn(ds).forEach(e => {
+    const b = div("ev-banner");
+    const total = Math.round((parseDate(e.end || e.start) - parseDate(e.start)) / 86400000) + 1;
+    const day = Math.round((parseDate(ds) - parseDate(e.start)) / 86400000) + 1;
+    b.append(Object.assign(document.createElement("small"), { textContent: total > 1 ? `Event, day ${day} of ${total}` : "Event" }),
+      Object.assign(document.createElement("strong"), { textContent: e.name || "Event" }));
+    if (e.location) b.append(Object.assign(document.createElement("span"), { textContent: e.location }));
+    box.append(b);
+  });
+
   const wks = workshopsOn(ds);
   if (wks.length) {
     const wb = div("boxes lg ws-row");
@@ -2051,7 +2229,7 @@ function dayView(ds, t0) {
   const dls = deadlinesOn(ds);
   if (dls.length) {
     const db = div("boxes lg dl-row");
-    dls.forEach(d => { const a = dlbox(d, "lg"); const sm = document.createElement("small"); sm.textContent = "Team deadline"; a.prepend(sm); db.append(a); });
+    dls.forEach(d => { const a = dlbox(d, "lg"); const sm = document.createElement("small"); sm.textContent = d.event && eventName(d.event) ? `Team deadline for ${eventName(d.event)}` : "Team deadline"; a.prepend(sm); db.append(a); });
     box.append(db);
   }
 
@@ -2161,11 +2339,45 @@ function renderCaptain() {
   const t = iso(today());
 
   // Team-wide deadlines
+  // Competitions and events
+  const esec = section("Competitions and events");
+  const er = div("form-row");
+  er.innerHTML = `<label class="grow">Event<input type="text" id="eName" placeholder="e.g. Humber District Event"></label>
+    <label>Starts<input type="date" id="eStart"></label>
+    <label>Ends<input type="date" id="eEnd"></label>
+    <label>Where<input type="text" id="eLoc" placeholder="e.g. Humber Polytechnic"></label>
+    <button class="tbtn go" id="eAdd">Add event</button>`;
+  esec.append(er);
+  const el2 = div("mlist");
+  const upE = data.events.filter(e => (e.end || e.start) >= t).sort((a, b) => a.start.localeCompare(b.start));
+  if (!upE.length) el2.append(div("muted", "No upcoming events."));
+  upE.forEach(e => {
+    const r = div("mrow ev");
+    const name = div("note-cell", e.name);
+    makeEditable(name, v => e.name = v);
+    const loc = document.createElement("input"); loc.type = "text"; loc.value = e.location || ""; loc.placeholder = "Where"; loc.className = "ev-loc";
+    loc.oninput = () => { e.location = loc.value.trim(); markDirty(); };
+    const del = document.createElement("button");
+    del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", "Remove event");
+    del.onclick = () => {
+      const tied = data.deadlines.filter(d => d.event === e.id);
+      if (!confirm(`Remove ${e.name}?${tied.length ? ` Its ${tied.length} deadline${tied.length === 1 ? "" : "s"} stay, just no longer tied to it.` : ""}`)) return;
+      tied.forEach(d => delete d.event);
+      data.events.splice(data.events.indexOf(e), 1); markDirty(); render();
+    };
+    const cd = countdown(e);
+    r.append(div("d", eventDates(e)), name, loc, div("c", cd.text), del);
+    el2.append(r);
+  });
+  esec.append(el2);
+
   const dsec = section("Team deadlines");
   const dr = div("form-row");
   dr.innerHTML = `<label>Date<input type="date" id="dDate"></label>
     <label class="grow">Deadline<input type="text" id="dTitle" placeholder="e.g. Robot bagged and tagged"></label>
+    <label>For event (optional)<select id="dEvent"><option value="">None</option></select></label>
     <button class="tbtn go" id="dAdd">Add deadline</button>`;
+  upE.forEach(e => dr.querySelector("#dEvent").add(new Option(e.name, e.id)));
   dsec.append(dr);
   const dl = div("mlist");
   const upcomingD = data.deadlines.filter(d => d.date >= t).sort((a, b) => a.date.localeCompare(b.date));
@@ -2177,7 +2389,7 @@ function renderCaptain() {
     const del = document.createElement("button");
     del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", "Remove deadline");
     del.onclick = () => { data.deadlines.splice(data.deadlines.indexOf(d), 1); markDirty(); render(); };
-    r.append(div("d", niceDate(d.date, { weekday: "short", month: "short", day: "numeric" })), title, div("c", ""), del);
+    r.append(div("d", niceDate(d.date, { weekday: "short", month: "short", day: "numeric" })), title, div("c", d.event ? eventName(d.event) : ""), del);
     dl.append(r);
   });
   dsec.append(dl);
@@ -2218,11 +2430,19 @@ function renderCaptain() {
   upcoming.forEach(m => ml.append(meetingRow(m)));
   usec.append(ml);
 
-  list.append(dsec, msec, rsec, usec);
+  list.append(esec, dsec, msec, rsec, usec);
+  $("eAdd").onclick = () => {
+    const name = $("eName").value.trim(), start = $("eStart").value, end = $("eEnd").value;
+    if (!name || !start) return setStatus("Give the event a name and a start date.", "err");
+    if (end && end < start) return setStatus("The end date is before the start date.", "err");
+    data.events.push({ id: newId(), name, start, end: end && end !== start ? end : "", location: $("eLoc").value.trim() });
+    markDirty(); render(); setStatus(`Added ${name}. Save to publish it.`);
+  };
   $("dAdd").onclick = () => {
     const d = $("dDate").value, title = $("dTitle").value.trim();
     if (!d || !title) return setStatus("Give the deadline a date and a name.", "err");
-    data.deadlines.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), date: d, title });
+    const ev = $("dEvent").value;
+    data.deadlines.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), date: d, title, ...(ev ? { event: ev } : {}) });
     markDirty(); render(); setStatus(`Added deadline for ${niceDate(d)}. Save to publish it.`);
   };
   $("mAdd").onclick = () => {
