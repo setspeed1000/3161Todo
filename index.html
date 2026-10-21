@@ -584,6 +584,49 @@
   .my-more { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--ink); }
   @media (max-width: 700px) { .ev-loc { width: 100%; } }
 
+  /* Checklists */
+  .ck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; align-items: start; }
+  .ck-card { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--yellow); border-radius: 4px; padding: 14px 16px; }
+  .ck-card.done { border-top-color: var(--green); }
+  .ck-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .ck-name { font: 700 22px/1.1 "Barlow Condensed", sans-serif; flex: 1 1 auto; }
+  .ck-for { font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; }
+  .ck-for:hover { color: var(--ink); text-decoration: underline; }
+  .ck-prog { display: flex; align-items: center; gap: 10px; margin: 10px 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .ck-prog .track { flex: 1; height: 6px; }
+  .ck-card.done .ck-prog .fill { background: var(--green); }
+  .ck-prog.small { margin: 0; min-width: 120px; flex: 1; }
+  .ck-items { display: grid; }
+  .ck-item { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+  .ck-item input { width: 18px; height: 18px; accent-color: var(--green); flex: none; }
+  .ck-item.on .ck-text { text-decoration: line-through; color: var(--muted); }
+  .ck-text { flex: 1; min-width: 0; }
+  .ck-by { font-size: 12px; color: var(--muted); }
+  .ck-x { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; }
+  .ck-x:hover { color: var(--red); }
+  .ck-add { width: 100%; margin-top: 8px; padding: 6px 8px; border: 1px dashed var(--line); border-radius: 3px; background: transparent; color: var(--ink); font-size: 14px; }
+  .ck-done { margin-top: 20px; }
+  .ck-done summary { cursor: pointer; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+  .ck-templates { margin-top: 28px; }
+  .tpl-row { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; padding: 10px 0; border-top: 1px solid var(--line); }
+  .tpl-btns { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .tpl-form, .tpl-edit { padding: 4px 0 12px; }
+  .tpl-edit { max-width: 560px; display: grid; gap: 4px; }
+  .tpl-edit textarea { font-size: 14px; }
+  .tpl-edit .tbtn { justify-self: start; }
+  .tpl-new { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; }
+  .ev-ck, .day-ck-row { display: flex; gap: 12px; align-items: center; font-size: 13px; font-weight: 600; margin-top: 8px; color: var(--ink); text-decoration: none; }
+  .ev-ck > span:first-child, .day-ck-row > span:first-child { min-width: 0; flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .day-ck { display: grid; gap: 2px; margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); }
+  .day-ck-row { margin-top: 0; padding: 4px 0; }
+
+  /* Workshop spots */
+  .ws-slots { grid-column: 2 / -1; margin-top: 2px; }
+  .wsbox.ws-full { border-left-color: var(--red); }
+  .ws-spots { display: block; font-size: 12px; font-weight: 700; margin-top: 4px; color: var(--yellow); }
+  .ws-spots.full { color: #ef6461; }
+  @media (max-width: 700px) { .ws-slots { grid-column: 1 / -1; } .ck-grid { grid-template-columns: 1fr; } }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -759,6 +802,23 @@ const DEFAULT_TEAMS = [
 // their workshops still show
 const inCal = id => (data.teams.find(t => t.id === id) || {}).calendar !== false;
 const PRIORITIES = ["High", "Med", "Low"];
+// Starter checklist templates (fixed ids so every device starts from the same ones; edit or delete freely)
+const STARTER_CHECKLISTS = [
+  { id: "tpl-pit", name: "Pit packing list", items: [
+    "Batteries, charged and numbered", "Battery chargers and power bar", "Extension cords", "Toolbox: hex keys, wrenches, screwdrivers",
+    "Drill, driver and bits", "Zip ties, electrical tape, Velcro", "Spare parts bin", "Spare bumper covers in both colours",
+    "Driver station laptop and charger", "Controllers", "Safety glasses for everyone", "Robot cart", "Team banner and pit display"
+  ].map((text, i) => ({ id: `pit-${i}`, text })) },
+  { id: "tpl-insp", name: "Robot inspection prep", items: [
+    "Weigh the robot without bumpers and battery", "Measure the frame perimeter and height", "Bumpers fit, numbers visible, both colours",
+    "Main breaker easy to reach", "Battery strapped down", "Radio powered and configured", "Robot signal light visible",
+    "No sharp edges or loose wires", "Robot runs enable and disable cleanly"
+  ].map((text, i) => ({ id: `insp-${i}`, text })) },
+  { id: "tpl-clean", name: "End of meeting cleanup", items: [
+    "Tools back where they belong", "Batteries on chargers", "Machines off and cleaned", "Scrap in the bins",
+    "Floor swept", "Robot powered off", "Lights off and door locked"
+  ].map((text, i) => ({ id: `clean-${i}`, text })) }
+];
 const PRI_RANK   = { High: 0, Med: 1, Low: 2 };
 const STATUSES   = [["todo", "To do"], ["doing", "In progress"], ["blocked", "Blocked"], ["done", "Done"]];
 const ST_RANK    = { doing: 0, todo: 1, blocked: 2, done: 3 };
@@ -887,6 +947,8 @@ function normalize(d) {
   if (!Array.isArray(d.deadlines)) d.deadlines = [];
   if (!Array.isArray(d.workshops)) d.workshops = [];
   if (!Array.isArray(d.events)) d.events = [];
+  if (!Array.isArray(d.checklists)) d.checklists = structuredClone(STARTER_CHECKLISTS);
+  if (!Array.isArray(d.runs)) d.runs = [];
   const ids = d.teams.map(t => t.id);
   d.tasks.forEach(t => {
     if (!ids.includes(t.team)) t.team = ids[0];
@@ -1037,7 +1099,7 @@ function mergeList(b = [], l = [], r = [], key, st) {
   return out;
 }
 
-const LISTS = { tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id, workshops: x => x.id, events: x => x.id };
+const LISTS = { tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id, workshops: x => x.id, events: x => x.id, checklists: x => x.id, runs: x => x.id };
 function mergeDoc(b, l, r) {
   const st = { conflicts: 0, kept: 0 };
   const out = {};
@@ -1134,8 +1196,28 @@ function describeChanges(b, a) {
   const be = byKey(b.events, x => x.id), ae = byKey(a.events, x => x.id);
   ae.forEach((x, id) => { const o = be.get(id); if (!o) out.push(`added the event ${q(x.name)} on ${short(x.start)}`); else if (!deepEq(o, x)) out.push(`edited the event ${q(x.name)}`); });
   be.forEach((x, id) => { if (!ae.has(id)) out.push(`removed the event ${q(x.name)}`); });
+  const bc = byKey(b.checklists, x => x.id), ac = byKey(a.checklists, x => x.id);
+  ac.forEach((x, id) => { const o = bc.get(id); if (!o) out.push(`created the checklist template ${q(x.name)}`); else if (!deepEq(o, x)) out.push(`edited the checklist template ${q(x.name)}`); });
+  bc.forEach((x, id) => { if (!ac.has(id)) out.push(`deleted the checklist template ${q(x.name)}`); });
+  const br = byKey(b.runs, x => x.id), ar = byKey(a.runs, x => x.id);
+  ar.forEach((x, id) => {
+    const o = br.get(id);
+    if (!o) return out.push(`started the checklist ${q(x.name)}${x.event && eventName(x.event) ? ` for ${eventName(x.event)}` : x.date ? ` for ${short(x.date)}` : ""}`);
+    if (deepEq(o, x)) return;
+    const oi = new Map((o.items || []).map(i => [i.id, i]));
+    const ticked = (x.items || []).filter(i => i.done && !(oi.get(i.id) || {}).done), unticked = (x.items || []).filter(i => !i.done && (oi.get(i.id) || {}).done);
+    if (ticked.length > 3) out.push(`ticked ${ticked.length} items on ${q(x.name)}`); else ticked.forEach(i => out.push(`ticked ${q(i.text)} on ${q(x.name)}`));
+    if (unticked.length > 3) out.push(`unticked ${unticked.length} items on ${q(x.name)}`); else unticked.forEach(i => out.push(`unticked ${q(i.text)} on ${q(x.name)}`));
+    if (!ticked.length && !unticked.length) out.push(`edited the checklist ${q(x.name)}`);
+    else if ((x.items || []).length && (x.items || []).every(i => i.done)) out.push(`finished the checklist ${q(x.name)}`);
+  });
+  br.forEach((x, id) => { if (!ar.has(id)) out.push(`removed the checklist ${q(x.name)}`); });
   const bw = byKey(b.workshops, x => x.id), aw = byKey(a.workshops, x => x.id);
-  aw.forEach((x, id) => { const o = bw.get(id); if (!o) out.push(`scheduled the ${tn(x.team)} workshop ${q(x.title)} for ${short(x.date)}`); else if (!deepEq(o, x)) out.push(`edited the workshop ${q(x.title)}`); });
+  aw.forEach((x, id) => { const o = bw.get(id); if (!o) out.push(`scheduled the ${tn(x.team)} workshop ${q(x.title)} for ${short(x.date)}`); else if (!deepEq(o, x)) {
+    if (x.needed && (o.filled || 0) !== (x.filled || 0) && (o.needed || 0) === x.needed) out.push((x.filled || 0) >= x.needed ? `filled every spot in the workshop ${q(x.title)}` : `${x.filled || 0} of ${x.needed} spots taken in the workshop ${q(x.title)}`);
+    else if ((o.needed || 0) !== (x.needed || 0)) out.push(x.needed ? `gave the workshop ${q(x.title)} ${x.needed} spot${x.needed === 1 ? "" : "s"}` : `removed the spot limit from the workshop ${q(x.title)}`);
+    else out.push(`edited the workshop ${q(x.title)}`);
+  } });
   bw.forEach((x, id) => { if (!aw.has(id)) out.push(`cancelled the workshop ${q(x.title)}`); });
   return out;
 }
@@ -1247,7 +1329,12 @@ function wsbox(w, cls = "") {
       Object.assign(document.createElement("span"), { className: "ws-title", textContent: w.title || "Workshop" }));
     if (w.where) a.append(Object.assign(document.createElement("small"), { className: "ws-where", textContent: w.where }));
     if (w.notes) a.append(Object.assign(document.createElement("span"), { className: "ws-notes", textContent: w.notes }));
+    if (w.needed) {
+      const f = Math.min(w.filled || 0, w.needed);
+      a.append(Object.assign(document.createElement("small"), { className: "ws-spots" + (f >= w.needed ? " full" : ""), textContent: f >= w.needed ? "Full" : `${w.needed - f} of ${w.needed} spots left` }));
+    }
   } else a.textContent = w.title || "Workshop";
+  if (w.needed && (w.filled || 0) >= w.needed) { a.classList.add("ws-full"); a.title += " (full)"; }
   return a;
 }
 
@@ -1310,6 +1397,7 @@ function currentPage() {
   if (id === "captain") return editing ? "captain" : "calendar";
   if (id === "settings") return "settings";
   if (id === "mine") return "mine";
+  if (id === "checklists") return "checklists";
   if (id === "history") return "history";
   if (id === "display") return "display";
   if (data.teams.some(t => t.id === id)) return null;
@@ -1360,6 +1448,7 @@ function render(focusId) {
   nav.append(navLink("#home", "Home", "", page === "home"));
   nav.append(navLink("#mine", "My tasks", myName() ? myTasks().filter(t => !t.done).length : "", page === "mine"));
   nav.append(navLink("#calendar", "Calendar", "", page === "calendar"));
+  nav.append(navLink("#checklists", "Checklists", data.runs.filter(r => !runDone(r)).length, page === "checklists"));
   nav.append(navLink("#display", "Shop display", "", false));
   if (editing) nav.append(navLink("#captain", "Captain stuff", "", page === "captain", "hidden-tab"));
   nav.append(div("nav-sep"));
@@ -1374,7 +1463,7 @@ function render(focusId) {
   const allOpen = data.tasks.filter(t => !t.done).length;
   $("overall").textContent = `${allOpen} open across all subteams`;
 
-  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : page === "mine" ? "My tasks" : page === "history" ? "History" : team.name;
+  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : page === "mine" ? "My tasks" : page === "checklists" ? "Checklists" : page === "history" ? "History" : team.name;
   $("mtopTitle").textContent = label;
   document.title = `${label} · ${data.title || "Tasks"}`;
   $("tools").hidden = !!page;
@@ -1384,6 +1473,7 @@ function render(focusId) {
   if (page === "home") return renderHome();
   if (page === "settings") return renderSettings();
   if (page === "mine") return renderMine();
+  if (page === "checklists") return renderChecklists();
   if (page === "history") return renderHistory();
   if (page === "calendar") return renderCalendar();
   if (page === "captain") return renderCaptain();
@@ -1771,7 +1861,11 @@ function renderDisplay() {
   const wks = workshopsOn(ts);
   if (wks.length) {
     side.append(el("div", "d-label", wks.length === 1 ? "Workshop today" : "Workshops today"));
-    wks.forEach(w => { const r = el("div", "d-ws"); r.append(el("span", "d-ws-t", w.title || "Workshop"), el("span", "d-ws-m", [teamName(w.team), w.time, w.where].filter(Boolean).join(", "))); side.append(r); });
+    wks.forEach(w => {
+      const r = el("div", "d-ws"); r.append(el("span", "d-ws-t", w.title || "Workshop"), el("span", "d-ws-m", [teamName(w.team), w.time, w.where].filter(Boolean).join(", ")));
+      if (w.needed) { const f = Math.min(w.filled || 0, w.needed); r.append(el("span", f >= w.needed ? "d-full" : "d-need", f >= w.needed ? "Full" : `${w.needed - f} spot${w.needed - f === 1 ? "" : "s"} left`)); }
+      side.append(r);
+    });
   }
   if (m && m.agenda) {
     side.append(el("div", "d-label", "Agenda"), el("div", "d-agenda", m.agenda));
@@ -1889,6 +1983,171 @@ function renderMine() {
   }
 }
 
+/* ---------- Checklists: reusable templates, started for an event or a date ---------- */
+const runDone = r => (r.items || []).length > 0 && r.items.every(i => i.done);
+const runWhen = r => (r.event && ((data.events.find(e => e.id === r.event) || {}).start)) || r.date || "9999";
+function runFor(r) {
+  if (r.event && eventName(r.event)) return eventName(r.event);
+  if (r.date) return niceDate(r.date, { weekday: "short", month: "short", day: "numeric" });
+  return "";
+}
+let openTpl = null;      // which template's Start or Edit form is open: { id, mode }
+
+function progressEl(r, small) {
+  const n = (r.items || []).length, d = (r.items || []).filter(i => i.done).length;
+  const w = div("ck-prog" + (small ? " small" : ""));
+  const tr = div("track"); const f = div("fill"); f.style.width = n ? (d / n * 100) + "%" : "0"; tr.append(f);
+  w.append(tr, Object.assign(document.createElement("span"), { textContent: `${d} of ${n}` }));
+  return w;
+}
+
+function runCard(r) {
+  const c = div("ck-card" + (runDone(r) ? " done" : ""));
+  const head = div("ck-head");
+  const name = div("ck-name", r.name);
+  makeEditable(name, v => r.name = v);
+  head.append(name);
+  const forTxt = runFor(r);
+  if (forTxt) {
+    const a = document.createElement("a"); a.className = "ck-for";
+    a.href = calHref("day", r.event ? runWhen(r) : r.date); a.textContent = forTxt;
+    head.append(a);
+  }
+  if (editing) {
+    const del = document.createElement("button"); del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", "Remove checklist");
+    del.onclick = () => { if (!confirm(`Remove the checklist ${r.name}?`)) return; data.runs.splice(data.runs.indexOf(r), 1); markDirty(); render(); };
+    head.append(del);
+  }
+  c.append(head, progressEl(r));
+  const ul = div("ck-items");
+  r.items.forEach(it => {
+    const row = div("ck-item" + (it.done ? " on" : ""));
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = !!it.done; cb.disabled = !editing;
+    cb.setAttribute("aria-label", it.text);
+    cb.onchange = () => {
+      it.done = cb.checked;
+      if (it.done) { const n = myName(); n ? it.by = n : delete it.by; } else delete it.by;
+      markDirty(); render();
+    };
+    const tx = div("ck-text", it.text);
+    makeEditable(tx, v => it.text = v);
+    row.append(cb, tx);
+    if (it.done && it.by) row.append(Object.assign(document.createElement("span"), { className: "ck-by", textContent: it.by }));
+    if (editing) {
+      const x = document.createElement("button"); x.className = "ck-x"; x.textContent = "×"; x.setAttribute("aria-label", `Remove ${it.text}`);
+      x.onclick = () => { r.items.splice(r.items.indexOf(it), 1); markDirty(); render(); };
+      row.append(x);
+    }
+    ul.append(row);
+  });
+  c.append(ul);
+  if (editing) {
+    const add = document.createElement("input"); add.type = "text"; add.className = "ck-add"; add.placeholder = "Add an item and press Enter";
+    add.onkeydown = e => { if (e.key === "Enter" && add.value.trim()) { r.items.push({ id: newId(), text: add.value.trim(), done: false }); markDirty(); render(); } };
+    c.append(add);
+  }
+  return c;
+}
+
+function renderChecklists() {
+  const head = div("page-head");
+  const h2 = document.createElement("h2"); h2.className = "page-title"; h2.textContent = "Checklists";
+  head.append(h2);
+  const active = data.runs.filter(r => !runDone(r)).sort((a, b) => runWhen(a).localeCompare(runWhen(b)));
+  const finished = data.runs.filter(runDone).sort((a, b) => runWhen(b).localeCompare(runWhen(a)));
+  const sub = div("muted", editing ? "Tick items as they're done. Your name goes next to what you tick." : "Unlock editing to tick items off.");
+  sub.style.marginTop = "8px"; head.append(sub);
+  $("pageHead").replaceChildren(head);
+  const list = $("list"); list.innerHTML = "";
+
+  if (!active.length) list.append(div("empty", editing ? "No checklists in progress. Start one from a template below." : "No checklists in progress."));
+  const grid = div("ck-grid");
+  active.forEach(r => grid.append(runCard(r)));
+  list.append(grid);
+
+  if (finished.length) {
+    const det = document.createElement("details"); det.className = "ck-done";
+    det.innerHTML = `<summary>Finished (${finished.length})</summary>`;
+    const g = div("ck-grid"); finished.forEach(r => g.append(runCard(r))); det.append(g);
+    list.append(det);
+  }
+
+  if (!editing) return;
+  const tsec = section("Templates");
+  tsec.classList.add("ck-templates");
+  tsec.append(div("muted", "Reusable lists. Start one for an event or a date to get a fresh copy to tick off."));
+  const upE = data.events.filter(e => (e.end || e.start) >= iso(today())).sort((a, b) => a.start.localeCompare(b.start));
+  data.checklists.forEach(tp => {
+    const row = div("tpl-row");
+    row.append(Object.assign(document.createElement("strong"), { textContent: tp.name }),
+      Object.assign(document.createElement("span"), { className: "muted", textContent: `${tp.items.length} item${tp.items.length === 1 ? "" : "s"}` }));
+    const btns = div("tpl-btns");
+    [["start", "Start"], ["edit", "Edit"]].forEach(([mode, label]) => {
+      const b = document.createElement("button"); b.className = "tbtn small" + (mode === "start" ? " go" : ""); b.textContent = label;
+      b.onclick = () => { openTpl = openTpl && openTpl.id === tp.id && openTpl.mode === mode ? null : { id: tp.id, mode }; render(); };
+      btns.append(b);
+    });
+    const del = document.createElement("button"); del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", `Delete template ${tp.name}`);
+    del.onclick = () => { if (!confirm(`Delete the template ${tp.name}? Checklists already started from it stay.`)) return; data.checklists.splice(data.checklists.indexOf(tp), 1); markDirty(); render(); };
+    btns.append(del);
+    row.append(btns);
+    tsec.append(row);
+
+    if (openTpl && openTpl.id === tp.id && openTpl.mode === "start") {
+      const f = div("form-row tpl-form");
+      f.innerHTML = `<label>For<select class="tpl-for"><option value="">A date</option></select></label>
+        <label class="tpl-date-l">Date<input type="date" class="tpl-date"></label>
+        <button class="tbtn go tpl-go">Start checklist</button>`;
+      const sel = f.querySelector(".tpl-for");
+      upE.forEach(e => sel.add(new Option(e.name, e.id)));
+      if (upE.length) sel.value = upE[0].id;
+      const syncDate = () => { f.querySelector(".tpl-date-l").hidden = !!sel.value; };
+      sel.onchange = syncDate; syncDate();
+      f.querySelector(".tpl-go").onclick = () => {
+        const ev = sel.value, date = f.querySelector(".tpl-date").value;
+        if (!ev && !date) return setStatus("Pick an event or a date.", "err");
+        data.runs.push({ id: newId(), template: tp.id, name: tp.name, ...(ev ? { event: ev } : { date }),
+          items: tp.items.map(i => ({ id: newId(), text: i.text, done: false })) });
+        openTpl = null; markDirty(); render();
+        setStatus(`Started ${tp.name}${ev ? ` for ${eventName(ev)}` : ""}. Save to publish it.`);
+      };
+      tsec.append(f);
+    }
+    if (openTpl && openTpl.id === tp.id && openTpl.mode === "edit") {
+      const f = div("tpl-edit");
+      f.innerHTML = `<label class="dlg-field">Name<input type="text" class="tpl-name"></label>
+        <label class="dlg-field">Items, one per line<textarea class="tpl-items" rows="8"></textarea></label>
+        <button class="tbtn go tpl-save">Update template</button>`;
+      f.querySelector(".tpl-name").value = tp.name;
+      f.querySelector(".tpl-items").value = tp.items.map(i => i.text).join("\n");
+      f.querySelector(".tpl-save").onclick = () => {
+        const name = f.querySelector(".tpl-name").value.trim();
+        const lines = f.querySelector(".tpl-items").value.split("\n").map(l => l.trim()).filter(Boolean);
+        if (!name || !lines.length) return setStatus("A template needs a name and at least one item.", "err");
+        const old = new Map(tp.items.map(i => [i.text, i.id]));
+        tp.name = name; tp.items = lines.map(text => ({ id: old.get(text) || newId(), text }));
+        openTpl = null; markDirty(); render(); setStatus(`Updated ${name}. Checklists already started keep their own items.`);
+      };
+      tsec.append(f);
+    }
+  });
+
+  const nf = div("tpl-edit tpl-new");
+  nf.innerHTML = `<h4 class="donehead">New template</h4>
+    <label class="dlg-field">Name<input type="text" class="tpl-nname" placeholder="e.g. Drive team pre-match checks"></label>
+    <label class="dlg-field">Items, one per line<textarea class="tpl-nitems" rows="6"></textarea></label>
+    <button class="tbtn go tpl-ncreate">Create template</button>`;
+  nf.querySelector(".tpl-ncreate").onclick = () => {
+    const name = nf.querySelector(".tpl-nname").value.trim();
+    const lines = nf.querySelector(".tpl-nitems").value.split("\n").map(l => l.trim()).filter(Boolean);
+    if (!name || !lines.length) return setStatus("A template needs a name and at least one item.", "err");
+    data.checklists.push({ id: newId(), name, items: lines.map(text => ({ id: newId(), text })) });
+    markDirty(); render(); setStatus(`Created ${name}. Save to publish it.`);
+  };
+  tsec.append(nf);
+  list.append(tsec);
+}
+
 /* ---------- Home: the landing page ---------- */
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
@@ -1962,6 +2221,11 @@ function renderHome() {
     ec.append(row, el("div", "ev-name", ev.name || "Event"), el("div", "ev-meta", [eventDates(ev), ev.location].filter(Boolean).join(", ")));
     const tied = data.deadlines.filter(d => d.event === ev.id && d.date >= ts).length;
     if (tied) ec.append(el("div", "ev-dl", `${tied} deadline${tied === 1 ? "" : "s"} before it`));
+    data.runs.filter(r => r.event === ev.id).forEach(r => {
+      const ln = el("div", "ev-ck");
+      ln.append(el("span", "", r.name), progressEl(r, true));
+      ec.append(ln);
+    });
     side.append(ec);
   }
 
@@ -2218,6 +2482,14 @@ function dayView(ds, t0) {
     if (e.location) b.append(Object.assign(document.createElement("span"), { textContent: e.location }));
     box.append(b);
   });
+
+  const dayEvents = eventsOn(ds).map(e => e.id);
+  const runs = data.runs.filter(r => (r.date === ds) || (r.event && dayEvents.includes(r.event)));
+  if (runs.length) {
+    const cl = div("day-ck");
+    runs.forEach(r => { const a = document.createElement("a"); a.href = "#checklists"; a.className = "day-ck-row"; a.append(Object.assign(document.createElement("span"), { textContent: r.name }), progressEl(r, true)); cl.append(a); });
+    box.append(cl);
+  }
 
   const wks = workshopsOn(ds);
   if (wks.length) {
@@ -2664,7 +2936,7 @@ function depsEditor(t) {
 }
 
 /* ---------- Members needed: one box per slot, red once every slot is filled ---------- */
-function slotsEl(t) {
+function slotsEl(t, noun) {
   const n = t.needed, f = Math.min(t.filled || 0, n), full = f >= n;
   const box = div("slots" + (full ? " full" : ""));
   const boxes = div("slot-boxes");
@@ -2681,7 +2953,9 @@ function slotsEl(t) {
   const left = n - f;
   box.append(boxes, Object.assign(document.createElement("span"), {
     className: "slot-text",
-    textContent: full ? `Full (${n} of ${n})` : `${f} of ${n} members. Needs ${left} more`
+    textContent: noun === "spots"
+      ? (full ? `Full (${n} of ${n} spots)` : `${f} of ${n} spots taken. ${left} left`)
+      : (full ? `Full (${n} of ${n})` : `${f} of ${n} members. Needs ${left} more`)
   }));
   return box;
 }
@@ -2808,9 +3082,14 @@ function workshopsEl(team) {
       tm.oninput = () => { w.time = tm.value.trim(); markDirty(); };
       const wh = document.createElement("input"); wh.type = "text"; wh.value = w.where || ""; wh.placeholder = "Where"; wh.setAttribute("aria-label", "Workshop location");
       wh.oninput = () => { w.where = wh.value.trim(); markDirty(); };
-      meta.append(tm, wh);
+      const sp = document.createElement("select"); sp.setAttribute("aria-label", "Spots"); sp.className = "need-sel";
+      sp.add(new Option("No spot limit", "0", false, !w.needed));
+      for (let i = 1; i <= 30; i++) sp.add(new Option(`${i} spot${i === 1 ? "" : "s"}`, String(i), false, w.needed === i));
+      sp.onchange = () => { const n = +sp.value; if (n) { w.needed = n; w.filled = Math.min(w.filled || 0, n); } else { delete w.needed; delete w.filled; } markDirty(); render(); };
+      meta.append(tm, wh, sp);
     }
     r.append(when, title, meta);
+    if (w.needed) { const sl = slotsEl(w, "spots"); sl.classList.add("ws-slots"); r.append(sl); }
     if (editing) {
       const del = document.createElement("button"); del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", "Cancel workshop");
       del.onclick = () => { data.workshops.splice(data.workshops.indexOf(w), 1); markDirty(); render(); };
