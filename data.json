@@ -313,13 +313,13 @@
       "id": "ae1662db-98d4-48e5-bb1f-4ae7ec70a647",
       "team": "programming",
       "title": "Tune Kicker",
-      "owner": "",
+      "owner": "Mathias",
       "subsystem": "Other",
       "priority": "High",
-      "due": "2026-10-22",
+      "due": "",
       "done": false,
       "status": "doing",
-      "notes": "",
+      "notes": "Check code, test again tomorrow",
       "parts": [],
       "plan": [
         "2026-10-21"
@@ -649,6 +649,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T19:54:16.107Z",
+  "updated": "2026-10-21T20:12:25.321Z",
   "archive": []
 }
