@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
   "subtitle": "Unlock to edit. Every save is a commit.",
-  "updated": "2026-10-21T02:02:35.655Z",
+  "updated": "2026-10-21T02:07:55.511Z",
   "teams": [
     {
       "id": "mechanical",
@@ -192,6 +192,28 @@
       "due": "2046-03-21",
       "done": false,
       "notes": ""
+    },
+    {
+      "id": "9ae5c54e-8c5e-40ae-9b25-f6d317acdc4a",
+      "team": "inventory",
+      "title": "Inventore and logisticize",
+      "owner": "",
+      "subsystem": "Other",
+      "priority": "Med",
+      "due": "2026-11-01",
+      "done": false,
+      "notes": ""
+    },
+    {
+      "id": "b311e921-3a7d-4bf7-9956-6e1b67fdefca",
+      "team": "mechanical",
+      "title": "No mech meeting for the next month",
+      "owner": "",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "2026-11-19",
+      "done": false,
+      "notes": "GTA 6 BABYYYY"
     }
   ]
 }
