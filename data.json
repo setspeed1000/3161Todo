@@ -405,15 +405,6 @@
       "notes": ""
     },
     {
-      "id": "09aea6a6-29e2-4eb0-8a37-5dd0c3998dfb",
-      "team": "captains",
-      "date": "2026-10-22",
-      "title": "STIMS workshop",
-      "time": "4",
-      "where": "Shop",
-      "notes": ""
-    },
-    {
       "id": "b2bd0585-9319-493e-8188-2afffcd3e7ea",
       "team": "scouting",
       "date": "2026-10-22",
@@ -421,9 +412,18 @@
       "time": "3:00 PM - 4:00 PM",
       "where": "Room 209",
       "notes": ""
+    },
+    {
+      "id": "5e1c4b4a-cd19-473d-b506-f4a103662d92",
+      "team": "captains",
+      "date": "2026-11-05",
+      "title": "STIMS workshop",
+      "time": "",
+      "where": "",
+      "notes": ""
     }
   ],
-  "updated": "2026-10-21T15:01:36.293Z",
+  "updated": "2026-10-21T15:07:47.944Z",
   "events": [],
   "checklists": [
     {
