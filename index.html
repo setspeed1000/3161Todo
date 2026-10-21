@@ -603,7 +603,7 @@
   <form method="dialog">
     <h2>Unlock editing</h2>
     <p id="pwHint">Your name goes on every change you save, so the team can see who did what.</p>
-    <label class="dlg-field">Your name<input id="nameInput" type="text" autocomplete="name" placeholder="e.g. Max"></label>
+    <label class="dlg-field">Your name<input id="nameInput" type="text" autocomplete="name"></label>
     <label class="dlg-field" for="tokenInput">Password</label>
     <div class="pw">
       <input id="tokenInput" type="password" autocomplete="off" placeholder="Password" aria-label="Password">
@@ -620,7 +620,7 @@
   <form method="dialog">
     <h2>Who's saving?</h2>
     <p>Your name goes on every change you save. You only need to enter it once on this device.</p>
-    <label class="dlg-field">Your name<input id="nameOnly" type="text" autocomplete="name" placeholder="e.g. Max"></label>
+    <label class="dlg-field">Your name<input id="nameOnly" type="text" autocomplete="name"></label>
     <div class="dlg-bar">
       <button value="cancel">Cancel</button>
       <button class="go" value="ok">Continue</button>
@@ -1441,7 +1441,7 @@ function renderSettings() {
   const ng = div("set-group");
   const nn = div("set-name", "Your name");
   const nsm = document.createElement("small"); nsm.textContent = "Shown on changes you save from this device."; nn.append(nsm);
-  const ni = document.createElement("input"); ni.type = "text"; ni.value = myName(); ni.placeholder = "e.g. Max"; ni.className = "name-in";
+  const ni = document.createElement("input"); ni.type = "text"; ni.value = myName(); ni.className = "name-in";
   ni.setAttribute("aria-label", "Your name");
   ni.onchange = () => { setMyName(ni.value); setStatus(ni.value.trim() ? "Name saved on this device." : "Name cleared.", "ok"); };
   ng.append(nn, ni);
