@@ -251,6 +251,9 @@
   .agenda { white-space: pre-wrap; font-size: 15px; line-height: 1.55; font-weight: 300; background: var(--bg); border-radius: 4px;
     padding: 10px 12px; max-width: 70ch; }
   .agenda:empty::before { content: attr(data-placeholder); color: var(--muted); }
+  .agenda-ta { display: block; width: 100%; color: var(--ink); font-family: inherit; border: 1px dashed #b3861b; background: var(--edit);
+    resize: vertical; overflow: hidden; min-height: 5em; }
+  .agenda-ta:focus { outline: 2px solid #b3861b; outline-offset: 1px; }
   .sec-title { margin: 0 0 10px; font: 700 22px/1.1 "Rajdhani", sans-serif; }
   .form-row .grow { flex: 1 1 220px; }
   .form-row .grow input { width: 100%; }
@@ -2728,14 +2731,17 @@ function dayView(ds, t0) {
 
     if (m.agenda || editing) {
       const ha = document.createElement("h4"); ha.textContent = "Agenda";
-      const ag = div("agenda", m.agenda || "");
-      if (editing) ag.dataset.placeholder = "Paste the agenda here";
+      let ag;
       if (editing) {
-        // Plain text only, and keep line breaks (Enter adds a line here)
-        ag.contentEditable = "plaintext-only";
-        if (ag.contentEditable !== "plaintext-only") ag.contentEditable = "true";
-        ag.oninput = () => { m.agenda = ag.innerText.replace(/\n{3,}/g, "\n\n").trim(); markDirty(); };
-      }
+        // A real text box, so Enter adds a line in every browser. It grows with the text.
+        ag = document.createElement("textarea");
+        ag.className = "agenda agenda-ta"; ag.rows = 3; ag.value = m.agenda || "";
+        ag.placeholder = "Type or paste the agenda here. Enter starts a new line.";
+        ag.setAttribute("aria-label", "Meeting agenda");
+        const grow = () => { ag.style.height = "auto"; ag.style.height = ag.scrollHeight + 2 + "px"; };
+        ag.oninput = () => { m.agenda = ag.value.replace(/\n{3,}/g, "\n\n").trim(); markDirty(); grow(); };
+        requestAnimationFrame(grow);
+      } else ag = div("agenda", m.agenda || "");
       box.append(ha, ag);
     }
 
