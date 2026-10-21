@@ -2001,7 +2001,7 @@ function renderDisplay() {
     if (next) side.append(el("div", "d-big", `Next: ${niceDate(next.date, { weekday: "short", month: "short", day: "numeric" })}`),
       ...(next.note ? [el("div", "d-sub", next.note)] : []));
   }
-  const dls = data.deadlines.filter(d => d.date >= ts).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
+  const dls = data.deadlines.filter(d => d.date >= ts && d.date <= wk).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
   if (dls.length) {
     const dl = el("div", "d-dls");
     dls.forEach(d => {
