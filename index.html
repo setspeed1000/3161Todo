@@ -95,8 +95,22 @@
   .del { border: none; background: none; color: var(--muted); font-size: 20px; line-height: 1; padding: 0 4px; cursor: pointer; }
   .del:hover { color: var(--red); }
 
-  .empty { color: var(--muted); padding: 36px 0; text-align: center; }
-  .donehead { margin: 22px 0 8px; font: 600 15px/1 "Barlow Condensed", sans-serif; color: var(--muted); }
+  .empty { color: var(--muted); padding: 14px 2px; font-size: 14px; }
+  .donehead { margin: 14px 0 6px; font: 600 15px/1 "Barlow Condensed", sans-serif; color: var(--muted); }
+
+  /* Subteam sections */
+  .team { margin-bottom: 34px; scroll-margin-top: 12px; }
+  .team-head { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: end;
+    padding-bottom: 10px; margin-bottom: 10px; border-bottom: 2px solid var(--ink); }
+  .team-name { margin: 0; font: 700 32px/1 "Barlow Condensed", sans-serif; letter-spacing: -0.005em; }
+  .team-count { font: 600 16px/1 "Barlow Condensed", sans-serif; color: var(--muted); text-align: right; white-space: nowrap; }
+  .team-count b { color: var(--ink); font-size: 22px; }
+  .leads { grid-column: 1 / -1; display: flex; gap: 4px 18px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+  .leads b { color: var(--ink); font-weight: 600; }
+  .team-list { display: grid; gap: 6px; }
+  .addrow { margin-top: 8px; border: 1px dashed var(--line); background: transparent; color: var(--muted);
+    width: 100%; padding: 9px; border-radius: 4px; cursor: pointer; text-align: left; }
+  .addrow:hover { color: var(--ink); border-color: var(--muted); }
   footer { margin-top: 28px; font-size: 12px; color: var(--muted); }
 
   dialog { border: none; border-radius: 6px; background: var(--panel); color: var(--ink);
@@ -127,7 +141,6 @@
       </div>
       <div class="bar">
         <button class="btn" id="unlockBtn">Unlock editing</button>
-        <button class="btn" id="addBtn" hidden>Add task</button>
         <button class="btn primary" id="saveBtn" hidden disabled>Save</button>
         <button class="btn" id="lockBtn" hidden>Lock</button>
       </div>
@@ -173,7 +186,17 @@ const DATA_PATH      = "data.json";
 const TOKEN_KEY      = "pages-edit-token";
 const HIDE_KEY       = "pages-edit-hide-done";
 
-const SUBSYSTEMS = ["Drivetrain", "Intake", "Shooter", "Climber", "Elevator", "Frame", "Other"];
+// Used when data.json has no "teams" yet. Edit names and categories in data.json.
+const DEFAULT_TEAMS = [
+  { id: "mechanical", name: "Mechanical", leads: [{ role: "Lead", name: "Max Girardin" }, { role: "Jr. lead", name: "Matthew Alphonso" }],
+    categories: ["Drivetrain", "Intake", "Shooter", "Climber", "Elevator", "Frame", "Field elements", "Other"] },
+  { id: "design", name: "Design", leads: [{ role: "Lead", name: "Julia Kalbfleisch" }, { role: "Co-lead", name: "Siddhesh Rajarajan" }],
+    categories: ["CAD", "Prototyping", "Drawings", "Other"] },
+  { id: "programming", name: "Programming", leads: [{ role: "Lead", name: "Mathias Turiga" }],
+    categories: ["Drive", "Autonomous", "Vision", "Subsystems", "Dashboard", "Other"] },
+  { id: "electrical", name: "Electrical", leads: [{ role: "Lead", name: "Neel Sunil" }, { role: "Co-lead", name: "Daniel Bruce" }],
+    categories: ["Wiring", "Power", "Sensors", "CAN", "Pneumatics", "Other"] }
+];
 const PRIORITIES = ["High", "Med", "Low"];
 const PRI_RANK   = { High: 0, Med: 1, Low: 2 };
 
@@ -243,9 +266,19 @@ async function load() {
     sha = null;
     setStatus("Showing the published copy. It can lag the latest save by about a minute.");
   }
+  normalize();
   dirty = false;
   render();
 }
+
+// Fill in teams and give every task a team, so older data.json files keep working.
+function normalize() {
+  if (!Array.isArray(data.teams) || !data.teams.length) data.teams = structuredClone(DEFAULT_TEAMS);
+  if (!Array.isArray(data.tasks)) data.tasks = [];
+  const ids = data.teams.map(t => t.id);
+  data.tasks.forEach(t => { if (!ids.includes(t.team)) t.team = ids[0]; });
+}
+const teamOf = t => data.teams.find(x => x.id === t.team) || data.teams[0];
 
 /* ---------- Auth ---------- */
 async function unlock() {
@@ -365,7 +398,7 @@ function render(focusId) {
   if (!data) return;
   document.body.classList.toggle("editing", editing);
   $("unlockBtn").hidden = editing;
-  $("addBtn").hidden = $("saveBtn").hidden = $("lockBtn").hidden = !editing;
+  $("saveBtn").hidden = $("lockBtn").hidden = !editing;
   $("saveBtn").disabled = !dirty;
   $("hideDone").checked = hideDone;
 
@@ -384,39 +417,27 @@ function render(focusId) {
   $("progPct").textContent = total ? Math.round(done / total * 100) + "%" : "";
   requestAnimationFrame(() => { $("progFill").style.width = total ? (done / total * 100) + "%" : "0"; });
 
-  // Filters, with open-task counts
+  // Subteam filters, with open-task counts
   const open = data.tasks.filter(t => !t.done);
-  const subs = ["All", ...SUBSYSTEMS.filter(s => data.tasks.some(t => t.subsystem === s))];
-  data.tasks.forEach(t => { if (!subs.includes(t.subsystem)) subs.push(t.subsystem); });
-  if (!subs.includes(filter)) filter = "All";
+  const views = ["All", ...data.teams.map(t => t.id)];
+  if (!views.includes(filter)) filter = "All";
   $("filters").innerHTML = "";
-  subs.forEach(s => {
-    const n = s === "All" ? open.length : open.filter(t => t.subsystem === s).length;
+  views.forEach(v => {
+    const team = data.teams.find(t => t.id === v);
+    const n = v === "All" ? open.length : open.filter(t => t.team === v).length;
     const b = document.createElement("button");
-    b.className = "chip" + (s === filter ? " on" : "");
+    b.className = "chip" + (v === filter ? " on" : "");
     b.innerHTML = `<span></span><span class="n">${n}</span>`;
-    b.firstChild.textContent = s;
-    b.setAttribute("aria-pressed", s === filter);
-    b.onclick = () => { filter = s; render(); };
+    b.firstChild.textContent = team ? team.name : "All";
+    b.setAttribute("aria-pressed", v === filter);
+    b.onclick = () => { filter = v; render(); };
     $("filters").append(b);
   });
 
-  // Tasks: open first (priority, then due date), done grouped below
+  // One section per subteam: open tasks (priority, then due date), done grouped below
   const list = $("list");
   list.innerHTML = "";
-  const inView = data.tasks.filter(t => filter === "All" || t.subsystem === filter);
-  const openTasks = sortTasks(inView.filter(t => !t.done));
-  const doneTasks = sortTasks(inView.filter(t => t.done));
-  if (!openTasks.length) {
-    list.innerHTML = `<div class="empty"></div>`;
-    list.firstChild.textContent = editing ? "Nothing open here. Add a task to get started." : "Nothing open here.";
-  }
-  openTasks.forEach(t => list.append(taskEl(t)));
-  if (doneTasks.length && !hideDone) {
-    const h = div("donehead", `Done (${doneTasks.length})`);
-    list.append(h);
-    doneTasks.forEach(t => list.append(taskEl(t)));
-  }
+  data.teams.filter(team => filter === "All" || team.id === filter).forEach(team => list.append(teamEl(team)));
 
   $("footer").textContent = data.updated ? `Last saved ${new Date(data.updated).toLocaleString()}` : "";
 
@@ -424,6 +445,47 @@ function render(focusId) {
     const el = list.querySelector(`[data-id="${CSS.escape(focusId)}"] .title`);
     if (el) { el.focus(); document.getSelection().selectAllChildren(el); }
   }
+}
+
+function teamEl(team) {
+  const sec = document.createElement("section");
+  sec.className = "team"; sec.id = "team-" + team.id;
+  const mine = data.tasks.filter(t => t.team === team.id);
+  const openTasks = sortTasks(mine.filter(t => !t.done));
+  const doneTasks = sortTasks(mine.filter(t => t.done));
+
+  const head = div("team-head");
+  const h2 = document.createElement("h2"); h2.className = "team-name"; h2.textContent = team.name;
+  makeEditable(h2, v => team.name = v);
+  const count = div("team-count");
+  count.innerHTML = `<b></b> open`; count.firstChild.textContent = openTasks.length;
+  const leads = div("leads");
+  (team.leads || []).forEach(l => {
+    const s = document.createElement("span");
+    const b = document.createElement("b"); b.textContent = l.name;
+    makeEditable(b, v => l.name = v);
+    s.append(l.role + " ", b);
+    leads.append(s);
+  });
+  head.append(h2, count, leads);
+  sec.append(head);
+
+  const tl = div("team-list");
+  if (!openTasks.length) tl.append(div("empty", "Nothing open."));
+  openTasks.forEach(t => tl.append(taskEl(t)));
+  if (doneTasks.length && !hideDone) {
+    tl.append(div("donehead", `Done (${doneTasks.length})`));
+    doneTasks.forEach(t => tl.append(taskEl(t)));
+  }
+  sec.append(tl);
+
+  if (editing) {
+    const add = document.createElement("button");
+    add.className = "addrow"; add.textContent = `Add ${team.name.toLowerCase()} task`;
+    add.onclick = () => addTask(team.id);
+    sec.append(add);
+  }
+  return sec;
 }
 
 function taskEl(t) {
@@ -442,9 +504,19 @@ function taskEl(t) {
 
   const meta = div("meta");
   if (editing) {
+    const teamSel = document.createElement("select");
+    teamSel.setAttribute("aria-label", "Subteam");
+    data.teams.forEach(x => teamSel.add(new Option(x.name, x.id, false, x.id === t.team)));
+    teamSel.onchange = () => {
+      t.team = teamSel.value;
+      const cats = teamOf(t).categories || [];
+      if (!cats.includes(t.subsystem)) t.subsystem = cats.includes("Other") ? "Other" : (cats[0] || "");
+      markDirty(); render();
+    };
     meta.append(
       field("Owner", t.owner, v => t.owner = v),
-      selectField(t.subsystem, SUBSYSTEMS, v => { t.subsystem = v; }),
+      teamSel,
+      selectField(t.subsystem, teamOf(t).categories || [], v => { t.subsystem = v; }),
       dateField(t.due, v => t.due = v)
     );
   } else {
@@ -494,8 +566,9 @@ function field(label, val, set) {
 
 function selectField(val, opts, set) {
   const sel = document.createElement("select");
-  sel.setAttribute("aria-label", "Subsystem");
-  opts.forEach(o => sel.add(new Option(o, o, false, o === val)));
+  sel.setAttribute("aria-label", "Category");
+  const all = opts.includes(val) || !val ? opts : [val, ...opts];
+  all.forEach(o => sel.add(new Option(o, o, false, o === val)));
   sel.onchange = () => { set(sel.value); markDirty(); };
   return sel;
 }
@@ -515,10 +588,13 @@ function makeEditable(el, set) {
   el.onkeydown = e => { if (e.key === "Enter" && !el.classList.contains("notes")) { e.preventDefault(); el.blur(); } };
 }
 
-function addTask() {
+function addTask(teamId) {
   const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+  const team = data.teams.find(t => t.id === teamId) || data.teams[0];
+  const cats = team.categories || [];
   data.tasks.push({
-    id, title: "New task", owner: "", subsystem: filter !== "All" ? filter : "Other",
+    id, team: team.id, title: "New task", owner: "",
+    subsystem: cats.includes("Other") ? "Other" : (cats[0] || ""),
     priority: "High", due: "", done: false, notes: ""
   });
   markDirty(); render(id);
@@ -528,7 +604,6 @@ function addTask() {
 $("unlockBtn").onclick = unlock;
 $("lockBtn").onclick = lock;
 $("saveBtn").onclick = save;
-$("addBtn").onclick = addTask;
 $("showPw").onclick = () => {
   const i = $("tokenInput"); const show = i.type === "password";
   i.type = show ? "text" : "password"; $("showPw").textContent = show ? "Hide" : "Show"; i.focus();

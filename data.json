@@ -1,10 +1,97 @@
 {
-  "title": "Design Tasks",
-  "subtitle": "Unlock with a token to edit. Every save is a commit.",
+  "title": "Team 3161 Tasks",
+  "subtitle": "Unlock to edit. Every save is a commit.",
   "updated": "2026-10-21T01:56:53.509Z",
+  "teams": [
+    {
+      "id": "mechanical",
+      "name": "Mechanical",
+      "leads": [
+        {
+          "role": "Lead",
+          "name": "Max Girardin"
+        },
+        {
+          "role": "Jr. lead",
+          "name": "Matthew Alphonso"
+        }
+      ],
+      "categories": [
+        "Drivetrain",
+        "Intake",
+        "Shooter",
+        "Climber",
+        "Elevator",
+        "Frame",
+        "Field elements",
+        "Other"
+      ]
+    },
+    {
+      "id": "design",
+      "name": "Design",
+      "leads": [
+        {
+          "role": "Lead",
+          "name": "Julia Kalbfleisch"
+        },
+        {
+          "role": "Co-lead",
+          "name": "Siddhesh Rajarajan"
+        }
+      ],
+      "categories": [
+        "CAD",
+        "Prototyping",
+        "Drawings",
+        "Other"
+      ]
+    },
+    {
+      "id": "programming",
+      "name": "Programming",
+      "leads": [
+        {
+          "role": "Lead",
+          "name": "Mathias Turiga"
+        }
+      ],
+      "categories": [
+        "Drive",
+        "Autonomous",
+        "Vision",
+        "Subsystems",
+        "Dashboard",
+        "Other"
+      ]
+    },
+    {
+      "id": "electrical",
+      "name": "Electrical",
+      "leads": [
+        {
+          "role": "Lead",
+          "name": "Neel Sunil"
+        },
+        {
+          "role": "Co-lead",
+          "name": "Daniel Bruce"
+        }
+      ],
+      "categories": [
+        "Wiring",
+        "Power",
+        "Sensors",
+        "CAN",
+        "Pneumatics",
+        "Other"
+      ]
+    }
+  ],
   "tasks": [
     {
       "id": "9c384603-8a2f-4af0-ad11-bf38b0dc05b1",
+      "team": "mechanical",
       "title": "Overthrow the government",
       "owner": "Max",
       "subsystem": "Other",
@@ -15,6 +102,7 @@
     },
     {
       "id": "1",
+      "team": "mechanical",
       "title": "test",
       "owner": "",
       "subsystem": "Drivetrain",
@@ -25,6 +113,7 @@
     },
     {
       "id": "2",
+      "team": "mechanical",
       "title": "Replace cracked intake roller mount",
       "owner": "",
       "subsystem": "Intake",
@@ -35,6 +124,7 @@
     },
     {
       "id": "3",
+      "team": "mechanical",
       "title": "Buy super glue",
       "owner": "",
       "subsystem": "Other",
@@ -45,6 +135,7 @@
     },
     {
       "id": "85e0f923-cbf3-439f-ae93-327ca8ab91a2",
+      "team": "mechanical",
       "title": "Add calender view for peak efficency",
       "owner": "",
       "subsystem": "Other",
