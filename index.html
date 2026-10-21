@@ -3,7 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mechanical Tasks</title>
+<title>Team 3161 Tasks</title>
+<script>
+  // Visual settings live in this browser only (see the Settings tab)
+  try {
+    const st = JSON.parse(localStorage.getItem("pages-edit-settings") || "{}");
+    const r = document.documentElement;
+    if (st.theme && st.theme !== "system") r.dataset.theme = st.theme;
+    if (st.size && st.size !== "normal") r.dataset.size = st.size;
+    if (st.density === "compact") r.dataset.density = "compact";
+    if (st.motion === "reduce") r.dataset.motion = "reduce";
+  } catch {}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -15,8 +26,18 @@
     --red: #c9302c; --green: #2e7d4f; --edit: #fff8e1;
     --plate: #cdd2d7; --plate-ink: #1f2328; --nav-ink: #39414a; --nav-muted: #5b6570; --nav-hover: rgba(0,0,0,.06); --nav-active: #f8f9fa; --btn-line: #98a1aa;
   }
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+      --bg: #15181b; --panel: #1e2226; --sunk: #272c31; --ink: #e8eaec; --muted: #98a2ad;
+      --line: #333a41; --yellow: #f5b700; --yellow-ink: #15181b;
+      --high: #f5b700; --med: #6f7f8f; --low: #3e4750;
+      --red: #ef6461; --green: #5cc58a; --edit: #2b2615;
+      --plate: #2a2f35; --plate-ink: #e8eaec; --nav-ink: #b9c1c9; --nav-muted: #8a939c; --nav-hover: rgba(255,255,255,.06); --nav-active: #3a4148; --btn-line: #59626b;
+  }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
       --bg: #15181b; --panel: #1e2226; --sunk: #272c31; --ink: #e8eaec; --muted: #98a2ad;
       --line: #333a41; --yellow: #f5b700; --yellow-ink: #15181b;
       --high: #f5b700; --med: #6f7f8f; --low: #3e4750;
@@ -302,6 +323,27 @@
     .team-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
+  /* Settings (per device) */
+  :root[data-size="large"] body { zoom: 1.12; }
+  :root[data-size="xlarge"] body { zoom: 1.25; }
+  :root[data-density="compact"] .task { padding: 7px 10px; gap: 8px; }
+  :root[data-density="compact"] .team-list, :root[data-density="compact"] .list { gap: 3px; }
+  :root[data-density="compact"] .title { font-size: 16px; }
+  :root[data-density="compact"] .meta { margin-top: 2px; }
+  :root[data-density="compact"] .notes { margin-top: 3px; }
+  :root[data-density="compact"] .day { min-height: 64px; }
+  :root[data-density="compact"] .nav a { padding: 6px 10px; }
+  :root[data-motion="reduce"] *, :root[data-motion="reduce"] *::before { transition: none !important; animation: none !important; }
+  .set-group { padding: 16px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 220px) 1fr; gap: 8px 24px; align-items: center; }
+  .set-group:first-child { border-top: none; }
+  .set-name { font-weight: 600; }
+  .set-group .seg { justify-self: start; flex-wrap: wrap; }
+  .set-name small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+  .seg button { border: none; background: var(--panel); color: var(--ink); padding: 6px 14px; cursor: pointer; font-size: 14px; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+  @media (max-width: 700px) { .set-group { grid-template-columns: 1fr; } }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -440,6 +482,7 @@ const FALLBACK_REPO  = "3161todo";
 const DATA_PATH      = "data.json";
 const TOKEN_KEY      = "pages-edit-token";
 const HIDE_KEY       = "pages-edit-hide-done";
+const SETTINGS_KEY   = "pages-edit-settings";
 
 // Used when data.json has no "teams" yet. Edit names and categories in data.json.
 const DEFAULT_TEAMS = [
@@ -677,6 +720,7 @@ function currentPage() {
   const id = decodeURIComponent(location.hash.slice(1));
   if (id.split("/")[0] === "calendar") return "calendar";
   if (id === "captain") return editing ? "captain" : "calendar";
+  if (id === "settings") return "settings";
   if (data.teams.some(t => t.id === id)) return null;
   return "home";   // empty or unknown link: the landing page
 }
@@ -721,12 +765,14 @@ function render(focusId) {
   nav.append(navLink("#calendar", "Calendar", "", page === "calendar"));
   if (editing) nav.append(navLink("#captain", "Captain stuff", "", page === "captain", "hidden-tab"));
   nav.append(div("nav-sep"));
+  const navTail = () => { nav.append(div("nav-sep")); nav.append(navLink("#settings", "Settings", "", page === "settings")); };
   data.teams.forEach(t => nav.append(navLink("#" + encodeURIComponent(t.id), t.name,
     data.tasks.filter(x => x.team === t.id && !x.done).length, team && t.id === team.id)));
+  navTail();
   const allOpen = data.tasks.filter(t => !t.done).length;
   $("overall").textContent = `${allOpen} open across all subteams`;
 
-  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : team.name;
+  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : team.name;
   $("mtopTitle").textContent = label;
   document.title = `${label} · ${data.title || "Tasks"}`;
   $("tools").hidden = !!page;
@@ -734,6 +780,7 @@ function render(focusId) {
 
   document.body.classList.toggle("on-home", page === "home");
   if (page === "home") return renderHome();
+  if (page === "settings") return renderSettings();
   if (page === "calendar") return renderCalendar();
   if (page === "captain") return renderCaptain();
 
@@ -782,6 +829,71 @@ function render(focusId) {
     const el = list.querySelector(`[data-id="${CSS.escape(focusId)}"] .title`);
     if (el) { el.focus(); document.getSelection().selectAllChildren(el); }
   }
+}
+
+/* ---------- Settings: visual options saved in this browser only ---------- */
+function loadSettings() { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch { return {}; } }
+function applySettings(st) {
+  const r = document.documentElement;
+  const set = (k, v, off) => { if (!v || v === off) delete r.dataset[k]; else r.dataset[k] = v; };
+  set("theme", st.theme, "system");
+  set("size", st.size, "normal");
+  set("density", st.density, "comfortable");
+  set("motion", st.motion, "system");
+}
+
+function renderSettings() {
+  const st = loadSettings();
+  const head = div("page-head");
+  const h2 = document.createElement("h2"); h2.className = "page-title"; h2.textContent = "Settings";
+  const sub = div("muted", "These only change how the site looks on this device. Nothing here is saved to the team list.");
+  sub.style.marginTop = "8px";
+  head.append(h2, sub);
+  $("pageHead").replaceChildren(head);
+
+  const list = $("list");
+  list.innerHTML = "";
+  const box = div("detail");
+  const groups = [
+    ["theme", "Theme", "System follows your device's light or dark setting.", [["system", "System"], ["light", "Light"], ["dark", "Dark"]]],
+    ["size", "Text size", "", [["normal", "Normal"], ["large", "Large"], ["xlarge", "Extra large"]]],
+    ["density", "Density", "Compact fits more tasks on screen.", [["comfortable", "Comfortable"], ["compact", "Compact"]]],
+    ["done", "Completed tasks", "Same as the Hide done switch on subteam pages.", [["show", "Show"], ["hide", "Hide"]]],
+    ["motion", "Animations", "", [["system", "System"], ["reduce", "Off"]]]
+  ];
+  groups.forEach(([key, name, help, opts]) => {
+    const g = div("set-group");
+    const n = div("set-name", name);
+    if (help) { const sm = document.createElement("small"); sm.textContent = help; n.append(sm); }
+    const seg = div("seg"); seg.setAttribute("role", "group"); seg.setAttribute("aria-label", name);
+    const cur = key === "done" ? (hideDone ? "hide" : "show") : (st[key] || opts[0][0]);
+    opts.forEach(([v, label]) => {
+      const b = document.createElement("button");
+      b.textContent = label;
+      b.setAttribute("aria-pressed", v === cur);
+      b.onclick = () => {
+        if (key === "done") {
+          hideDone = v === "hide";
+          try { localStorage.setItem(HIDE_KEY, hideDone ? "1" : "0"); } catch {}
+        } else {
+          const s2 = loadSettings(); s2[key] = v;
+          try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s2)); } catch {}
+          applySettings(s2);
+        }
+        render();
+      };
+      seg.append(b);
+    });
+    g.append(n, seg);
+    box.append(g);
+  });
+  const reset = document.createElement("button"); reset.className = "tbtn"; reset.textContent = "Reset to defaults";
+  reset.style.marginTop = "14px";
+  reset.onclick = () => {
+    try { localStorage.removeItem(SETTINGS_KEY); localStorage.removeItem(HIDE_KEY); } catch {}
+    hideDone = false; applySettings({}); render();
+  };
+  list.append(box, reset);
 }
 
 /* ---------- Home: the landing page ---------- */
