@@ -264,7 +264,7 @@
       "owner": "Daniel",
       "subsystem": "Shop",
       "priority": "Med",
-      "due": "2026-11-05",
+      "due": "",
       "done": false,
       "status": "doing",
       "notes": "",
@@ -295,7 +295,8 @@
         "mechanical",
         "programming",
         "business",
-        "media"
+        "media",
+        "inventory"
       ]
     },
     {
@@ -599,5 +600,5 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T16:49:23.470Z"
+  "updated": "2026-10-21T16:49:53.542Z"
 }
