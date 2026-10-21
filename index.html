@@ -478,8 +478,25 @@
   .d-ag-x:hover { background: #333333; }
   .d-ag-body { white-space: pre-line; font-size: 1.45em; line-height: 1.55; padding: .2em 1.4em 1.2em 1.4em; overflow-y: auto;
     min-height: 0; outline: none; overscroll-behavior: contain; }
-  .d-ag-txt.two { column-count: 2; column-gap: 2.4em; column-rule: 1px solid #333333; }
-  .d-ag-card:has(.two) { width: min(100%, 90em); }
+  .d-ag-main { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; flex: 1 1 auto; }
+  .d-ag-side { display: none; }
+  @media (min-width: 1000px) and (min-height: 520px) {
+    .d-ag-card { width: min(100%, 100em); height: 100%; }
+    .d-ag-main { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+    .d-ag-side { display: flex; flex-direction: column; min-height: 0; border-left: 1px solid #333333; padding: .2em 1.4em 1.2em; }
+  }
+  .d-ag-sh { font: 600 1em/1.2 "Rajdhani", sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #b3b3b3; margin: .3em 0 .7em; }
+  .d-up-list { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: .35em; }
+  .d-up { display: grid; grid-template-columns: 6.2em minmax(0, 1fr); gap: .7em; padding: .38em .7em; border-radius: 3px; flex: none;
+    border: 1px solid #cc991f; border-left-width: .3em; }
+  .d-up.dl { border-color: #d5573b; background: rgba(213, 87, 59, .1); }
+  .d-up.now { background: rgba(204, 153, 31, .14); }
+  .d-up.dl.now { background: rgba(213, 87, 59, .24); }
+  .d-up-when { font-weight: 700; color: #cc991f; line-height: 1.2; }
+  .d-up.dl .d-up-when { color: #d5573b; }
+  .d-up-when small, .d-up-what small { display: block; font-weight: 400; font-size: .75em; color: #b3b3b3; margin-top: .05em; }
+  .d-up-t { font-weight: 600; line-height: 1.2; }
+  .d-up-more, .d-up-none { color: #b3b3b3; flex: none; }
   .d-main { min-height: 0; display: flex; flex-direction: column; }
   .d-cols { --n: 3; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 1em; margin-top: .6em; min-height: 0; flex: 1; }
   .d-col { background: #1c1c1c; border-radius: 6px; padding: .9em; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: .45em; border-top: .3em solid #e6ac22; }
@@ -690,6 +707,7 @@
   .ev-rem .c { color: var(--muted); font-size: 13px; white-space: nowrap; }
   .ev-rem input { padding: 5px 8px; border: 1px dashed #b3861b; border-radius: 3px; background: var(--edit); color: var(--ink); font: inherit; font-size: 13px; min-width: 0; }
   .ev-rem.add input.rem-in { border-style: solid; border-color: var(--line); background: var(--panel); }
+  .d-rem.due { background: rgba(204, 153, 31, .16); }
   .d-rem { display: grid; padding: .5em .8em; border-left: .3em solid #cc991f; border: 1px solid #cc991f; border-left-width: .3em; border-radius: 3px; margin-bottom: .4em; }
   @media (max-width: 700px) {
     .ev-rems { margin-left: 4px; }
@@ -1960,7 +1978,8 @@ function renderDisplay() {
     el("div", "d-date", now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })));
   const nev = nextEvent();
   if (nev) { const cd = countdown(nev); left.append(el("div", "d-ev", `${nev.name}: ${cd.n === "Now" ? (cd.unit === "today" ? "today" : cd.unit) : `${cd.n} ${cd.unit}`}`)); }
-  const dueRem = remindersDue(iso(today()));
+  const wk = iso(addDays(today(), 7));
+  const dueRem = allReminders().filter(x => !x.r.done && x.date <= wk && (x.e.end || x.e.start) >= iso(today()));
   const clock = el("div", "d-clock"); clock.id = "dClock";
   clock.textContent = now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   const ctr = el("div", "d-ctrl");
@@ -1995,7 +2014,7 @@ function renderDisplay() {
   }
   if (dueRem.length) {
     side.append(el("div", "d-label", "Reminders"));
-    dueRem.slice(0, 4).forEach(x => { const r = el("div", "d-rem"); r.append(el("span", "d-ws-t", x.r.text), el("span", "d-ws-m", `${x.e.name}, ${remWhen(x.date).toLowerCase()}`)); side.append(r); });
+    dueRem.slice(0, 4).forEach(x => { const r = el("div", "d-rem" + (x.date <= iso(today()) ? " due" : "")); r.append(el("span", "d-ws-t", x.r.text), el("span", "d-ws-m", `${x.e.name}, ${remWhen(x.date).toLowerCase()}`)); side.append(r); });
   }
   const wks = workshopsOn(ts);
   if (wks.length) {
@@ -2059,7 +2078,7 @@ function renderDisplay() {
   if (!dispUpdated) dispUpdated = now;
   // Keep an open agenda in step with the minute refresh, without losing its scroll position
   if (agendaDlg) {
-    if (m && m.agenda) { const b = document.getElementById("dAgBig"); if (b && b.textContent !== m.agenda) { b.textContent = m.agenda; fitAgenda(); } }
+    if (m && m.agenda) { const b = document.getElementById("dAgBig"); if (b && b.textContent !== m.agenda) b.textContent = m.agenda; fillAgendaSide(); }
     else closeAgenda();
   }
   // Fade the agenda's last line only when it doesn't fit
@@ -2078,22 +2097,48 @@ function openAgenda(m) {
   top.append(el("div", "d-ag-h", `Agenda, ${niceDate(m.date, { weekday: "long", month: "long", day: "numeric" })}`));
   const x = el("button", "d-ag-x", "Close"); x.type = "button"; x.onclick = closeAgenda;
   top.append(x);
+  const main = el("div", "d-ag-main");
   const body = el("div", "d-ag-body"); body.tabIndex = 0;
   const txt = el("div", "d-ag-txt", m.agenda); txt.id = "dAgBig";
-  body.append(txt); card.append(top, body); o.append(card);
+  body.append(txt);
+  const side = el("div", "d-ag-side");
+  side.append(el("div", "d-ag-sh", "Due dates and reminders"), Object.assign(el("div", "d-up-list"), { id: "dAgUp" }));
+  main.append(body, side); card.append(top, main); o.append(card);
   o.onclick = ev => { if (ev.target === o) closeAgenda(); };
   const poke = () => { clearTimeout(agendaTimer); agendaTimer = setTimeout(closeAgenda, 5 * 60000); };
   ["pointerdown", "wheel", "keydown", "touchmove"].forEach(t => o.addEventListener(t, poke, { passive: true }));
-  document.body.append(o); agendaDlg = o; poke(); fitAgenda(); x.focus();
+  document.body.append(o); agendaDlg = o; poke(); fillAgendaSide(); x.focus();
 }
-// Long agendas flow into two columns on a wide screen instead of scrolling one narrow column
-function fitAgenda() {
-  const txt = document.getElementById("dAgBig"); if (!txt) return;
-  const sc = txt.parentElement;
-  txt.classList.remove("two");
-  if (sc.clientWidth > 900 && sc.scrollHeight > sc.clientHeight + 2) txt.classList.add("two");
+// Team deadlines and open reminders, soonest first (overdue reminders stay until ticked off)
+function upcomingDue(ts) {
+  const dl = (data.deadlines || []).filter(d => d.date >= ts)
+    .map(d => ({ date: d.date, kind: "dl", title: d.title, sub: d.event ? `Deadline for ${eventName(d.event)}` : "Team deadline" }));
+  const rm = allReminders().filter(x => !x.r.done && (x.e.end || x.e.start) >= ts)
+    .map(x => ({ date: x.date, kind: "rm", title: x.r.text || "Reminder", sub: `Reminder for ${x.e.name}` }));
+  return [...dl, ...rm].sort((a, b) => a.date.localeCompare(b.date));
 }
-window.addEventListener("resize", () => { if (agendaDlg) fitAgenda(); });
+// Right panel of the enlarged agenda: as many as fit, then "+N more". Hidden on narrow screens.
+function fillAgendaSide() {
+  const list = document.getElementById("dAgUp"); if (!list) return;
+  const ts = iso(today());
+  list.replaceChildren();
+  const items = upcomingDue(ts);
+  if (!items.length) { list.append(el("div", "d-up-none", "Nothing due.")); return; }
+  items.forEach(it => {
+    const r = el("div", `d-up ${it.kind}${it.date <= ts ? " now" : ""}`);
+    const w = el("div", "d-up-when", remWhen(it.date));
+    w.append(el("small", "", niceDate(it.date, { weekday: "short", month: "short", day: "numeric" })));
+    const t = el("div", "d-up-what"); t.append(el("span", "d-up-t", it.title), el("small", "", it.sub));
+    r.append(w, t); list.append(r);
+  });
+  if (!list.offsetParent) return;                       // panel hidden (narrow screen)
+  const rows = [...list.children];
+  if (list.scrollHeight <= list.clientHeight + 1) return;
+  const more = el("div", "d-up-more"); list.append(more);
+  let shown = rows.length;
+  while (shown > 0 && list.scrollHeight > list.clientHeight + 1) { rows[--shown].hidden = true; more.textContent = `+${rows.length - shown} more`; }
+}
+window.addEventListener("resize", () => { if (agendaDlg) fillAgendaSide(); });
 function closeAgenda() {
   clearTimeout(agendaTimer);
   if (agendaDlg) { agendaDlg.remove(); agendaDlg = null; }
