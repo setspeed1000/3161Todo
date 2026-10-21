@@ -40,6 +40,10 @@ document.getElementById("go").onclick = async () => {
   const tok = document.getElementById("tok").value.trim();
   const pw  = document.getElementById("pw").value;
   if (!tok || !pw) return alert("Need both a token and a password.");
+  if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(tok))
+    return alert("That isn't a GitHub token. It should start with github_pat_ and be about 90 characters. Check you pasted it in the token box, not the password box.");
+  if (/^(github_pat_|ghp_)/.test(pw))
+    return alert("The password box has a token in it. Put the token in the top box.");
   const iterations = 600000;
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv   = crypto.getRandomValues(new Uint8Array(12));
