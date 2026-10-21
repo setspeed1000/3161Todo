@@ -274,7 +274,7 @@
   "meetings": [
     {
       "date": "2026-10-21",
-      "note": "Drive team applications due tomorrow Mech: continuing robot repairs Electrical: fixing wiring Programming: working on code",
+      "note": "",
       "agenda": "October 21st Meeting Agenda \n- 2:45 - 4:30 PM\n- Drive team applications due tomorrow\n- Mech: continuing robot repairs\n- Electrical: fixing wiring\n- Programming: working on code",
       "active": [
         "mechanical",
@@ -584,5 +584,5 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T16:20:45.349Z"
+  "updated": "2026-10-21T16:25:06.444Z"
 }
