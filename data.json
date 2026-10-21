@@ -271,8 +271,21 @@
     {
       "date": "2026-10-31",
       "note": "STEMley",
-      "agenda": "- 7 AM - 7 PM\n- Please wear competition polos",
-      "active": []
+      "agenda": "- 7 AM - 7 PM\n- Please wear competition polos\n- Media take photos of event",
+      "active": [
+        "mechanical",
+        "programming",
+        "electrical",
+        "media"
+      ]
+    },
+    {
+      "date": "2026-11-02",
+      "note": "",
+      "agenda": "November 2nd Meeting Agenda\n- Media work on STEMly Post",
+      "active": [
+        "media"
+      ]
     },
     {
       "date": "2026-11-05",
@@ -298,5 +311,5 @@
       "title": "Complete STIMS"
     }
   ],
-  "updated": "2026-10-21T13:10:20.724Z"
+  "updated": "2026-10-21T13:10:35.830Z"
 }
