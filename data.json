@@ -276,7 +276,7 @@
       "id": "aabf5a9d-21bd-4c24-a870-9d27b7e02930",
       "team": "media",
       "title": "Record and Document testing",
-      "owner": "",
+      "owner": "Leads",
       "subsystem": "Video",
       "priority": "High",
       "due": "",
@@ -291,7 +291,7 @@
       "id": "eb956306-59af-41be-b061-031100c9d8fd",
       "team": "media",
       "title": "Pre-Stemley OA Post",
-      "owner": "",
+      "owner": "Paget + Daniel",
       "subsystem": "Other",
       "priority": "High",
       "due": "2026-10-30",
@@ -615,5 +615,5 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T17:22:03.845Z"
+  "updated": "2026-10-21T17:22:44.119Z"
 }
