@@ -513,6 +513,43 @@
   .task.flash { outline: 3px solid var(--yellow); outline-offset: 2px; transition: outline-color 1.4s; }
   .st-sel:disabled { opacity: 1; color: var(--red); border-color: var(--red); }
 
+  /* Workshops */
+  .wsbox { display: block; background: var(--ink); color: var(--bg); text-decoration: none; font-size: 11.5px; font-weight: 700;
+    line-height: 1.3; padding: 2px 6px; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--yellow); }
+  .wsbox small { display: block; font-weight: 500; opacity: .75; font-size: 11px; }
+  .wsbox:hover { background: var(--yellow); color: var(--yellow-ink); }
+  .wk .wsbox { white-space: normal; }
+  .wsbox.lg { font-size: 17px; padding: 10px 14px; border-left-width: 5px; white-space: normal; min-width: 220px; flex: 1 1 260px; }
+  .wsbox.lg small { font-size: 12px; font-weight: 600; opacity: .8; margin-bottom: 2px; }
+  .wsbox.lg .ws-title { display: block; }
+  .wsbox.lg .ws-where { margin: 2px 0 0; }
+  .wsbox.lg .ws-notes { display: block; font-size: 13px; font-weight: 500; opacity: .85; margin-top: 6px; white-space: pre-line; }
+  .boxes.ws-row { margin-bottom: 10px; }
+  .next-boxes .wsbox { font-size: 13px; padding: 4px 9px; }
+  .sday.wk { box-shadow: inset 0 -3px 0 var(--ink); }
+  .sday.today.wk { box-shadow: inset 0 -3px 0 var(--yellow); }
+  .workshops { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--ink); border-radius: 4px; padding: 14px 16px; margin-bottom: 16px; display: grid; gap: 6px; }
+  .workshops .sec-title { margin-bottom: 4px; }
+  .ws-row { display: grid; grid-template-columns: 9ch minmax(0, 1fr) auto auto; gap: 4px 12px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line); }
+  .ws-row:first-of-type { border-top: none; }
+  .ws-when { font-weight: 700; color: var(--ink); text-decoration: none; }
+  .ws-when:hover { text-decoration: underline; }
+  .ws-t { font-weight: 600; min-width: 0; }
+  .ws-m { color: var(--muted); font-size: 14px; display: flex; gap: 6px; }
+  .ws-m input { width: 9em; font-size: 13px; padding: 3px 6px; border: 1px dashed #c9a227; border-radius: 3px; background: var(--edit); color: var(--ink); }
+  .ws-n { grid-column: 2 / -1; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
+  .ws-n:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: .7; }
+  .ws-form { margin-top: 6px; }
+  .d-ws { display: grid; padding: .5em .8em; border-left: .3em solid #f5b700; background: #1e2328; border-radius: 3px; margin-bottom: .4em; }
+  .d-ws-t { font-weight: 700; font-size: 1.15em; }
+  .d-ws-m { color: #9aa4ae; font-size: .85em; }
+  @media (max-width: 700px) {
+    .ws-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .ws-when { grid-column: 1 / -1; }
+    .ws-m { grid-column: 1 / -1; flex-wrap: wrap; }
+    .ws-n { grid-column: 1 / -1; }
+  }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -813,6 +850,7 @@ function normalize(d) {
   if (!Array.isArray(d.tasks)) d.tasks = [];
   if (!Array.isArray(d.meetings)) d.meetings = [];
   if (!Array.isArray(d.deadlines)) d.deadlines = [];
+  if (!Array.isArray(d.workshops)) d.workshops = [];
   const ids = d.teams.map(t => t.id);
   d.tasks.forEach(t => {
     if (!ids.includes(t.team)) t.team = ids[0];
@@ -963,7 +1001,7 @@ function mergeList(b = [], l = [], r = [], key, st) {
   return out;
 }
 
-const LISTS = { tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id };
+const LISTS = { tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id, workshops: x => x.id };
 function mergeDoc(b, l, r) {
   const st = { conflicts: 0, kept: 0 };
   const out = {};
@@ -1057,6 +1095,9 @@ function describeChanges(b, a) {
   const bd = byKey(b.deadlines, x => x.id), ad = byKey(a.deadlines, x => x.id);
   ad.forEach((x, id) => { const o = bd.get(id); if (!o) out.push(`added deadline ${q(x.title)} on ${short(x.date)}`); else if (!deepEq(o, x)) out.push(`edited deadline ${q(x.title)}`); });
   bd.forEach((x, id) => { if (!ad.has(id)) out.push(`removed deadline ${q(x.title)}`); });
+  const bw = byKey(b.workshops, x => x.id), aw = byKey(a.workshops, x => x.id);
+  aw.forEach((x, id) => { const o = bw.get(id); if (!o) out.push(`scheduled the ${tn(x.team)} workshop ${q(x.title)} for ${short(x.date)}`); else if (!deepEq(o, x)) out.push(`edited the workshop ${q(x.title)}`); });
+  bw.forEach((x, id) => { if (!aw.has(id)) out.push(`cancelled the workshop ${q(x.title)}`); });
   return out;
 }
 
@@ -1153,6 +1194,23 @@ function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 function niceDate(s, opts = { weekday: "long", month: "long", day: "numeric" }) { return parseDate(s).toLocaleDateString(undefined, opts); }
 const meetingOn = s => data.meetings.find(m => m.date === s);
 const deadlinesOn = s => data.deadlines.filter(d => d.date === s);
+const workshopsOn = s => (data.workshops || []).filter(w => w.date === s && inCal(w.team)).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+
+// Subteam workshop: dark box at the top of the day; links to the day view
+function wsbox(w, cls = "") {
+  const a = document.createElement("a");
+  a.className = "wsbox " + cls;
+  a.href = calHref("day", w.date);
+  a.title = `${teamName(w.team)} workshop: ${w.title || "Workshop"}${w.time ? `, ${w.time}` : ""}${w.where ? `, ${w.where}` : ""}`;
+  a.onclick = e => e.stopPropagation();
+  if (cls.includes("lg")) {
+    a.append(Object.assign(document.createElement("small"), { textContent: `${teamName(w.team)} workshop${w.time ? `, ${w.time}` : ""}` }),
+      Object.assign(document.createElement("span"), { className: "ws-title", textContent: w.title || "Workshop" }));
+    if (w.where) a.append(Object.assign(document.createElement("small"), { className: "ws-where", textContent: w.where }));
+    if (w.notes) a.append(Object.assign(document.createElement("span"), { className: "ws-notes", textContent: w.notes }));
+  } else a.textContent = w.title || "Workshop";
+  return a;
+}
 
 // Team-wide deadline: red box above the subteams on that day; links to the day view
 function dlbox(d, cls = "") {
@@ -1288,6 +1346,8 @@ function render(focusId) {
 
   const list = $("list");
   list.innerHTML = "";
+  const wsec = workshopsEl(team);
+  if (wsec) list.append(wsec);
   const waiting = waitingEl(team);
   if (waiting) list.append(waiting);
   if (team.id === "inventory") list.append(ordersEl());
@@ -1624,6 +1684,11 @@ function renderDisplay() {
     });
     side.append(dl);
   }
+  const wks = workshopsOn(ts);
+  if (wks.length) {
+    side.append(el("div", "d-label", wks.length === 1 ? "Workshop today" : "Workshops today"));
+    wks.forEach(w => { const r = el("div", "d-ws"); r.append(el("span", "d-ws-t", w.title || "Workshop"), el("span", "d-ws-m", [teamName(w.team), w.time, w.where].filter(Boolean).join(", "))); side.append(r); });
+  }
   if (m && m.agenda) {
     side.append(el("div", "d-label", "Agenda"), el("div", "d-agenda", m.agenda));
   }
@@ -1729,8 +1794,10 @@ function renderHome() {
     if (nm.note) card.append(el("p", "next-note", nm.note));
     const dls = deadlinesOn(nm.date);
     const act = activeOf(nm);
-    if (dls.length || act.length) {
+    const wks = workshopsOn(nm.date);
+    if (dls.length || act.length || wks.length) {
       const bx = el("div", "next-boxes");
+      wks.forEach(x => bx.append(wsbox(x)));
       dls.forEach(x => bx.append(dlbox(x)));
       act.forEach(id => bx.append(sbox(id)));
       card.append(bx);
@@ -1771,10 +1838,10 @@ function renderHome() {
   const strip = el("div", "strip");
   const ws = addDays(t0, -t0.getDay());
   for (let i = 0; i < 7; i++) {
-    const d = addDays(ws, i), ds = iso(d), m = meetingOn(ds), dl = deadlinesOn(ds).length;
-    const c = el("a", "sday" + (ds === ts ? " today" : "") + (m ? " meet" : "") + (dl ? " dl" : ""));
+    const d = addDays(ws, i), ds = iso(d), m = meetingOn(ds), dl = deadlinesOn(ds).length, wk = workshopsOn(ds).length;
+    const c = el("a", "sday" + (ds === ts ? " today" : "") + (m ? " meet" : "") + (dl ? " dl" : "") + (wk ? " wk" : ""));
     c.href = calHref("day", ds);
-    c.title = d.toDateString() + (m ? ", meeting" : "") + (dl ? ", deadline" : "");
+    c.title = d.toDateString() + (m ? ", meeting" : "") + (wk ? `, ${wk} workshop${wk === 1 ? "" : "s"}` : "") + (dl ? ", deadline" : "");
     c.append(el("span", "sd-dow", WEEKDAYS[d.getDay()][0]), el("span", "sd-num", d.getDate()));
     strip.append(c);
   }
@@ -1904,6 +1971,8 @@ function monthView(D, sel, t0) {
     cell.onclick = () => goCal("week", ds);
     cell.onkeydown = e => { if (e.key === "Enter") goCal("week", ds); };
     cell.append(div("num", d.getDate()));
+    const wks = workshopsOn(ds);
+    if (wks.length) { const wb = div("boxes txt"); wks.slice(0, 2).forEach(w => wb.append(wsbox(w))); if (wks.length > 2) wb.append(Object.assign(document.createElement("span"), { className: "muted small", textContent: `+${wks.length - 2} workshops` })); cell.append(wb); }
     const dls = deadlinesOn(ds);
     if (dls.length) { cell.classList.add("has-dl"); const db = div("boxes txt"); dls.forEach(d => db.append(dlbox(d))); cell.append(db); }
     if (m && !act.length) cell.append(div("m txt", "Meeting"));
@@ -1937,6 +2006,8 @@ function weekView(start, sel, t0) {
     const hd = div("wk-head");
     hd.append(div("wk-dow", WEEKDAYS[d.getDay()]), div("wk-num", d.getDate()));
     col.append(hd);
+    const wks = workshopsOn(ds);
+    if (wks.length) { const wb = div("boxes"); wks.forEach(w => { const b = wsbox(w); b.textContent = `${w.title || "Workshop"}${w.time ? `, ${w.time}` : ""}`; b.append(Object.assign(document.createElement("small"), { textContent: teamName(w.team) })); wb.append(b); }); col.append(wb); }
     const dls = deadlinesOn(ds);
     if (dls.length) { const db = div("boxes"); dls.forEach(d => db.append(dlbox(d))); col.append(db); }
     if (m) {
@@ -1968,6 +2039,13 @@ function dayView(ds, t0) {
   const box = div("detail");
   const m = meetingOn(ds);
   const act = activeOf(m);
+
+  const wks = workshopsOn(ds);
+  if (wks.length) {
+    const wb = div("boxes lg ws-row");
+    wks.forEach(w => { const a = wsbox(w, "lg"); a.href = "#" + encodeURIComponent(w.team); a.title = `Open ${teamName(w.team)}`; wb.append(a); });
+    box.append(wb);
+  }
 
   const dls = deadlinesOn(ds);
   if (dls.length) {
@@ -2485,6 +2563,62 @@ function ordersEl() {
     return d;
   };
   box.append(group("To order", need, true), group("Ordered, not arrived", ord, true), group("Arrived", arr, false));
+  return box;
+}
+
+/* ---------- Workshops a subteam schedules (shown at the top of calendar days) ---------- */
+function workshopsEl(team) {
+  if (team.calendar === false) return null;      // Captains stay off the calendar
+  const ts = iso(today());
+  const up = data.workshops.filter(w => w.team === team.id && w.date >= ts).sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+  if (!up.length && !editing) return null;
+  const box = div("workshops");
+  box.append(Object.assign(document.createElement("h3"), { className: "sec-title", textContent: "Workshops" }));
+  if (!up.length) box.append(div("muted", "None scheduled."));
+  up.forEach(w => {
+    const r = div("ws-row");
+    const when = document.createElement("a"); when.className = "ws-when"; when.href = calHref("day", w.date);
+    when.textContent = niceDate(w.date, { weekday: "short", month: "short", day: "numeric" });
+    const title = div("ws-t", w.title || "");
+    makeEditable(title, v => w.title = v);
+    const meta = div("ws-m", [w.time, w.where].filter(Boolean).join(", "));
+    if (editing) {
+      meta.textContent = "";
+      const tm = document.createElement("input"); tm.type = "text"; tm.value = w.time || ""; tm.placeholder = "Time"; tm.setAttribute("aria-label", "Workshop time");
+      tm.oninput = () => { w.time = tm.value.trim(); markDirty(); };
+      const wh = document.createElement("input"); wh.type = "text"; wh.value = w.where || ""; wh.placeholder = "Where"; wh.setAttribute("aria-label", "Workshop location");
+      wh.oninput = () => { w.where = wh.value.trim(); markDirty(); };
+      meta.append(tm, wh);
+    }
+    r.append(when, title, meta);
+    if (editing) {
+      const del = document.createElement("button"); del.className = "del"; del.textContent = "×"; del.setAttribute("aria-label", "Cancel workshop");
+      del.onclick = () => { data.workshops.splice(data.workshops.indexOf(w), 1); markDirty(); render(); };
+      r.append(del);
+    }
+    if (w.notes || editing) {
+      const n = div("ws-n", w.notes || "");
+      if (editing) n.dataset.placeholder = "Notes (what to bring, who it's for)";
+      makeEditable(n, v => w.notes = v);
+      r.append(n);
+    }
+    box.append(r);
+  });
+  if (editing) {
+    const f = div("form-row ws-form");
+    f.innerHTML = `<label class="grow">Workshop<input type="text" class="wsT" placeholder="e.g. Lathe safety and certification"></label>
+      <label>Date<input type="date" class="wsD"></label>
+      <label>Time<input type="text" class="wsTm" placeholder="e.g. 4 to 5 pm"></label>
+      <label>Where<input type="text" class="wsW" placeholder="e.g. Shop"></label>
+      <button class="tbtn go wsAdd">Schedule</button>`;
+    f.querySelector(".wsAdd").onclick = () => {
+      const title = f.querySelector(".wsT").value.trim(), date = f.querySelector(".wsD").value;
+      if (!title || !date) return setStatus("Give the workshop a name and a date.", "err");
+      data.workshops.push({ id: newId(), team: team.id, date, title, time: f.querySelector(".wsTm").value.trim(), where: f.querySelector(".wsW").value.trim(), notes: "" });
+      markDirty(); render(); setStatus(`Scheduled ${title} for ${niceDate(date)}. Save to publish it.`);
+    };
+    box.append(f);
+  }
   return box;
 }
 
