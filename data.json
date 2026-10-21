@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
   "subtitle": "Unlock to edit. Every save is a commit.",
-  "updated": "2026-10-21T02:16:04.694Z",
+  "updated": "2026-10-21T02:17:41.244Z",
   "teams": [
     {
       "id": "mechanical",
@@ -231,7 +231,14 @@
     {
       "date": "2026-10-21",
       "note": "2:30-4:30",
-      "active": []
+      "active": [
+        "mechanical",
+        "design",
+        "programming",
+        "electrical",
+        "strategy",
+        "inventory"
+      ]
     }
   ]
 }
