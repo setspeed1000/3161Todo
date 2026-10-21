@@ -719,9 +719,10 @@ const DEFAULT_TEAMS = [
   { id: "outreach",    name: "Outreach",    leads: [], categories: ["Events", "FLL", "Community", "Other"] },
   { id: "media",       name: "Media",       leads: [], categories: ["Photos", "Video", "Social media", "Branding", "Other"] },
   { id: "inventory",   name: "Inventory & Logistics", leads: [], categories: ["Ordering", "Inventory", "Shop", "Travel", "Other"] },
-  { id: "captains",    name: "Captains",    leads: [], categories: ["Planning", "Communication", "Events", "Admin", "Other"], calendar: false }
+  { id: "captains",    name: "General",    leads: [], categories: ["Planning", "Communication", "Events", "Admin", "Other"], calendar: false }
 ];
-// Subteams with calendar: false (Captains) never appear on the calendar or the shop display
+// Subteams with calendar: false (General) are never marked active on the calendar and their tasks stay off it;
+// their workshops still show
 const inCal = id => (data.teams.find(t => t.id === id) || {}).calendar !== false;
 const PRIORITIES = ["High", "Med", "Low"];
 const PRI_RANK   = { High: 0, Med: 1, Low: 2 };
@@ -1194,7 +1195,7 @@ function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 function niceDate(s, opts = { weekday: "long", month: "long", day: "numeric" }) { return parseDate(s).toLocaleDateString(undefined, opts); }
 const meetingOn = s => data.meetings.find(m => m.date === s);
 const deadlinesOn = s => data.deadlines.filter(d => d.date === s);
-const workshopsOn = s => (data.workshops || []).filter(w => w.date === s && inCal(w.team)).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+const workshopsOn = s => (data.workshops || []).filter(w => w.date === s).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
 
 // Subteam workshop: dark box at the top of the day; links to the day view
 function wsbox(w, cls = "") {
@@ -2568,7 +2569,6 @@ function ordersEl() {
 
 /* ---------- Workshops a subteam schedules (shown at the top of calendar days) ---------- */
 function workshopsEl(team) {
-  if (team.calendar === false) return null;      // Captains stay off the calendar
   const ts = iso(today());
   const up = data.workshops.filter(w => w.team === team.id && w.date >= ts).sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
   if (!up.length && !editing) return null;
