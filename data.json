@@ -143,7 +143,7 @@
       "id": "07497821-d0d0-4e1f-b11d-03ddcb472523",
       "team": "mechanical",
       "title": "Swap intake back to pinion gears",
-      "owner": "Max",
+      "owner": "Max + Matthew",
       "subsystem": "Intake",
       "priority": "High",
       "due": "",
@@ -424,7 +424,7 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T16:04:05.997Z",
+  "updated": "2026-10-21T16:06:21.380Z",
   "events": [
     {
       "id": "53da8034-bf96-4981-932b-69a7260e917e",
