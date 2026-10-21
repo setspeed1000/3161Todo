@@ -310,5 +310,16 @@
       "title": "Complete STIMS"
     }
   ],
-  "updated": "2026-10-21T13:11:28.587Z"
+  "updated": "2026-10-21T13:21:14.853Z",
+  "workshops": [
+    {
+      "id": "3f164fa4-0a50-438c-b2e6-67b8fb7e98c8",
+      "team": "mechanical",
+      "date": "2026-10-26",
+      "title": "Mechanical Intro Workshop",
+      "time": "3-4",
+      "where": "Shop",
+      "notes": ""
+    }
+  ]
 }
