@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
   "subtitle": "",
-  "updated": "2026-10-21T02:46:10.456Z",
+  "updated": "2026-10-21T02:58:22.128Z",
   "teams": [
     {
       "id": "mechanical",
@@ -138,6 +138,16 @@
         "electrical",
         "strategy",
         "inventory"
+      ]
+    },
+    {
+      "date": "2026-10-22",
+      "note": "2:30-4:30",
+      "agenda": "",
+      "active": [
+        "mechanical",
+        "electrical",
+        "business"
       ]
     }
   ],
