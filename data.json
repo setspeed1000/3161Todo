@@ -54,6 +54,76 @@
         "Pneumatics",
         "Other"
       ]
+    },
+    {
+      "id": "strategy",
+      "name": "Strategy",
+      "leads": [],
+      "categories": [
+        "Game analysis",
+        "Match strategy",
+        "Pick list",
+        "Other"
+      ]
+    },
+    {
+      "id": "scouting",
+      "name": "Scouting",
+      "leads": [],
+      "categories": [
+        "Scouting app",
+        "Match scouting",
+        "Pit scouting",
+        "Data",
+        "Other"
+      ]
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "leads": [],
+      "categories": [
+        "Sponsorship",
+        "Grants",
+        "Budget",
+        "Awards",
+        "Other"
+      ]
+    },
+    {
+      "id": "outreach",
+      "name": "Outreach",
+      "leads": [],
+      "categories": [
+        "Events",
+        "FLL",
+        "Community",
+        "Other"
+      ]
+    },
+    {
+      "id": "media",
+      "name": "Media",
+      "leads": [],
+      "categories": [
+        "Photos",
+        "Video",
+        "Social media",
+        "Branding",
+        "Other"
+      ]
+    },
+    {
+      "id": "inventory",
+      "name": "Inventory & Logistics",
+      "leads": [],
+      "categories": [
+        "Ordering",
+        "Inventory",
+        "Shop",
+        "Travel",
+        "Other"
+      ]
     }
   ],
   "tasks": [
