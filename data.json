@@ -211,6 +211,19 @@
       "status": "todo",
       "notes": "",
       "parts": []
+    },
+    {
+      "id": "1a0d063b-84f8-41ce-8250-deb096121077",
+      "team": "captains",
+      "title": "New Members Pres - Divide Slides + Practice",
+      "owner": "Zoe + Daniel",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "",
+      "done": false,
+      "status": "todo",
+      "notes": "",
+      "parts": []
     }
   ],
   "meetings": [
@@ -257,6 +270,12 @@
       "note": "STEMley",
       "agenda": "- 7 AM - 7 PM\n- Please wear competition polos",
       "active": []
+    },
+    {
+      "date": "2026-11-05",
+      "note": "Parent Information Night",
+      "agenda": "",
+      "active": []
     }
   ],
   "deadlines": [
@@ -276,5 +295,5 @@
       "title": "Complete STIMS"
     }
   ],
-  "updated": "2026-10-21T13:03:58.936Z"
+  "updated": "2026-10-21T13:08:58.287Z"
 }
