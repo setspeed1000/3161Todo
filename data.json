@@ -269,6 +269,21 @@
       "status": "doing",
       "notes": "",
       "parts": []
+    },
+    {
+      "id": "aabf5a9d-21bd-4c24-a870-9d27b7e02930",
+      "team": "media",
+      "title": "Record and Document testing",
+      "owner": "",
+      "subsystem": "Video",
+      "priority": "High",
+      "due": "2026-10-21",
+      "done": false,
+      "status": "todo",
+      "notes": "",
+      "parts": [],
+      "needed": 2,
+      "filled": 0
     }
   ],
   "meetings": [
@@ -584,5 +599,5 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T16:32:00.532Z"
+  "updated": "2026-10-21T16:48:14.880Z"
 }
