@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
-  "subtitle": "Unlock to edit. Every save is a commit.",
-  "updated": "2026-10-21T02:17:41.244Z",
+  "subtitle": "",
+  "updated": "2026-10-21T02:27:43.019Z",
   "teams": [
     {
       "id": "mechanical",
@@ -126,107 +126,7 @@
       ]
     }
   ],
-  "tasks": [
-    {
-      "id": "9c384603-8a2f-4af0-ad11-bf38b0dc05b1",
-      "team": "mechanical",
-      "title": "Overthrow the government",
-      "owner": "Max",
-      "subsystem": "Other",
-      "priority": "High",
-      "due": "2026-10-31",
-      "done": false,
-      "notes": "title"
-    },
-    {
-      "id": "1",
-      "team": "mechanical",
-      "title": "test",
-      "owner": "",
-      "subsystem": "Drivetrain",
-      "priority": "High",
-      "due": "",
-      "done": false,
-      "notes": "Check all four modules."
-    },
-    {
-      "id": "2",
-      "team": "mechanical",
-      "title": "Replace cracked intake roller mount",
-      "owner": "",
-      "subsystem": "Intake",
-      "priority": "Med",
-      "due": "",
-      "done": false,
-      "notes": ""
-    },
-    {
-      "id": "3",
-      "team": "mechanical",
-      "title": "Buy super glue",
-      "owner": "",
-      "subsystem": "Other",
-      "priority": "Low",
-      "due": "",
-      "done": true,
-      "notes": ""
-    },
-    {
-      "id": "85e0f923-cbf3-439f-ae93-327ca8ab91a2",
-      "team": "mechanical",
-      "title": "Add calender view for peak efficency",
-      "owner": "",
-      "subsystem": "Other",
-      "priority": "High",
-      "due": "2026-10-21",
-      "done": false,
-      "notes": ""
-    },
-    {
-      "id": "0d33b6e0-89b1-486a-b3e0-9e1a58047b37",
-      "team": "design",
-      "title": "CAD the whole robot right fucking now",
-      "owner": "",
-      "subsystem": "Other",
-      "priority": "Low",
-      "due": "2046-03-21",
-      "done": false,
-      "notes": ""
-    },
-    {
-      "id": "9ae5c54e-8c5e-40ae-9b25-f6d317acdc4a",
-      "team": "inventory",
-      "title": "Inventore and logisticize",
-      "owner": "",
-      "subsystem": "Other",
-      "priority": "Med",
-      "due": "2026-11-01",
-      "done": false,
-      "notes": ""
-    },
-    {
-      "id": "b311e921-3a7d-4bf7-9956-6e1b67fdefca",
-      "team": "mechanical",
-      "title": "No mech meeting for the next month",
-      "owner": "",
-      "subsystem": "Other",
-      "priority": "High",
-      "due": "2026-11-19",
-      "done": false,
-      "notes": "GTA 6 BABYYYY"
-    },
-    {
-      "id": "ab2a2172-75a3-4e17-a242-a486dea324d4",
-      "team": "scouting",
-      "title": "torture training",
-      "owner": "",
-      "subsystem": "Other",
-      "priority": "High",
-      "due": "2026-10-22",
-      "done": false,
-      "notes": "(i think i dont acc know the date ok?)"
-    }
-  ],
+  "tasks": [],
   "meetings": [
     {
       "date": "2026-10-21",
@@ -240,5 +140,6 @@
         "inventory"
       ]
     }
-  ]
+  ],
+  "deadlines": []
 }
