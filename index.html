@@ -416,21 +416,6 @@
 
   /* Shop display (TV) */
   body.display-mode .app, body.display-mode .scrim { display: none !important; }
-  body.login-mode .app, body.login-mode .scrim, body.login-mode .disp { display: none !important; }
-  .login { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; padding: 24px 16px; background: var(--plate); position: relative; }
-  .login::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 8px;
-    background: repeating-linear-gradient(-45deg, var(--yellow) 0 14px, #1f2328 14px 28px); }
-  .login-box { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 28px 24px; }
-  .login-box h1 { margin: 0 0 6px; font: 700 34px/1 "Barlow Condensed", sans-serif; color: var(--ink); }
-  .login-box p { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
-  .login-box .pw { display: flex; gap: 6px; }
-  .login-box .pw input { flex: 1; min-width: 0; padding: 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 16px; }
-  .login-box .pw button { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 4px; padding: 0 12px; cursor: pointer; }
-  .login-err { color: var(--red) !important; min-height: 1.4em; margin: 8px 0 4px !important; font-weight: 600; }
-  .login-box .go { width: 100%; padding: 11px; border-radius: 4px; border: 1px solid var(--yellow); background: var(--yellow); color: var(--yellow-ink);
-    font-weight: 700; font-size: 16px; cursor: pointer; }
-  .login-box .go:disabled { opacity: .6; }
-  .login-help { margin: 14px 0 0 !important; font-size: 13px !important; }
   body.display-mode { overflow: hidden; }
   body.display-mode.idle, body.display-mode.idle * { cursor: none; }
   .disp { position: fixed; inset: 0; z-index: 50; background: #121519; color: #eef0f2; display: grid;
@@ -604,20 +589,6 @@
 </style>
 </head>
 <body>
-<div class="login" id="login" hidden>
-  <form class="login-box" id="loginForm">
-    <h1>Team 3161 Tasks</h1>
-    <p>This site is for team members. Enter the member password to continue.</p>
-    <label class="dlg-field" for="memberPw">Member password</label>
-    <div class="pw">
-      <input id="memberPw" type="password" autocomplete="current-password" aria-label="Member password">
-      <button type="button" id="memberShow">Show</button>
-    </div>
-    <p class="login-err" id="loginErr" role="alert"></p>
-    <button class="go" id="loginGo" type="submit">Sign in</button>
-    <p class="login-help">Don't have it? Ask a captain or your subteam lead. You only need to sign in once on each device.</p>
-  </form>
-</div>
 <div class="disp" id="disp" hidden></div>
 <div class="scrim" id="scrim"></div>
 <div class="app">
@@ -789,104 +760,6 @@ function detectRepo() {
 function loadToken() { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } }
 function saveToken(t) { try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch {} }
 
-/* ---------- Member login: the list is stored encrypted with the member password ----------
-   data.json holds {encrypted, salt, iterations, iv, ct}. Without the password it is unreadable,
-   even though the repo is public. Commit messages are encrypted the same way, so History
-   doesn't leak task names either. Editors still need the editor password to save. */
-const MEMBER_STORE = "pages-edit-member";
-const KDF_ITER = 600000;
-let encOn = false;          // is data.json encrypted?
-let memberSalt = null;      // salt of the current member password
-const keyring = {};         // salt -> CryptoKey (old keys stay so older History entries still open)
-class NeedLogin extends Error {}
-
-const u8b64 = u => { let s = ""; u.forEach(x => s += String.fromCharCode(x)); return btoa(s); };
-const b64u8 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-
-async function deriveMemberKey(pw, saltB64) {
-  const baseKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
-  return crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64u8(saltB64), iterations: KDF_ITER, hash: "SHA-256" },
-    baseKey, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
-}
-async function rememberKey(salt, key) {
-  keyring[salt] = key;
-  try { localStorage.setItem(MEMBER_STORE, JSON.stringify({ salt, key: u8b64(new Uint8Array(await crypto.subtle.exportKey("raw", key))) })); } catch {}
-}
-async function loadStoredKey() {
-  try {
-    const st = JSON.parse(localStorage.getItem(MEMBER_STORE) || "null");
-    if (st && st.salt && st.key && !keyring[st.salt])
-      keyring[st.salt] = await crypto.subtle.importKey("raw", b64u8(st.key), "AES-GCM", true, ["encrypt", "decrypt"]);
-  } catch {}
-}
-function forgetMember() { try { localStorage.removeItem(MEMBER_STORE); } catch {} Object.keys(keyring).forEach(k => delete keyring[k]); }
-
-async function aesEncrypt(key, text) {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(text)));
-  return { iv: u8b64(iv), ct: u8b64(ct) };
-}
-async function aesDecrypt(key, iv, ct) {
-  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64u8(iv) }, key, b64u8(ct)));
-}
-
-// Turn whatever is in data.json (plain or encrypted) into the task document
-async function openDoc(raw) {
-  if (!raw || !raw.encrypted) return raw;
-  await loadStoredKey();
-  const key = keyring[raw.salt];
-  if (!key) throw new NeedLogin(raw.salt);
-  try { return JSON.parse(await aesDecrypt(key, raw.iv, raw.ct)); }
-  catch { throw new NeedLogin(raw.salt); }
-}
-async function sealDoc(doc) {
-  if (!encOn) return doc;
-  const { iv, ct } = await aesEncrypt(keyring[memberSalt], JSON.stringify(doc));
-  return { encrypted: 1, salt: memberSalt, iterations: KDF_ITER, iv, ct };
-}
-async function sealText(text) {
-  if (!encOn) return text;
-  const { iv, ct } = await aesEncrypt(keyring[memberSalt], text);
-  return `enc:${memberSalt}:${iv}:${ct}`;
-}
-async function openText(text) {
-  if (!text.startsWith("enc:")) return text;
-  const [, salt, iv, ct] = text.split(":");
-  await loadStoredKey();
-  try { return keyring[salt] ? await aesDecrypt(keyring[salt], iv, ct) : null; } catch { return null; }
-}
-
-// Full-screen sign-in; resolves once the right password is entered
-let loginWaiters = [];
-function showLogin(salt) {
-  document.body.classList.add("login-mode");
-  $("login").hidden = false;
-  $("memberPw").value = ""; $("loginErr").textContent = "";
-  setTimeout(() => $("memberPw").focus(), 50);
-  $("loginForm").onsubmit = async e => {
-    e.preventDefault();
-    const pw = $("memberPw").value;
-    if (!pw) return;
-    $("loginGo").disabled = true; $("loginErr").textContent = ""; $("loginGo").textContent = "Checking…";
-    try {
-      const key = await deriveMemberKey(pw, salt);
-      keyring[salt] = key;
-      await load(true);                         // throws NeedLogin again if the password is wrong
-      if (keyring[salt]) await rememberKey(salt, key);
-    } catch (err) {
-      delete keyring[salt];
-      $("loginErr").textContent = err instanceof NeedLogin ? "That isn't the member password. Check capitals and spaces." : "Couldn't reach the site. Check the Wi-Fi and try again.";
-    }
-    $("loginGo").disabled = false; $("loginGo").textContent = "Sign in";
-  };
-  return new Promise(res => loginWaiters.push(res));
-}
-function hideLogin() {
-  document.body.classList.remove("login-mode");
-  $("login").hidden = true;
-  loginWaiters.splice(0).forEach(r => r());
-}
-
 function setStatus(msg, kind = "") { const s = $("status"); s.textContent = msg; s.className = "status " + kind; }
 
 function headers(extra = {}) {
@@ -909,7 +782,7 @@ function fromB64(b64) {
 
 /* ---------- Load ---------- */
 // Read through the API (fresh, gives sha). Falls back to the Pages copy if the API is rate-limited.
-async function load(fromLogin) {
+async function load() {
   setStatus("Loading…");
   let raw, note = "";
   try {
@@ -925,19 +798,7 @@ async function load(fromLogin) {
     sha = null;
     note = "Showing the published copy. It can lag the latest save by about a minute.";
   }
-  encOn = !!(raw && raw.encrypted);
-  if (encOn) memberSalt = raw.salt;
-  let doc;
-  try { doc = await openDoc(raw); }
-  catch (e) {
-    if (!(e instanceof NeedLogin)) throw e;
-    if (fromLogin) throw e;                     // wrong password: the sign-in form shows the error
-    forgetMember();
-    await showLogin(raw.salt);                  // continues after a successful sign-in
-    return;
-  }
-  hideLogin();
-  data = doc;
+  data = raw;
   setStatus(note);
   normalize(data);
   base = structuredClone(data);
@@ -1119,15 +980,13 @@ async function fetchLatest(ref) {
   const r = await fetch(`${API}/contents/${DATA_PATH}?ref=${encodeURIComponent(ref || branch || "main")}`, { headers: headers(), cache: "no-store" });
   if (!r.ok) throw new Error(r.status);
   const j = await r.json();
-  const raw = JSON.parse(fromB64(j.content));
-  return { sha: j.sha, doc: normalize(await openDoc(raw)), encrypted: !!raw.encrypted, salt: raw.salt };
+  return { sha: j.sha, doc: normalize(JSON.parse(fromB64(j.content))) };
 }
 
 async function putDoc(doc, prevSha, message) {
-  const content = await sealDoc(doc);
   return fetch(`${API}/contents/${DATA_PATH}`, {
     method: "PUT", headers: headers({ "Content-Type": "application/json" }),
-    body: JSON.stringify({ message: await sealText(message), content: toB64(JSON.stringify(content, null, 2) + "\n"), branch, sha: prevSha })
+    body: JSON.stringify({ message, content: toB64(JSON.stringify(doc, null, 2) + "\n"), branch, sha: prevSha })
   });
 }
 
@@ -1222,12 +1081,7 @@ async function save(opts) {
   for (let attempt = 0; attempt < 4; attempt++) {
     let latest;
     try { latest = await fetchLatest(); }
-    catch (e) {
-      if (e instanceof NeedLogin) setStatus("Another captain changed the member password. Copy any unsaved work, then sign out in Settings and sign in with the new password.", "err");
-      else setStatus(`Couldn't reach GitHub (${e.message}). Your changes are still here; try Save again.`, "err");
-      $("saveBtn").disabled = false; return;
-    }
-    if (!opts.setEnc) { encOn = latest.encrypted; if (latest.encrypted) memberSalt = latest.salt; }
+    catch (e) { setStatus(`Couldn't reach GitHub (${e.message}). Your changes are still here; try Save again.`, "err"); $("saveBtn").disabled = false; return; }
     const changed = latest.sha !== sha;
     const { doc, st } = changed ? mergeDoc(base, data, latest.doc) : { doc: structuredClone(data), st: { conflicts: 0, kept: 0 } };
     doc.updated = new Date().toISOString();
@@ -1472,11 +1326,8 @@ let historyCache = null;     // { at, items, page, more }
 async function fetchHistory(page) {
   const r = await fetch(`${API}/commits?path=${DATA_PATH}&per_page=25&page=${page}`, { headers: headers(), cache: "no-store" });
   if (!r.ok) throw new Error(r.status);
-  const list = await r.json();
-  const msgs = await Promise.all(list.map(c => openText(c.commit.message || "")));
-  return list.map((c, i) => {
-    const locked = msgs[i] === null;
-    const msg = locked ? "Saved with an older member password" : msgs[i];
+  return (await r.json()).map(c => {
+    const msg = c.commit.message || "";
     const first = msg.split("\n")[0];
     const m = first.match(/^([^:\n]{1,40}): (.+)$/);
     const legacy = first === "Update tasks via site";
@@ -1487,7 +1338,7 @@ async function fetchHistory(page) {
       what: m ? m[2] : legacy ? "Saved from the site" : first,
       details: msg.split("\n").filter(l => l.startsWith("- ")).map(l => l.slice(2)),
       legacy: legacy || !m,
-      label: locked ? "Locked" : m ? m[1] : legacy ? "Someone" : "GitHub"   // old site saves had no name; others were made on GitHub directly
+      label: m ? m[1] : legacy ? "Someone" : "GitHub"   // old site saves had no name; others were made on GitHub directly
     };
   });
 }
@@ -1565,7 +1416,7 @@ function histRow(it, isLatest) {
           const ul = document.createElement("ul");
           (ch.length ? ch : ["No changes to tasks, meetings or deadlines"]).forEach(d => ul.append(Object.assign(document.createElement("li"), { textContent: d })));
           detail.append(ul); detail.dataset.done = "1";
-        } catch (e) { detail.append(div("muted", e instanceof NeedLogin ? "This version is locked with an older member password." : `Couldn't compare (${e.message}).`)); detail.dataset.done = "1"; }
+        } catch (e) { detail.append(div("muted", `Couldn't compare (${e.message}).`)); detail.dataset.done = "1"; }
         show.disabled = false;
       }
       detail.hidden = false; show.textContent = "Hide changes";
@@ -1607,7 +1458,7 @@ async function restoreVersion(it) {
       if (r.status !== 409 && r.status !== 422) throw new Error(r.status);
     }
     throw new Error("busy");
-  } catch (e) { setStatus(e instanceof NeedLogin ? "That version is locked with an older member password, so it can't be restored here." : `Restore failed (${e.message}). Nothing was changed.`, "err"); }
+  } catch (e) { setStatus(`Restore failed (${e.message}). Nothing was changed.`, "err"); }
 }
 
 /* ---------- Settings: visual options saved in this browser only ---------- */
@@ -1680,19 +1531,6 @@ function renderSettings() {
   ni.onchange = () => { setMyName(ni.value); setStatus(ni.value.trim() ? "Name saved on this device." : "Name cleared.", "ok"); };
   ng.append(nn, ni);
   box.prepend(ng);
-  if (encOn) {
-    const sg = div("set-group");
-    const sn = div("set-name", "Member access");
-    const ssm = document.createElement("small"); ssm.textContent = "Signed in on this device."; sn.append(ssm);
-    const so = document.createElement("button"); so.className = "tbtn"; so.textContent = "Sign out";
-    so.style.justifySelf = "start";
-    so.onclick = () => {
-      if (dirty && !confirm("You have unsaved changes. Sign out anyway?")) return;
-      forgetMember(); token = null; saveToken(null); location.reload();
-    };
-    sg.append(sn, so);
-    box.append(sg);
-  }
   list.append(box, reset);
 }
 
@@ -1714,13 +1552,10 @@ async function refreshDisplay() {
     else {
       const r = await fetch(`${DATA_PATH}?t=${Date.now()}`, { cache: "no-store" });
       if (!r.ok) throw new Error(r.status);
-      doc = normalize(await openDoc(await r.json()));
+      doc = normalize(await r.json());
     }
     data = doc; base = structuredClone(doc); dispUpdated = new Date(); dispError = false;
-  } catch (e) {
-    if (e instanceof NeedLogin) { forgetMember(); location.reload(); return; }   // member password changed
-    dispError = true;
-  }
+  } catch { dispError = true; }
   render();
 }
 
@@ -2304,47 +2139,7 @@ function renderCaptain() {
   upcoming.forEach(m => ml.append(meetingRow(m)));
   usec.append(ml);
 
-  // Member login
-  const ssec = section("Member login");
-  ssec.append(div("muted", encOn
-    ? "On. The list is encrypted, so only people with the member password can read it. Changing the password signs everyone out; they sign in again with the new one."
-    : "Off. Anyone with the link can read this site. Turning it on encrypts the list so only people with the member password can open it."));
-  const sr = div("form-row"); sr.style.marginTop = "10px";
-  sr.innerHTML = `<label>${encOn ? "New member password" : "Member password"}<input type="password" id="mpw1" autocomplete="new-password"></label>
-    <label>Type it again<input type="password" id="mpw2" autocomplete="new-password"></label>
-    <button class="tbtn go" id="mpwGo">${encOn ? "Change password" : "Turn on member login"}</button>`;
-  ssec.append(sr);
-  if (encOn) {
-    const off = document.createElement("button"); off.className = "tbtn"; off.textContent = "Turn off member login";
-    off.onclick = async () => {
-      if (!confirm("Turn off member login? The list will be readable by anyone with the link again.")) return;
-      encOn = false;
-      if (await save({ message: "turned off member login", setEnc: true })) setStatus("Member login is off. The list is readable by anyone with the link.", "ok");
-      else encOn = true;
-    };
-    ssec.append(off);
-  }
-  list.append(ssec, dsec, msec, rsec, usec);
-  $("mpwGo").onclick = async () => {
-    const a = $("mpw1").value, b = $("mpw2").value;
-    if (a.length < 8) return setStatus("Use at least 8 characters. A short phrase is easier to remember and harder to guess.", "err");
-    if (a !== b) return setStatus("The two passwords don't match.", "err");
-    if (dirty && !confirm("This also saves your other unsaved changes. Continue?")) return;
-    setStatus("Encrypting…");
-    const salt = u8b64(crypto.getRandomValues(new Uint8Array(16)));
-    const key = await deriveMemberKey(a, salt);
-    await rememberKey(salt, key);
-    const wasOn = encOn, oldSalt = memberSalt;
-    encOn = true; memberSalt = salt;
-    if (await save({ message: wasOn ? "changed the member password" : "turned on member login", setEnc: true })) {
-      $("mpw1").value = $("mpw2").value = "";
-      setStatus(wasOn ? "Member password changed. Share the new one with the team; everyone else signs in again." : "Member login is on. Share the member password with the team.", "ok");
-    } else {
-      encOn = wasOn; memberSalt = oldSalt;
-      if (oldSalt && keyring[oldSalt]) await rememberKey(oldSalt, keyring[oldSalt]);
-    }
-  };
-
+  list.append(dsec, msec, rsec, usec);
   $("dAdd").onclick = () => {
     const d = $("dDate").value, title = $("dTitle").value.trim();
     if (!d || !title) return setStatus("Give the deadline a date and a name.", "err");
@@ -2759,10 +2554,6 @@ function addTask(teamId) {
 $("unlockBtn").onclick = unlock;
 $("lockBtn").onclick = lock;
 $("saveBtn").onclick = () => save();
-$("memberShow").onclick = () => {
-  const i = $("memberPw"), show = i.type === "password";
-  i.type = show ? "text" : "password"; $("memberShow").textContent = show ? "Hide" : "Show"; i.focus();
-};
 $("showPw").onclick = () => {
   const i = $("tokenInput"); const show = i.type === "password";
   i.type = show ? "text" : "password"; $("showPw").textContent = show ? "Hide" : "Show"; i.focus();
