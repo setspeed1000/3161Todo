@@ -424,8 +424,16 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T15:13:21.812Z",
-  "events": [],
+  "updated": "2026-10-21T16:04:05.997Z",
+  "events": [
+    {
+      "id": "53da8034-bf96-4981-932b-69a7260e917e",
+      "name": "Stemley",
+      "start": "2026-10-31",
+      "end": "",
+      "location": "St. Mary's"
+    }
+  ],
   "checklists": [
     {
       "id": "tpl-pit",
