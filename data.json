@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
   "subtitle": "Unlock to edit. Every save is a commit.",
-  "updated": "2026-10-21T01:56:53.509Z",
+  "updated": "2026-10-21T02:02:35.655Z",
   "teams": [
     {
       "id": "mechanical",
@@ -109,6 +109,17 @@
       "subsystem": "Other",
       "priority": "High",
       "due": "2026-10-21",
+      "done": false,
+      "notes": ""
+    },
+    {
+      "id": "0d33b6e0-89b1-486a-b3e0-9e1a58047b37",
+      "team": "design",
+      "title": "CAD the whole robot right fucking now",
+      "owner": "",
+      "subsystem": "Other",
+      "priority": "Low",
+      "due": "2046-03-21",
       "done": false,
       "notes": ""
     }
