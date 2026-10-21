@@ -512,6 +512,22 @@
   .d-need { color: #f5d36a; font-weight: 600; }
   .d-full { color: #ef6461; font-weight: 700; }
 
+  /* Dependencies */
+  .deps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 13px; }
+  .deps-lab { color: var(--muted); font-weight: 600; }
+  .dep-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--sunk); border-radius: 3px; padding: 2px 4px 2px 8px; max-width: 100%; }
+  .dep-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dep-chip.done { opacity: .6; text-decoration: line-through; }
+  .dep-chip button { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 3px; }
+  .dep-chip button:hover { color: var(--red); }
+  .dep-add { font-size: 13px; padding: 3px 6px; border: 1px dashed #c9a227; border-radius: 3px; background: var(--edit); color: var(--ink); max-width: 100%; }
+  .blocked a.dep-link { color: var(--red); font-weight: 600; }
+  .holds { margin-top: 6px; font-size: 13px; color: var(--muted); }
+  .holds b { font-weight: 600; }
+  .holds a.dep-link { color: var(--ink); }
+  .task.flash { outline: 3px solid var(--yellow); outline-offset: 2px; transition: outline-color 1.4s; }
+  .st-sel:disabled { opacity: 1; color: var(--red); border-color: var(--red); }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -709,7 +725,37 @@ const PART_LABEL = { need: "To order", ordered: "Ordered", arrived: "Arrived" };
 let statusFilter = "all";
 
 // A task's status; "done" stays in sync with the old done checkbox field
-const stOf = t => t.done ? "done" : (t.status && t.status !== "done" ? t.status : "todo");
+// Dependencies: a task is Blocked while any task it depends on is unfinished, then falls back to its own status
+function openDeps(t, tasks) {
+  tasks = tasks || (data && data.tasks) || [];
+  return (t.dependsOn || []).map(id => tasks.find(x => x.id === id)).filter(d => d && !d.done);
+}
+const ownSt = t => t.done ? "done" : (t.status && t.status !== "done" ? t.status : "todo");
+const stOf = (t, tasks) => t.done ? "done" : openDeps(t, tasks).length ? "blocked" : ownSt(t);
+// Does task a depend on b, directly or through other tasks?
+function dependsOnTask(a, bId, seen = new Set()) {
+  if (seen.has(a.id)) return false; seen.add(a.id);
+  return (a.dependsOn || []).some(id => id === bId || ((x => x && dependsOnTask(x, bId, seen))(data.tasks.find(t => t.id === id))));
+}
+// Tasks (from other subteams) held up by this subteam: manual "waiting on" or an unfinished dependency it owns
+function waitingOn(teamId) {
+  const out = [];
+  data.tasks.forEach(t => {
+    if (t.done) return;
+    const deps = openDeps(t).filter(d => d.team === teamId && t.team !== teamId);
+    if (deps.length) out.push({ t, why: deps.map(d => d.title).join(", ") });
+    else if (ownSt(t) === "blocked" && t.blockedBy === teamId) out.push({ t, why: t.blockedNote || "" });
+  });
+  return out;
+}
+let flashId = null;      // task to scroll to after following a dependency link
+function taskLink(d) {
+  const a = document.createElement("a");
+  a.href = "#" + encodeURIComponent(d.team); a.textContent = d.title; a.className = "dep-link";
+  a.title = `${d.title} (${teamName(d.team)})`;
+  a.onclick = () => { flashId = d.id; if (location.hash === a.getAttribute("href")) render(); };
+  return a;
+}
 function setSt(t, st) {
   t.status = st; t.done = st === "done";
   if (st !== "blocked") { delete t.blockedBy; delete t.blockedNote; }
@@ -1102,11 +1148,19 @@ function describeChanges(b, a) {
     const o = bk.get(id);
     if (!o) return out.push(`added ${q(t.title)} to ${tn(t.team)}`);
     if (deepEq(o, t)) return;
-    if (!o.done && t.done) out.push(`completed ${q(t.title)}`);
-    else if (o.done && !t.done) out.push(`reopened ${q(t.title)}`);
+    if (!o.done && t.done) {
+      out.push(`completed ${q(t.title)}`);
+      (a.tasks || []).filter(x => !x.done && (x.dependsOn || []).includes(t.id) && !openDeps(x, a.tasks).length)
+        .forEach(x => out.push(`unblocked ${q(x.title)}`));
+    }
+    const da = t.dependsOn || [], db = o.dependsOn || [];
+    const tt = id => q(((a.tasks || []).find(x => x.id === id) || (b.tasks || []).find(x => x.id === id) || {}).title);
+    da.filter(x => !db.includes(x)).forEach(x => out.push(`made ${q(t.title)} depend on ${tt(x)}`));
+    if (o.done && !t.done) out.push(`reopened ${q(t.title)}`);
+    db.filter(x => !da.includes(x)).forEach(x => out.push(`removed ${tt(x)} as a dependency of ${q(t.title)}`));
     if (o.team !== t.team) out.push(`moved ${q(t.title)} to ${tn(t.team)}`);
     if (o.title !== t.title) out.push(`renamed ${q(o.title)} to ${q(t.title)}`);
-    const so = stOf(o), sn = stOf(t);
+    const so = ownSt(o), sn = ownSt(t);
     if (so !== sn && so !== "done" && sn !== "done") {
       if (sn === "doing") out.push(`started ${q(t.title)}`);
       else if (sn === "blocked") out.push(`marked ${q(t.title)} blocked${t.blockedBy ? ` (waiting on ${tn(t.blockedBy)})` : ""}`);
@@ -1402,6 +1456,14 @@ function render(focusId) {
     const el = list.querySelector(`[data-id="${CSS.escape(focusId)}"] .title`);
     if (el) { el.focus(); document.getSelection().selectAllChildren(el); }
   }
+  if (flashId) {
+    const id = flashId; flashId = null;
+    if (!list.querySelector(`[data-id="${CSS.escape(id)}"]`) && statusFilter !== "all") { statusFilter = "all"; return render(); }
+    requestAnimationFrame(() => {
+      const el = list.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1600); }
+    });
+  }
 }
 
 /* ---------- History: every save is a commit; list them and restore old versions ---------- */
@@ -1673,7 +1735,9 @@ function dTask(t, ts) {
     const d = dueInfo(t);
     if (d.cls) meta.append(el("span", "d-due " + d.cls, d.text));
   }
-  if (st === "blocked") meta.append(el("span", "d-wait", t.blockedBy ? `Waiting on ${teamName(t.blockedBy)}` : "Blocked"));
+  const od = openDeps(t);
+  if (od.length) meta.append(el("span", "d-wait", `Waiting on ${od.map(d => d.title).join(", ")}`));
+  else if (st === "blocked") meta.append(el("span", "d-wait", t.blockedBy ? `Waiting on ${teamName(t.blockedBy)}` : "Blocked"));
   if (t.needed) { const f = Math.min(t.filled || 0, t.needed); meta.append(el("span", f >= t.needed ? "d-full" : "d-need", f >= t.needed ? "Full" : `Needs ${t.needed - f} more`)); }
   const need = (t.parts || []).filter(p => (p.status || "need") !== "arrived").length;
   if (need) meta.append(el("span", "", `${need} part${need === 1 ? "" : "s"} not here`));
@@ -1746,7 +1810,7 @@ function renderDisplay() {
     const h = el("div", "d-col-h");
     h.append(el("span", "d-col-name", teamName(id)), el("span", "d-col-n", open.length ? `${open.length} open` : "All clear"));
     col.append(h);
-    const waiting = data.tasks.filter(t => !t.done && stOf(t) === "blocked" && t.blockedBy === id).length;
+    const waiting = waitingOn(id).length;
     if (waiting) col.append(el("div", "d-col-wait", `${waiting} task${waiting === 1 ? " is" : "s are"} waiting on ${teamName(id)}`));
     open.slice(0, perCol).forEach(t => col.append(dTask(t, ts)));
     if (open.length > perCol) col.append(el("div", "d-more", `+${open.length - perCol} more`));
@@ -1900,7 +1964,7 @@ function renderHome() {
     a.append(n);
     const meta = el("span", "tc-meta");
     const blk = op.filter(t => stOf(t) === "blocked").length;
-    const waitOn = data.tasks.filter(t => !t.done && stOf(t) === "blocked" && t.blockedBy === tm.id).length;
+    const waitOn = waitingOn(tm.id).length;
     const toOrder = tm.id === "inventory" ? allParts().filter(x => (x.pt.status || "need") === "need").length : 0;
     if (od) meta.append(el("span", "bad", `${od} overdue`));
     if (waitOn) meta.append(el("span", "bad", `${waitOn} waiting on them`));
@@ -2365,7 +2429,9 @@ function taskEl(t) {
     };
     const stSel = document.createElement("select");
     stSel.setAttribute("aria-label", "Status"); stSel.className = "st-sel";
-    STATUSES.forEach(([v, l]) => stSel.add(new Option(l, v, false, v === st)));
+    const depBlocked = !t.done && openDeps(t).length > 0;
+    STATUSES.forEach(([v, l]) => stSel.add(new Option(l, v, false, v === (depBlocked ? "blocked" : ownSt(t)))));
+    if (depBlocked) { stSel.disabled = true; stSel.title = "Blocked until the tasks it depends on are done. Tick the box to mark it done anyway."; }
     stSel.onchange = () => { setSt(t, stSel.value); markDirty(); render(); };
     const need = document.createElement("select");
     need.setAttribute("aria-label", "Members needed"); need.className = "need-sel";
@@ -2396,8 +2462,19 @@ function taskEl(t) {
   mid.append(title, meta);
   if (t.needed) mid.append(slotsEl(t));
 
-  // Blocked: what it's waiting on
-  if (st === "blocked") {
+  // Waiting on unfinished dependencies
+  const od = t.done ? [] : openDeps(t);
+  if (od.length && !editing) {
+    const bl = div("blocked");
+    const line = document.createElement("span");
+    line.append(Object.assign(document.createElement("b"), { textContent: "Waiting on " }));
+    od.forEach((d, i) => { if (i) line.append(", "); line.append(taskLink(d)); if (d.team !== t.team) line.append(` (${teamName(d.team)})`); });
+    bl.append(line);
+    mid.append(bl);
+  }
+
+  // Blocked by hand: what it's waiting on
+  if (!t.done && ownSt(t) === "blocked") {
     const bl = div("blocked");
     if (editing) {
       const lab = document.createElement("span"); lab.textContent = "Waiting on";
@@ -2418,6 +2495,16 @@ function taskEl(t) {
       bl.append(line);
     }
     mid.append(bl);
+  }
+
+  // Dependencies editor (edit mode) and what this task is holding up (view mode)
+  if (editing) mid.append(depsEditor(t));
+  const holds = t.done ? [] : data.tasks.filter(x => !x.done && (x.dependsOn || []).includes(t.id));
+  if (holds.length && !editing) {
+    const hl = div("holds");
+    hl.append(Object.assign(document.createElement("b"), { textContent: "Holding up " }));
+    holds.forEach((d, i) => { if (i) hl.append(", "); hl.append(taskLink(d)); if (d.team !== t.team) hl.append(` (${teamName(d.team)})`); });
+    mid.append(hl);
   }
 
   const notes = div("notes", t.notes || "");
@@ -2444,6 +2531,42 @@ function taskEl(t) {
 
   el.append(cb, mid, right);
   return el;
+}
+
+/* ---------- Dependencies editor ---------- */
+function depsEditor(t) {
+  const box = div("deps");
+  box.append(Object.assign(document.createElement("span"), { className: "deps-lab", textContent: "Depends on" }));
+  (t.dependsOn || []).forEach(id => {
+    const d = data.tasks.find(x => x.id === id);
+    if (!d) return;
+    const chip = div("dep-chip" + (d.done ? " done" : ""));
+    chip.append(Object.assign(document.createElement("span"), { textContent: `${d.title}${d.team !== t.team ? ` (${teamName(d.team)})` : ""}${d.done ? ", done" : ""}` }));
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", `Remove dependency on ${d.title}`);
+    x.onclick = () => { t.dependsOn = t.dependsOn.filter(i => i !== id); if (!t.dependsOn.length) delete t.dependsOn; markDirty(); render(); };
+    chip.append(x);
+    box.append(chip);
+  });
+  // Any unfinished task that isn't this one, isn't already listed, and wouldn't create a loop
+  const options = data.tasks.filter(d => d.id !== t.id && !d.done && !(t.dependsOn || []).includes(d.id) && !dependsOnTask(d, t.id));
+  if (options.length) {
+    const sel = document.createElement("select"); sel.className = "dep-add"; sel.setAttribute("aria-label", "Add a dependency");
+    sel.add(new Option(t.dependsOn && t.dependsOn.length ? "Add another task" : "Add a task it depends on", ""));
+    data.teams.forEach(tm => {
+      const mine = sortTasks(options.filter(d => d.team === tm.id));
+      if (!mine.length) return;
+      const g = document.createElement("optgroup"); g.label = tm.name;
+      mine.forEach(d => g.append(new Option(d.title, d.id)));
+      sel.append(g);
+    });
+    sel.onchange = () => {
+      if (!sel.value) return;
+      t.dependsOn = [...(t.dependsOn || []), sel.value];
+      markDirty(); render();
+    };
+    box.append(sel);
+  } else if (!(t.dependsOn || []).length) box.append(Object.assign(document.createElement("span"), { className: "muted small", textContent: "No other open tasks to depend on." }));
+  return box;
 }
 
 /* ---------- Members needed: one box per slot, red once every slot is filled ---------- */
@@ -2572,15 +2695,14 @@ function ordersEl() {
 
 /* ---------- Other subteams waiting on this one ---------- */
 function waitingEl(team) {
-  const w = data.tasks.filter(t => !t.done && stOf(t) === "blocked" && t.blockedBy === team.id);
+  const w = waitingOn(team.id);
   if (!w.length) return null;
   const box = div("waiting");
   box.append(Object.assign(document.createElement("h3"), { className: "sec-title", textContent: `Waiting on ${team.name} (${w.length})` }));
-  sortTasks(w).forEach(t => {
+  w.sort((x, y) => sortTasks([x.t, y.t])[0] === x.t ? -1 : 1).forEach(({ t, why }) => {
     const r = div("wait-row");
-    const a = document.createElement("a"); a.href = "#" + encodeURIComponent(t.team); a.textContent = t.title;
-    r.append(Object.assign(document.createElement("span"), { className: "tag", textContent: teamName(t.team) }), a);
-    if (t.blockedNote) r.append(Object.assign(document.createElement("span"), { className: "muted", textContent: t.blockedNote }));
+    r.append(Object.assign(document.createElement("span"), { className: "tag", textContent: teamName(t.team) }), taskLink(t));
+    if (why) r.append(Object.assign(document.createElement("span"), { className: "muted", textContent: why }));
     box.append(r);
   });
   return box;
@@ -2652,7 +2774,7 @@ function setMenu(open) {
 $("menuBtn").onclick = () => setMenu(!$("side").classList.contains("open"));
 $("scrim").onclick = () => setMenu(false);
 document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
-window.addEventListener("hashchange", () => { setMenu(false); statusFilter = "all"; render(); window.scrollTo(0, 0); });
+window.addEventListener("hashchange", () => { setMenu(false); statusFilter = "all"; const f = flashId; if (!f) window.scrollTo(0, 0); render(); });
 $("hideDone").onchange = e => {
   hideDone = e.target.checked;
   try { localStorage.setItem(HIDE_KEY, hideDone ? "1" : "0"); } catch {}
