@@ -310,7 +310,6 @@
       "title": "Complete STIMS"
     }
   ],
-  "updated": "2026-10-21T13:21:14.853Z",
   "workshops": [
     {
       "id": "3f164fa4-0a50-438c-b2e6-67b8fb7e98c8",
@@ -321,5 +320,6 @@
       "where": "Shop",
       "notes": ""
     }
-  ]
+  ],
+  "updated": "2026-10-21T13:26:05.604Z"
 }
