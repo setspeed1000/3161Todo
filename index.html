@@ -459,6 +459,24 @@
   .d-dl-what { font-weight: 600; }
   .d-agenda { white-space: pre-line; line-height: 1.5; font-size: 1.05em; color: #e6e6e6; overflow: hidden; min-height: 0; flex: 1 1 auto; }
   .d-agenda.clip { -webkit-mask-image: linear-gradient(to bottom, #000 85%, transparent); mask-image: linear-gradient(to bottom, #000 85%, transparent); }
+  .d-ag-open { display: flex; flex-direction: column; gap: .5em; flex: 1 1 auto; min-height: 0; text-align: left; font: inherit; color: inherit;
+    background: none; border: 1px solid transparent; border-radius: 6px; padding: 0 .6em .6em; margin: 0 -.6em; cursor: pointer; }
+  .d-ag-open:hover, .d-ag-open:focus-visible { border-color: #3a3a3a; background: #161616; outline: none; }
+  .d-ag-hint { margin-left: .6em; padding: .1em .5em; border: 1px solid #595959; border-radius: 3px; font-size: .85em; letter-spacing: .05em; color: #cccccc; }
+  body.idle .d-ag-hint { opacity: .6; }
+  .d-ag-over { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .78); display: grid; place-items: center;
+    padding: 3vh 4vw; font-size: clamp(16px, 1.4vw, 32px); color: #f2f2f2; }
+  .d-ag-card { width: min(100%, 60em); max-height: 100%; display: flex; flex-direction: column; background: #1c1c1c;
+    border-top: .35em solid #cc991f; border-radius: 6px; box-shadow: 0 1em 3em rgba(0, 0, 0, .6); min-height: 0; }
+  .d-ag-top { display: flex; justify-content: space-between; align-items: center; gap: 1em; padding: 1em 1.4em .6em; }
+  .d-ag-h { font: 700 1.5em/1.1 "Rajdhani", sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #cc991f; }
+  .d-ag-x { font: 500 1em "Roboto", sans-serif; color: #f2f2f2; background: #2a2a2a; border: 1px solid #595959; border-radius: 4px;
+    padding: .5em 1.2em; cursor: pointer; flex: none; }
+  .d-ag-x:hover { background: #333333; }
+  .d-ag-body { white-space: pre-line; font-size: 1.45em; line-height: 1.55; padding: .2em 1.4em 1.2em 1.4em; overflow-y: auto;
+    min-height: 0; outline: none; overscroll-behavior: contain; }
+  .d-ag-txt.two { column-count: 2; column-gap: 2.4em; column-rule: 1px solid #333333; }
+  .d-ag-card:has(.two) { width: min(100%, 90em); }
   .d-main { min-height: 0; display: flex; flex-direction: column; }
   .d-cols { --n: 3; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 1em; margin-top: .6em; min-height: 0; flex: 1; }
   .d-col { background: #1c1c1c; border-radius: 6px; padding: .9em; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: .45em; border-top: .3em solid #e6ac22; }
@@ -1969,7 +1987,11 @@ function renderDisplay() {
     });
   }
   if (m && m.agenda) {
-    side.append(el("div", "d-label", "Agenda"), el("div", "d-agenda", m.agenda));
+    const ag = el("button", "d-ag-open"); ag.type = "button"; ag.setAttribute("aria-label", "Enlarge the meeting agenda");
+    const lab = el("div", "d-label", "Agenda "); lab.append(el("span", "d-ag-hint", "Tap to enlarge"));
+    ag.append(lab, el("div", "d-agenda", m.agenda));
+    ag.onclick = () => openAgenda(m);
+    side.append(ag);
   }
   body.append(side);
 
@@ -2015,10 +2037,49 @@ function renderDisplay() {
   box.append(foot);
 
   if (!dispUpdated) dispUpdated = now;
+  // Keep an open agenda in step with the minute refresh, without losing its scroll position
+  if (agendaDlg) {
+    if (m && m.agenda) { const b = document.getElementById("dAgBig"); if (b && b.textContent !== m.agenda) { b.textContent = m.agenda; fitAgenda(); } }
+    else closeAgenda();
+  }
   // Fade the agenda's last line only when it doesn't fit
   requestAnimationFrame(() => { const a = box.querySelector(".d-agenda"); if (a) a.classList.toggle("clip", a.scrollHeight > a.clientHeight + 2); });
   keepAwake();
 }
+
+// Enlarged agenda on the shop display. Closes itself after 5 minutes untouched so the board never stays covered.
+let agendaDlg = null, agendaTimer = null;
+function openAgenda(m) {
+  closeAgenda();
+  const o = el("div", "d-ag-over");
+  o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Meeting agenda");
+  const card = el("div", "d-ag-card");
+  const top = el("div", "d-ag-top");
+  top.append(el("div", "d-ag-h", `Agenda, ${niceDate(m.date, { weekday: "long", month: "long", day: "numeric" })}`));
+  const x = el("button", "d-ag-x", "Close"); x.type = "button"; x.onclick = closeAgenda;
+  top.append(x);
+  const body = el("div", "d-ag-body"); body.tabIndex = 0;
+  const txt = el("div", "d-ag-txt", m.agenda); txt.id = "dAgBig";
+  body.append(txt); card.append(top, body); o.append(card);
+  o.onclick = ev => { if (ev.target === o) closeAgenda(); };
+  const poke = () => { clearTimeout(agendaTimer); agendaTimer = setTimeout(closeAgenda, 5 * 60000); };
+  ["pointerdown", "wheel", "keydown", "touchmove"].forEach(t => o.addEventListener(t, poke, { passive: true }));
+  document.body.append(o); agendaDlg = o; poke(); fitAgenda(); x.focus();
+}
+// Long agendas flow into two columns on a wide screen instead of scrolling one narrow column
+function fitAgenda() {
+  const txt = document.getElementById("dAgBig"); if (!txt) return;
+  const sc = txt.parentElement;
+  txt.classList.remove("two");
+  if (sc.clientWidth > 900 && sc.scrollHeight > sc.clientHeight + 2) txt.classList.add("two");
+}
+window.addEventListener("resize", () => { if (agendaDlg) fitAgenda(); });
+function closeAgenda() {
+  clearTimeout(agendaTimer);
+  if (agendaDlg) { agendaDlg.remove(); agendaDlg = null; }
+}
+document.addEventListener("keydown", ev => { if (ev.key === "Escape" && agendaDlg) closeAgenda(); });
+window.addEventListener("hashchange", () => { if (agendaDlg && currentPage() !== "display") closeAgenda(); });
 
 // Clock tick, minute refresh, and hide the cursor and controls when idle
 setInterval(() => {
