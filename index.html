@@ -582,7 +582,12 @@
   .ev-name { font: 700 22px/1.1 "Rajdhani", sans-serif; margin-top: 8px; }
   .ev-meta { font-size: 14px; color: var(--muted); margin-top: 2px; }
   .ev-dl { font-size: 13px; color: var(--red); font-weight: 600; margin-top: 8px; }
-  .mrow.ev { border-left: 4px solid var(--yellow); }
+  .mrow.ev { border-left: 4px solid var(--yellow); grid-template-columns: 11ch minmax(0, 1fr) minmax(0, 12em) auto auto; }
+  @media (max-width: 700px) {
+    .mrow.ev { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "d c x" "n n n" "l l l"; }
+    .mrow.ev > :nth-child(1) { grid-area: d; } .mrow.ev > :nth-child(2) { grid-area: n; order: 0; }
+    .mrow.ev > :nth-child(3) { grid-area: l; } .mrow.ev > :nth-child(4) { grid-area: c; } .mrow.ev > :nth-child(5) { grid-area: x; }
+  }
   .ev-loc { padding: 4px 8px; border: 1px dashed #b3861b; border-radius: 3px; background: var(--edit); color: var(--ink); font-size: 13px; width: 12em; }
   .form-row select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); font: inherit; }
   .d-ev { margin-top: .35em; color: #e6ac22; font: 700 1.25em/1.1 "Rajdhani", sans-serif; }
@@ -642,6 +647,35 @@
   .ws-spots { display: block; font-size: 12px; font-weight: 700; margin-top: 4px; color: var(--yellow); }
   .ws-spots.full { color: #d5573b; }
   @media (max-width: 700px) { .ws-slots { grid-column: 1 / -1; } .ck-grid { grid-template-columns: 1fr; } }
+
+  /* Event reminders */
+  .rmbox { display: block; border: 1px solid var(--yellow); border-left-width: 3px; color: var(--ink); background: transparent; text-decoration: none;
+    font-size: 11.5px; font-weight: 600; line-height: 1.3; padding: 1px 6px; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rmbox::before { content: "Reminder: "; font-weight: 500; color: var(--muted); }
+  .boxes.txt .rmbox::before { content: none; }
+  .rmbox.done { opacity: .55; text-decoration: line-through; }
+  .wk .rmbox { white-space: normal; }
+  .rem-line { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--line); }
+  .rem-line input { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--green); flex: none; }
+  .rem-tx { display: grid; gap: 1px; min-width: 0; }
+  .rem-t { font-size: 14px; font-weight: 600; }
+  .rem-m { font-size: 12.5px; color: var(--muted); }
+  .rem-line.due .rem-m { color: var(--red); font-weight: 600; }
+  .remcard { border-left: 4px solid var(--yellow); }
+  .day-rem { margin-bottom: 12px; }
+  .day-rem h4 { margin: 0 0 2px; }
+  .ev-rems { display: grid; gap: 4px; margin: -2px 0 10px 24px; padding-left: 12px; border-left: 2px solid var(--line); }
+  .ev-rem { display: grid; grid-template-columns: minmax(0, 1fr) 5em auto auto; gap: 10px; align-items: center; font-size: 14px; }
+  .ev-rem .c { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .ev-rem input { padding: 5px 8px; border: 1px dashed #b3861b; border-radius: 3px; background: var(--edit); color: var(--ink); font: inherit; font-size: 13px; min-width: 0; }
+  .ev-rem.add input.rem-in { border-style: solid; border-color: var(--line); background: var(--panel); }
+  .d-rem { display: grid; padding: .5em .8em; border-left: .3em solid #cc991f; border: 1px solid #cc991f; border-left-width: .3em; border-radius: 3px; margin-bottom: .4em; }
+  @media (max-width: 700px) {
+    .ev-rems { margin-left: 4px; }
+    .ev-rem { grid-template-columns: 4.5em minmax(0, 1fr) auto; grid-template-areas: "t t t" "n c x"; row-gap: 4px; padding-bottom: 6px; }
+    .ev-rem > :nth-child(1) { grid-area: t; } .ev-rem > :nth-child(2) { grid-area: n; }
+    .ev-rem > :nth-child(3) { grid-area: c; } .ev-rem > :nth-child(4) { grid-area: x; }
+  }
 
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
@@ -1210,7 +1244,22 @@ function describeChanges(b, a) {
   ad.forEach((x, id) => { const o = bd.get(id); if (!o) out.push(`added deadline ${q(x.title)} on ${short(x.date)}`); else if (!deepEq(o, x)) out.push(`edited deadline ${q(x.title)}`); });
   bd.forEach((x, id) => { if (!ad.has(id)) out.push(`removed deadline ${q(x.title)}`); });
   const be = byKey(b.events, x => x.id), ae = byKey(a.events, x => x.id);
-  ae.forEach((x, id) => { const o = be.get(id); if (!o) out.push(`added the event ${q(x.name)} on ${short(x.start)}`); else if (!deepEq(o, x)) out.push(`edited the event ${q(x.name)}`); });
+  ae.forEach((x, id) => {
+    const o = be.get(id);
+    if (!o) { const n = (x.reminders || []).length; return out.push(`added the event ${q(x.name)} on ${short(x.start)}${n ? ` with ${n} reminder${n === 1 ? "" : "s"}` : ""}`); }
+    if (deepEq(o, x)) return;
+    const orr = new Map((o.reminders || []).map(r => [r.id, r])), nr = new Map((x.reminders || []).map(r => [r.id, r]));
+    nr.forEach((r, rid) => {
+      const y = orr.get(rid);
+      if (!y) out.push(`added a reminder to ${q(x.name)}: ${q(r.text)}`);
+      else if (!y.done && r.done) out.push(`ticked off the reminder ${q(r.text)}`);
+      else if (y.done && !r.done) out.push(`reopened the reminder ${q(r.text)}`);
+      else if (!deepEq(y, r)) out.push(`edited the reminder ${q(r.text)}`);
+    });
+    orr.forEach((r, rid) => { if (!nr.has(rid)) out.push(`removed the reminder ${q(r.text)} from ${q(x.name)}`); });
+    const { reminders: a1, ...oa } = o, { reminders: a2, ...xa } = x;
+    if (!deepEq(oa, xa)) out.push(`edited the event ${q(x.name)}`);
+  });
   be.forEach((x, id) => { if (!ae.has(id)) out.push(`removed the event ${q(x.name)}`); });
   const bc = byKey(b.checklists, x => x.id), ac = byKey(a.checklists, x => x.id);
   ac.forEach((x, id) => { const o = bc.get(id); if (!o) out.push(`created the checklist template ${q(x.name)}`); else if (!deepEq(o, x)) out.push(`edited the checklist template ${q(x.name)}`); });
@@ -1374,6 +1423,37 @@ function eventDates(e) {
   const o = { weekday: "short", month: "short", day: "numeric" };
   return e.end && e.end !== e.start ? `${niceDate(e.start, o)} to ${niceDate(e.end, o)}` : niceDate(e.start, o);
 }
+/* ---------- Event reminders: "N days before" an event, shown on that date until ticked off ---------- */
+const remDate = (e, r) => iso(addDays(parseDate(e.start), -(r.days || 0)));
+function allReminders() {
+  const out = [];
+  (data.events || []).forEach(e => (e.reminders || []).forEach(r => { if (e.start) out.push({ e, r, date: remDate(e, r) }); }));
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+const remindersOn = ds => allReminders().filter(x => x.date === ds);
+// Open reminders whose date has come, for events that haven't finished yet
+const remindersDue = ts => allReminders().filter(x => !x.r.done && x.date <= ts && (x.e.end || x.e.start) >= ts);
+function remWhen(date) {
+  const n = Math.round((parseDate(date) - today()) / 86400000);
+  return n === 0 ? "Today" : n === 1 ? "Tomorrow" : n === -1 ? "Yesterday" : n < 0 ? `${-n} days ago` : `In ${n} days`;
+}
+function rmbox(x, cls = "") {
+  const a = document.createElement("a");
+  a.className = "rmbox " + cls + (x.r.done ? " done" : "");
+  a.href = calHref("day", x.date);
+  a.textContent = x.r.text || "Reminder";
+  a.title = `Reminder for ${x.e.name}: ${x.r.text}`;
+  a.onclick = ev => ev.stopPropagation();
+  return a;
+}
+function remTick(x) {
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = !!x.r.done; cb.disabled = !editing;
+  cb.setAttribute("aria-label", `Done: ${x.r.text}`);
+  cb.onclick = ev => ev.stopPropagation();
+  cb.onchange = () => { x.r.done = cb.checked; if (!x.r.done) delete x.r.done; markDirty(); render(); };
+  return cb;
+}
+
 function evbox(e, cls = "") {
   const a = document.createElement("a");
   a.className = "evbox " + cls;
@@ -1842,6 +1922,7 @@ function renderDisplay() {
     el("div", "d-date", now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })));
   const nev = nextEvent();
   if (nev) { const cd = countdown(nev); left.append(el("div", "d-ev", `${nev.name}: ${cd.n === "Now" ? (cd.unit === "today" ? "today" : cd.unit) : `${cd.n} ${cd.unit}`}`)); }
+  const dueRem = remindersDue(iso(today()));
   const clock = el("div", "d-clock"); clock.id = "dClock";
   clock.textContent = now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   const ctr = el("div", "d-ctrl");
@@ -1873,6 +1954,10 @@ function renderDisplay() {
       dl.append(r);
     });
     side.append(dl);
+  }
+  if (dueRem.length) {
+    side.append(el("div", "d-label", "Reminders"));
+    dueRem.slice(0, 4).forEach(x => { const r = el("div", "d-rem"); r.append(el("span", "d-ws-t", x.r.text), el("span", "d-ws-m", `${x.e.name}, ${remWhen(x.date).toLowerCase()}`)); side.append(r); });
   }
   const wks = workshopsOn(ts);
   if (wks.length) {
@@ -2245,6 +2330,23 @@ function renderHome() {
     side.append(ec);
   }
 
+  // Reminders: due ones first, then what's coming in the next two weeks
+  const horizon = iso(addDays(t0, 14));
+  const due = remindersDue(ts), soon = allReminders().filter(x => !x.r.done && x.date > ts && x.date <= horizon && (x.e.end || x.e.start) >= ts);
+  if (due.length || soon.length) {
+    const rc = el("div", "card remcard");
+    rc.append(el("p", "card-label", "Reminders"));
+    [...due, ...soon].slice(0, 6).forEach(x => {
+      const ln = el("div", "rem-line" + (x.date <= ts ? " due" : ""));
+      ln.append(remTick(x));
+      const tx = el("div", "rem-tx");
+      tx.append(el("span", "rem-t", x.r.text), el("span", "rem-m", `${remWhen(x.date)}, for ${x.e.name}`));
+      ln.append(tx);
+      rc.append(ln);
+    });
+    side.append(rc);
+  }
+
   const yc = el("div", "card");
   const yl = el("a", "card-label link", "Your tasks"); yl.href = "#mine";
   yc.append(yl);
@@ -2418,6 +2520,8 @@ function monthView(D, sel, t0) {
     cell.append(div("num", d.getDate()));
     const evs = eventsOn(ds);
     if (evs.length) { const eb = div("boxes txt"); evs.forEach(e => eb.append(evbox(e))); cell.append(eb); cell.classList.add("has-ev"); }
+    const rms = remindersOn(ds);
+    if (rms.length) { const rb = div("boxes txt"); rms.slice(0, 2).forEach(x => rb.append(rmbox(x))); if (rms.length > 2) rb.append(Object.assign(document.createElement("span"), { className: "muted small", textContent: `+${rms.length - 2} reminders` })); cell.append(rb); }
     const wks = workshopsOn(ds);
     if (wks.length) { const wb = div("boxes txt"); wks.slice(0, 2).forEach(w => wb.append(wsbox(w))); if (wks.length > 2) wb.append(Object.assign(document.createElement("span"), { className: "muted small", textContent: `+${wks.length - 2} workshops` })); cell.append(wb); }
     const dls = deadlinesOn(ds);
@@ -2455,6 +2559,8 @@ function weekView(start, sel, t0) {
     col.append(hd);
     const evs = eventsOn(ds);
     if (evs.length) { const eb = div("boxes"); evs.forEach(e => eb.append(evbox(e))); col.append(eb); }
+    const rms = remindersOn(ds);
+    if (rms.length) { const rb = div("boxes"); rms.forEach(x => rb.append(rmbox(x))); col.append(rb); }
     const wks = workshopsOn(ds);
     if (wks.length) { const wb = div("boxes"); wks.forEach(w => { const b = wsbox(w); b.textContent = `${w.title || "Workshop"}${w.time ? `, ${w.time}` : ""}`; b.append(Object.assign(document.createElement("small"), { textContent: teamName(w.team) })); wb.append(b); }); col.append(wb); }
     const dls = deadlinesOn(ds);
@@ -2498,6 +2604,22 @@ function dayView(ds, t0) {
     if (e.location) b.append(Object.assign(document.createElement("span"), { textContent: e.location }));
     box.append(b);
   });
+
+  const rms = remindersOn(ds);
+  if (rms.length) {
+    const rl = div("day-rem");
+    rl.append(Object.assign(document.createElement("h4"), { textContent: rms.length === 1 ? "Reminder" : "Reminders" }));
+    rms.forEach(x => {
+      const ln = div("rem-line" + (x.r.done ? "" : " due"));
+      ln.append(remTick(x));
+      const tx = div("rem-tx");
+      tx.append(Object.assign(document.createElement("span"), { className: "rem-t", textContent: x.r.text }),
+        Object.assign(document.createElement("span"), { className: "rem-m", textContent: `For ${x.e.name}, ${x.r.days ? `${x.r.days} day${x.r.days === 1 ? "" : "s"} before` : "on the day"}` }));
+      ln.append(tx);
+      rl.append(ln);
+    });
+    box.append(rl);
+  }
 
   const dayEvents = eventsOn(ds).map(e => e.id);
   const runs = data.runs.filter(r => (r.date === ds) || (r.event && dayEvents.includes(r.event)));
@@ -2656,6 +2778,38 @@ function renderCaptain() {
     const cd = countdown(e);
     r.append(div("d", eventDates(e)), name, loc, div("c", cd.text), del);
     el2.append(r);
+
+    // Reminders for this event
+    const rw = div("ev-rems");
+    (e.reminders || []).slice().sort((a, b) => (b.days || 0) - (a.days || 0)).forEach(rm => {
+      const row = div("ev-rem");
+      const tx = div("note-cell", rm.text);
+      makeEditable(tx, v => rm.text = v);
+      const dn = document.createElement("input"); dn.type = "number"; dn.min = "0"; dn.max = "365"; dn.value = rm.days || 0; dn.className = "rem-days";
+      dn.setAttribute("aria-label", "Days before the event");
+      const when = div("c", "");
+      const sync = () => { when.textContent = `${dn.value === "0" ? "on the day" : `${dn.value} day${dn.value === "1" ? "" : "s"} before`}, ${niceDate(remDate(e, rm), { month: "short", day: "numeric" })}`; };
+      dn.oninput = () => { rm.days = Math.max(0, parseInt(dn.value) || 0); sync(); markDirty(); };
+      sync();
+      const x = document.createElement("button"); x.className = "del"; x.textContent = "×"; x.setAttribute("aria-label", "Remove reminder");
+      x.onclick = () => { e.reminders.splice(e.reminders.indexOf(rm), 1); if (!e.reminders.length) delete e.reminders; markDirty(); render(); };
+      row.append(tx, dn, when, x);
+      rw.append(row);
+    });
+    const add = div("ev-rem add");
+    add.innerHTML = `<input type="text" class="rem-in" placeholder="Add a reminder, e.g. Submit the inspection form">
+      <input type="number" class="rem-days" min="0" max="365" value="7" aria-label="Days before the event">
+      <span class="c">days before</span><button class="tbtn small rem-add">Add</button>`;
+    const doAdd = () => {
+      const t = add.querySelector(".rem-in").value.trim();
+      if (!t) return setStatus("Type the reminder first.", "err");
+      (e.reminders = e.reminders || []).push({ id: newId(), text: t, days: Math.max(0, parseInt(add.querySelector(".rem-days").value) || 0) });
+      markDirty(); render(); setStatus(`Added a reminder to ${e.name}. Save to publish it.`);
+    };
+    add.querySelector(".rem-add").onclick = doAdd;
+    add.querySelector(".rem-in").onkeydown = ev => { if (ev.key === "Enter") doAdd(); };
+    rw.append(add);
+    el2.append(rw);
   });
   esec.append(el2);
 
