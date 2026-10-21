@@ -261,7 +261,7 @@
       "id": "f2a84351-fa5d-4c0c-8774-6b74623baad5",
       "team": "inventory",
       "title": "Clean/Organize Toolchest",
-      "owner": "Daniel",
+      "owner": "Daniel + Max",
       "subsystem": "Shop",
       "priority": "Med",
       "due": "",
@@ -615,5 +615,5 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T17:21:04.681Z"
+  "updated": "2026-10-21T17:22:03.845Z"
 }
