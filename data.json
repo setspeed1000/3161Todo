@@ -375,24 +375,6 @@
       "notes": ""
     },
     {
-      "id": "0e985346-e6ba-41f1-8ee2-2d79b7a80bfe",
-      "team": "scouting",
-      "date": "2026-11-02",
-      "title": "STIMS Workshop",
-      "time": "3:00 PM",
-      "where": "Shop",
-      "notes": ""
-    },
-    {
-      "id": "b2bd0585-9319-493e-8188-2afffcd3e7ea",
-      "team": "scouting",
-      "date": "2026-10-22",
-      "title": "Scouting Workshop",
-      "time": "3:00 PM",
-      "where": "Room 209",
-      "notes": ""
-    },
-    {
       "id": "d83dbf3b-bd09-434b-adaf-8a0d02671393",
       "team": "design",
       "date": "2026-10-29",
@@ -402,5 +384,5 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T13:49:04.994Z"
+  "updated": "2026-10-21T13:51:03.683Z"
 }
