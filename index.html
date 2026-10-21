@@ -716,6 +716,42 @@
     .ev-rem > :nth-child(3) { grid-area: c; } .ev-rem > :nth-child(4) { grid-area: x; }
   }
 
+  /* Meeting plans and log */
+  .plan-chip { font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 3px; border: 1px solid var(--ok); border-left-width: 3px; color: var(--ink); }
+  .plan-chip.now { background: color-mix(in srgb, var(--ok) 18%, transparent); }
+  .plan-sel { max-width: 15em; }
+  .next-plan { margin: 8px 0 0; font-weight: 600; font-size: 14px; }
+  .d-plan { font-size: .7em; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .1em .5em; border-radius: 3px;
+    background: rgba(99, 176, 255, .18); border-left: .25em solid #63b0ff; color: #f2f2f2; }
+  .log-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  .log-bar select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); font: inherit; font-size: 14px; }
+  .log-day { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; }
+  .log-day.meet { border-left: 4px solid var(--yellow); }
+  .log-h { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; color: var(--ink); text-decoration: none; }
+  .log-h:hover .log-date { text-decoration: underline; }
+  .log-date { font: 700 20px/1.15 "Rajdhani", sans-serif; }
+  .log-kind { color: var(--muted); font-size: 13px; }
+  .log-today { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; background: var(--yellow); color: #0d0d0d; }
+  .log-day h4, .detail > h4 { margin: 12px 0 6px; }
+  .log-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 20px; }
+  .log-tn { font-weight: 600; font-size: 14px; color: var(--ink); }
+  .log-groups ul { margin: 3px 0 0; padding-left: 18px; }
+  .log-groups li { font-size: 14px; line-height: 1.45; }
+  .log-o, .log-st { color: var(--muted); font-size: 12.5px; margin-left: 6px; }
+  .log-st { font-weight: 600; }
+  .log-st.ok { color: var(--green); }
+  .log-ag { margin-top: 10px; }
+  .log-ag summary { margin-top: 0; }
+  .log-ag .agenda { margin-top: 6px; }
+  .log-link { display: inline-block; margin-top: 8px; font-size: 14px; color: var(--ink); }
+  @media print {
+    .side, .mtop, #status, #footer, .log-bar, .tools, .scrim { display: none !important; }
+    html, body, .app, .wrap { background: #fff !important; color: #000 !important; display: block !important; margin: 0 !important; padding: 0 !important; max-width: none !important; }
+    .log-day { break-inside: avoid; border-color: #999 !important; background: #fff !important; }
+    .log-ag[open] .agenda, .log-ag .agenda { background: #fff !important; }
+    a { color: #000 !important; text-decoration: none !important; }
+  }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -949,9 +985,26 @@ function taskLink(d) {
   return a;
 }
 function setSt(t, st) {
+  const was = !!t.done, ts = iso(today());
   t.status = st; t.done = st === "done";
   if (st !== "blocked") { delete t.blockedBy; delete t.blockedNote; }
+  // Meeting log: when it was finished, and which meetings it was worked on at
+  if (t.done && !was) { t.doneOn = ts; if (t.plan) { t.plan = t.plan.filter(d => d <= ts); if (!t.plan.length) delete t.plan; } }
+  if (!t.done) delete t.doneOn;
+  if (st === "doing" && meetingOn(ts)) addPlan(t, ts);
 }
+/* Meeting plans: t.plan holds the meeting dates a task was set for. Future dates are the plan;
+   past ones are history for the meeting log, so a planned task never counts as due or overdue. */
+function addPlan(t, d) { if (!(t.plan || []).includes(d)) (t.plan = t.plan || []).push(d); }
+const planNext = t => (t.plan || []).filter(d => d >= iso(today())).sort()[0] || "";
+function setPlan(t, date) {
+  const ts = iso(today());
+  t.plan = (t.plan || []).filter(d => d < ts);
+  if (date) t.plan.push(date);
+  if (!t.plan.length) delete t.plan;
+}
+const plannedOn = ds => data.tasks.filter(t => (t.plan || []).includes(ds));
+const planLabel = d => d === iso(today()) ? "At today's meeting" : `Planned for ${niceDate(d, { weekday: "short", month: "short", day: "numeric" })}`;
 const newId = () => crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 
 const { owner: OWNER, repo: REPO } = detectRepo();
@@ -1038,6 +1091,7 @@ function normalize(d) {
   if (!Array.isArray(d.events)) d.events = [];
   if (!Array.isArray(d.checklists)) d.checklists = structuredClone(STARTER_CHECKLISTS);
   if (!Array.isArray(d.runs)) d.runs = [];
+  if (!Array.isArray(d.archive)) d.archive = [];
   const ids = d.teams.map(t => t.id);
   d.tasks.forEach(t => {
     if (!ids.includes(t.team)) t.team = ids[0];
@@ -1188,7 +1242,7 @@ function mergeList(b = [], l = [], r = [], key, st) {
   return out;
 }
 
-const LISTS = { tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id, workshops: x => x.id, events: x => x.id, checklists: x => x.id, runs: x => x.id };
+const LISTS = { archive: x => x.id, tasks: x => x.id, teams: x => x.id, meetings: x => x.date, deadlines: x => x.id, workshops: x => x.id, events: x => x.id, checklists: x => x.id, runs: x => x.id };
 function mergeDoc(b, l, r) {
   const st = { conflicts: 0, kept: 0 };
   const out = {};
@@ -1259,6 +1313,9 @@ function describeChanges(b, a) {
       else if (!deepEq(y, x)) out.push(`edited part ${q(x.name)}`);
     });
     op.forEach((x, pid) => { if (!np.has(pid)) out.push(`removed part ${q(x.name)} from ${q(t.title)}`); });
+    const pAdd = (t.plan || []).filter(x => !(o.plan || []).includes(x)), pDel = (o.plan || []).filter(x => !(t.plan || []).includes(x));
+    if (pAdd.length && !(sn === "doing" && so !== "doing")) out.push(`planned ${q(t.title)} for the ${short(pAdd[0])} meeting`);
+    pDel.forEach(x => { if (!t.done) out.push(`took ${q(t.title)} off the ${short(x)} meeting`); });
     if ((o.needed || 0) !== (t.needed || 0)) out.push(t.needed ? `set ${q(t.title)} to need ${t.needed} member${t.needed === 1 ? "" : "s"}` : `removed the member count from ${q(t.title)}`);
     else if (t.needed && (o.filled || 0) !== (t.filled || 0)) out.push((t.filled || 0) >= t.needed ? `filled every slot on ${q(t.title)}` : `${t.filled || 0} of ${t.needed} slots filled on ${q(t.title)}`);
     const rest = ["owner", "subsystem", "priority", "due", "notes"].filter(k => (o[k] || "") !== (t[k] || ""));
@@ -1533,6 +1590,7 @@ function currentPage() {
   if (id === "settings") return "settings";
   if (id === "mine") return "mine";
   if (id === "checklists") return "checklists";
+  if (id === "log") return "log";
   if (id === "history") return "history";
   if (id === "display") return "display";
   if (data.teams.some(t => t.id === id)) return null;
@@ -1584,6 +1642,7 @@ function render(focusId) {
   nav.append(navLink("#mine", "My tasks", myName() ? myTasks().filter(t => !t.done).length : "", page === "mine"));
   nav.append(navLink("#calendar", "Calendar", "", page === "calendar"));
   nav.append(navLink("#checklists", "Checklists", data.runs.filter(r => !runDone(r)).length, page === "checklists"));
+  nav.append(navLink("#log", "Meeting log", "", page === "log"));
   nav.append(navLink("#display", "Shop display", "", false));
   if (editing) nav.append(navLink("#captain", "Captain stuff", "", page === "captain", "hidden-tab"));
   nav.append(div("nav-sep"));
@@ -1598,7 +1657,7 @@ function render(focusId) {
   const allOpen = data.tasks.filter(t => !t.done).length;
   $("overall").textContent = `${allOpen} open across all subteams`;
 
-  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : page === "mine" ? "My tasks" : page === "checklists" ? "Checklists" : page === "history" ? "History" : team.name;
+  const label = page === "home" ? "Home" : page === "calendar" ? "Calendar" : page === "captain" ? "Captain stuff" : page === "settings" ? "Settings" : page === "mine" ? "My tasks" : page === "checklists" ? "Checklists" : page === "log" ? "Meeting log" : page === "history" ? "History" : team.name;
   $("mtopTitle").textContent = label;
   document.title = `${label} · ${data.title || "Tasks"}`;
   $("tools").hidden = !!page;
@@ -1609,6 +1668,7 @@ function render(focusId) {
   if (page === "settings") return renderSettings();
   if (page === "mine") return renderMine();
   if (page === "checklists") return renderChecklists();
+  if (page === "log") return renderLog();
   if (page === "history") return renderHistory();
   if (page === "calendar") return renderCalendar();
   if (page === "captain") return renderCaptain();
@@ -1948,6 +2008,7 @@ function dTask(t, ts) {
   const r = el("div", "d-task p-" + t.priority + " s-" + st);
   r.append(el("div", "d-title", t.title));
   const meta = el("div", "d-meta");
+  if ((t.plan || []).includes(ts)) meta.append(el("span", "d-plan", "Today"));
   if (st === "doing" || st === "blocked") meta.append(el("span", "stp stp-" + st, ST_LABEL[st]));
   if (t.owner) meta.append(el("span", "", t.owner));
   if (t.due) {
@@ -2036,8 +2097,10 @@ function renderDisplay() {
 
   // Main: one column per subteam active today (or every subteam with open work)
   const main = el("section", "d-main");
-  let teams = m && activeOf(m).length ? activeOf(m) : data.teams.map(t => t.id).filter(id => inCal(id) && data.tasks.some(t => t.team === id && !t.done));
-  const heading = el("div", "d-label", m && activeOf(m).length ? "Active subteams" : "Open work");
+  const planTeams = plannedOn(ts).filter(t => !t.done).map(t => t.team);
+  const onToday = m ? data.teams.map(t => t.id).filter(id => activeOf(m).includes(id) || planTeams.includes(id)) : [];
+  let teams = onToday.length ? onToday : data.teams.map(t => t.id).filter(id => inCal(id) && data.tasks.some(t => t.team === id && !t.done));
+  const heading = el("div", "d-label", onToday.length ? "Active subteams" : "Open work");
   main.append(heading);
   if (!teams.length) main.append(el("div", "d-empty", m ? "No subteams marked active yet." : "No open tasks. Nice."));
   const cols = el("div", "d-cols");
@@ -2045,7 +2108,8 @@ function renderDisplay() {
   const perCol = teams.length > 5 ? 4 : 7;
   teams.forEach(id => {
     const open = sortTasks(data.tasks.filter(t => t.team === id && !t.done))
-      .sort((a, b) => (stOf(a) === "doing" ? 0 : 1) - (stOf(b) === "doing" ? 0 : 1));   // in progress floats to the top
+      .sort((a, b) => (stOf(a) === "doing" ? 0 : 1) - (stOf(b) === "doing" ? 0 : 1))    // in progress floats to the top
+      .sort((a, b) => ((b.plan || []).includes(ts) ? 1 : 0) - ((a.plan || []).includes(ts) ? 1 : 0));   // today's plan above that
     const col = el("div", "d-col");
     const h = el("div", "d-col-h");
     h.append(el("span", "d-col-name", teamName(id)), el("span", "d-col-n", open.length ? `${open.length} open` : "All clear"));
@@ -2423,6 +2487,8 @@ function renderHome() {
     } else {
       card.append(el("p", "muted", "No subteams marked active yet."));
     }
+    const npl = plannedOn(nm.date).filter(t => !t.done).length;
+    if (npl) card.append(el("p", "next-plan", `${npl} task${npl === 1 ? "" : "s"} planned`));
     if (nm.agenda) {
       const lines = nm.agenda.split("\n").filter(Boolean);
       const ag = el("div", "next-agenda", lines.slice(0, 4).join("\n") + (lines.length > 4 ? "\n…" : ""));
@@ -2833,6 +2899,15 @@ function dayView(ds, t0) {
     }
   }
 
+  // Meeting plan / log for this day
+  {
+    const ts0 = iso(today());
+    const comp = logTasks().filter(t => t.doneOn === ds), pl = logTasks().filter(t => (t.plan || []).includes(ds) && t.doneOn !== ds);
+    if (pl.length) box.append(el("h4", "", ds > ts0 ? `Planned for this meeting (${pl.length})` : ds === ts0 ? `Planned for today (${pl.length})` : `Worked on (${pl.length})`), logGroups(pl, ds <= ts0));
+    if (comp.length) box.append(el("h4", "", `Completed (${comp.length})`), logGroups(comp));
+    if ((pl.length || comp.length) && ds <= ts0) { const a = document.createElement("a"); a.href = "#log"; a.className = "log-link"; a.textContent = "Open the meeting log"; box.append(a); }
+  }
+
   const due = sortTasks(data.tasks.filter(t => t.due === ds && !t.done && inCal(t.team)));
   if (due.length) {
     const h4 = document.createElement("h4"); h4.textContent = "Tasks due";
@@ -3113,7 +3188,8 @@ function taskEl(t) {
       teamSel,
       selectField(t.subsystem, teamOf(t).categories || [], v => { t.subsystem = v; }),
       dateField(t.due, v => t.due = v),
-      need
+      need,
+      planSelect(t)
     );
   } else {
     if (st === "doing" || st === "blocked") meta.append(Object.assign(document.createElement("span"), { className: "stp stp-" + st, textContent: ST_LABEL[st] }));
@@ -3123,6 +3199,8 @@ function taskEl(t) {
     const due = dueInfo(t);
     const ds = document.createElement("span"); ds.className = "due " + due.cls; ds.textContent = due.text;
     meta.append(tag, who, ds);
+    const pn = !t.done && planNext(t);
+    if (pn) meta.append(Object.assign(document.createElement("span"), { className: "plan-chip" + (pn === iso(today()) ? " now" : ""), textContent: planLabel(pn) }));
   }
   mid.append(title, meta);
   if (t.needed) mid.append(slotsEl(t));
@@ -3186,7 +3264,12 @@ function taskEl(t) {
     sel.onchange = () => { t.priority = sel.value; markDirty(); render(); };
     const del = document.createElement("button");
     del.className = "del"; del.textContent = "×"; del.title = "Delete task"; del.setAttribute("aria-label", "Delete task");
-    del.onclick = () => { data.tasks.splice(data.tasks.indexOf(t), 1); markDirty(); render(); };
+    del.onclick = () => {
+      // Keep its place in the meeting log after it's deleted
+      const ts = iso(today()), hist = (t.plan || []).filter(d => d <= ts);
+      if (t.doneOn || hist.length) data.archive.push({ id: t.id, title: t.title, team: t.team, owner: t.owner || "", doneOn: t.doneOn, plan: hist, deleted: ts });
+      data.tasks.splice(data.tasks.indexOf(t), 1); markDirty(); render();
+    };
     right.append(sel, del);
   } else {
     const p = document.createElement("span");
@@ -3196,6 +3279,122 @@ function taskEl(t) {
 
   el.append(cb, mid, right);
   return el;
+}
+
+// "Plan for a meeting" picker: the next 8 meetings
+function planSelect(t) {
+  const ts = iso(today()), cur = planNext(t);
+  const sel = document.createElement("select"); sel.className = "plan-sel"; sel.setAttribute("aria-label", "Plan for a meeting");
+  sel.add(new Option("No meeting planned", ""));
+  const dates = data.meetings.map(m => m.date).filter(d => d >= ts).sort().slice(0, 8);
+  if (cur && !dates.includes(cur)) dates.push(cur);
+  dates.forEach(d => sel.add(new Option(d === ts ? "Today's meeting" : `Meeting ${niceDate(d, { weekday: "short", month: "short", day: "numeric" })}`, d, false, d === cur)));
+  if (!dates.length) { sel.options[0].text = "No upcoming meetings"; sel.disabled = true; }
+  sel.onchange = () => { setPlan(t, sel.value); markDirty(); render(); };
+  return sel;
+}
+
+/* ---------- Meeting log: what was completed and worked on, day by day ---------- */
+let logTeam = "";
+const logTasks = () => [...data.tasks, ...(data.archive || []).filter(a => !data.tasks.some(t => t.id === a.id))];
+function logDays(team) {
+  const ts = iso(today()), all = logTasks().filter(t => !team || t.team === team);
+  const days = new Set();
+  data.meetings.forEach(m => { if (m.date <= ts) days.add(m.date); });
+  all.forEach(t => { if (t.doneOn) days.add(t.doneOn); (t.plan || []).forEach(d => { if (d <= ts) days.add(d); }); });
+  return [...days].sort().reverse().map(ds => ({
+    ds, m: meetingOn(ds),
+    done: all.filter(t => t.doneOn === ds),
+    worked: all.filter(t => (t.plan || []).includes(ds) && t.doneOn !== ds)
+  }));
+}
+function logStatus(t) {
+  if (t.doneOn) return `Done ${niceDate(t.doneOn, { month: "short", day: "numeric" })}`;
+  if (t.deleted) return "Deleted";
+  return ST_LABEL[stOf(t)] || "To do";
+}
+function byTeam(arr) {
+  return data.teams.map(tm => [tm.id, arr.filter(t => t.team === tm.id)]).filter(([, a]) => a.length);
+}
+function logGroups(arr, withStatus) {
+  const g = div("log-groups");
+  byTeam(arr).forEach(([id, ts]) => {
+    const b = div("log-team");
+    const h = document.createElement("a"); h.className = "log-tn"; h.href = "#" + encodeURIComponent(id); h.textContent = teamName(id);
+    const ul = document.createElement("ul");
+    ts.forEach(t => {
+      const li = document.createElement("li");
+      li.append(el("span", "log-t", t.title));
+      if (t.owner) li.append(el("span", "log-o", t.owner));
+      if (withStatus) { const s = logStatus(t); li.append(el("span", "log-st" + (t.doneOn ? " ok" : ""), s)); }
+      ul.append(li);
+    });
+    b.append(h, ul); g.append(b);
+  });
+  return g;
+}
+function logDayEl({ ds, m, done, worked }) {
+  const ts = iso(today());
+  const c = div("log-day" + (m ? " meet" : ""));
+  const h = document.createElement("a"); h.className = "log-h"; h.href = calHref("day", ds);
+  h.append(el("span", "log-date", niceDate(ds, { weekday: "long", month: "long", day: "numeric", year: "numeric" })),
+    el("span", "log-kind", m ? (m.note ? `Meeting, ${m.note}` : "Meeting") : "No meeting"));
+  if (ds === ts) h.append(el("span", "log-today", "Today"));
+  c.append(h);
+  if (done.length) { c.append(el("h4", "", `Completed (${done.length})`), logGroups(done)); }
+  if (worked.length) { c.append(el("h4", "", `${ds === ts ? "Planned / worked on" : "Worked on"} (${worked.length})`), logGroups(worked, true)); }
+  if (!done.length && !worked.length) c.append(div("muted", ds === ts ? "Nothing yet today." : "Nothing logged."));
+  if (m && m.agenda) {
+    const d = document.createElement("details"); d.className = "log-ag";
+    d.append(Object.assign(document.createElement("summary"), { textContent: "Agenda" }), div("agenda", m.agenda));
+    c.append(d);
+  }
+  return c;
+}
+function logMarkdown() {
+  const L = [`# ${data.title || "Team 3161 Tasks"}: meeting log`, "",
+    `Exported ${new Date().toLocaleString()}${logTeam ? `. ${teamName(logTeam)} only` : ""}.`, ""];
+  const sec = (title, arr, st) => {
+    if (!arr.length) return;
+    L.push(`### ${title}`, "");
+    byTeam(arr).forEach(([id, ts]) => {
+      L.push(`**${teamName(id)}**`, "");
+      ts.forEach(t => L.push(`- ${t.title}${t.owner ? ` (${t.owner})` : ""}${st ? `: ${logStatus(t)}` : ""}`));
+      L.push("");
+    });
+  };
+  logDays(logTeam).forEach(({ ds, m, done, worked }) => {
+    L.push(`## ${niceDate(ds, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}${m ? ` (meeting${m.note ? `, ${m.note}` : ""})` : ""}`, "");
+    sec("Completed", done); sec("Worked on", worked, true);
+    if (!done.length && !worked.length) L.push("Nothing logged.", "");
+    if (m && m.agenda) L.push("### Agenda", "", ...m.agenda.split("\n").map(l => `> ${l}`), "");
+  });
+  return L.join("\n");
+}
+function renderLog() {
+  const head = div("page-head");
+  head.append(el("h2", "page-title", "Meeting log"));
+  head.append(Object.assign(div("muted log-sub"), { style: "margin-top:8px;max-width:75ch" }));
+  head.lastChild.textContent = "What was completed and worked on at each meeting. Plan a task for a meeting from the task itself; it drops off the plan once the meeting has passed and never counts as due. Tasks finished on other days are listed under that day.";
+  const bar = div("log-bar");
+  const sel = document.createElement("select"); sel.setAttribute("aria-label", "Subteam");
+  sel.add(new Option("All subteams", ""));
+  data.teams.forEach(t => sel.add(new Option(t.name, t.id)));
+  sel.value = logTeam; sel.onchange = () => { logTeam = sel.value; render(); };
+  const dl = el("button", "tbtn", "Download log (.md)");
+  dl.onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([logMarkdown()], { type: "text/markdown" }));
+    a.download = `3161-meeting-log${logTeam ? "-" + logTeam : ""}-${iso(today())}.md`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+  const pr = el("button", "tbtn", "Print or save as PDF"); pr.onclick = () => window.print();
+  bar.append(sel, dl, pr); head.append(bar);
+  $("pageHead").replaceChildren(head);
+  const list = $("list"); list.innerHTML = "";
+  const days = logDays(logTeam);
+  if (!days.length) return list.append(div("empty", "Nothing logged yet. Completed tasks and tasks planned for a meeting show up here."));
+  days.forEach(d => list.append(logDayEl(d)));
 }
 
 /* ---------- Dependencies editor ---------- */
