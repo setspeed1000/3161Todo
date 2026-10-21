@@ -308,6 +308,22 @@
       "status": "todo",
       "notes": "",
       "parts": []
+    },
+    {
+      "id": "ae1662db-98d4-48e5-bb1f-4ae7ec70a647",
+      "team": "programming",
+      "title": "Tune Kicker",
+      "owner": "",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "2026-10-22",
+      "done": false,
+      "status": "doing",
+      "notes": "",
+      "parts": [],
+      "plan": [
+        "2026-10-21"
+      ]
     }
   ],
   "meetings": [
@@ -463,6 +479,15 @@
       "title": "STIMS workshop",
       "time": "",
       "where": "",
+      "notes": ""
+    },
+    {
+      "id": "a7284fe2-0342-4e65-8207-087f56ff9f39",
+      "team": "programming",
+      "date": "2026-10-22",
+      "title": "Repository/Subsystem Logic Workshop",
+      "time": "2:45- 3:45",
+      "where": "Shop",
       "notes": ""
     }
   ],
@@ -624,5 +649,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-21T17:22:44.119Z"
+  "updated": "2026-10-21T19:54:16.107Z",
+  "archive": []
 }
