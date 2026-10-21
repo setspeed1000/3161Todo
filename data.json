@@ -364,7 +364,16 @@
       "time": "3-4",
       "where": "Shop",
       "notes": ""
+    },
+    {
+      "id": "45168e08-6f06-49a6-bb43-d5e286d469d8",
+      "team": "scouting",
+      "date": "2026-10-22",
+      "title": "Stemly Scouting Workshop",
+      "time": "3-4pm",
+      "where": "Upstairs classroom",
+      "notes": ""
     }
   ],
-  "updated": "2026-10-21T13:41:19.788Z"
+  "updated": "2026-10-21T13:46:55.227Z"
 }
