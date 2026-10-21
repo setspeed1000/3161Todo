@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mechanical Tasks</title>
+<style>
+  :root {
+    --bg: #f4f3ef; --panel: #ffffff; --ink: #1b1d21; --muted: #6b6f78;
+    --line: #dddad2; --accent: #c2410c; --accent-ink: #ffffff;
+    --ok: #15803d; --warn: #b45309; --bad: #b91c1c; --edit: #fff7ed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141518; --panel: #1d1f23; --ink: #ecebe7; --muted: #9a9ea8;
+      --line: #2e3137; --accent: #f97316; --accent-ink: #141518;
+      --ok: #4ade80; --warn: #fbbf24; --bad: #f87171; --edit: #2a2219;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
+  .sub { margin: 4px 0 0; color: var(--muted); }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .status { margin: 14px 0; font-size: 13px; color: var(--muted); min-height: 1.4em; }
+  .status.err { color: var(--bad); } .status.ok { color: var(--ok); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; }
+  .chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .list { display: grid; gap: 8px; }
+  .task { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; }
+  .task.done .title { text-decoration: line-through; color: var(--muted); }
+  .check { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); }
+  .title { font-weight: 600; }
+  .meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .meta span b { font-weight: 500; color: var(--ink); }
+  .pri { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid currentColor; }
+  .pri.High { color: var(--bad); } .pri.Med { color: var(--warn); } .pri.Low { color: var(--ok); }
+  .notes { font-size: 13px; margin-top: 6px; white-space: pre-wrap; }
+  [contenteditable="true"] { background: var(--edit); outline: 1px dashed var(--accent); border-radius: 4px; padding: 0 3px; }
+  .editing select, .editing input[type=date] { font: inherit; font-size: 13px; padding: 2px 4px;
+    background: var(--edit); color: var(--ink); border: 1px dashed var(--accent); border-radius: 4px; }
+  .del { border: none; background: none; color: var(--bad); font-size: 18px; padding: 0 4px; }
+  .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+  footer { margin-top: 24px; font-size: 12px; color: var(--muted); }
+  dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink);
+    max-width: 420px; width: calc(100% - 32px); }
+  dialog input { width: 100%; font: inherit; padding: 8px; margin: 8px 0 12px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+  dialog p { font-size: 13px; color: var(--muted); }
+  @media (max-width: 520px) { .task { grid-template-columns: auto 1fr; } .task .right { grid-column: 2; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 data-field="title">Loading…</h1>
+      <p class="sub" data-field="subtitle"></p>
+    </div>
+    <div class="bar">
+      <button id="unlockBtn">Unlock editing</button>
+      <button id="addBtn" hidden>+ Task</button>
+      <button id="saveBtn" class="primary" hidden disabled>Save</button>
+      <button id="lockBtn" hidden>Lock</button>
+    </div>
+  </header>
+
+  <div id="status" class="status"></div>
+  <div class="filters" id="filters"></div>
+  <div class="list" id="list"></div>
+
+  <footer id="footer"></footer>
+</div>
+
+<dialog id="tokenDlg">
+  <form method="dialog">
+    <strong>Editor password</strong>
+    <p id="pwHint">Enter the editor password.</p>
+    <input id="tokenInput" type="password" autocomplete="off" placeholder="Password">
+    <div class="bar">
+      <button value="cancel">Cancel</button>
+      <button id="tokenOk" class="primary" value="ok">Unlock</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ---------- Config ---------- */
+// Auto-detected on *.github.io; fallbacks used when opened anywhere else.
+const FALLBACK_OWNER = "setspeed1000";
+const FALLBACK_REPO  = "3161todo";
+const DATA_PATH      = "data.json";
+const TOKEN_KEY      = "pages-edit-token";
+
+const SUBSYSTEMS = ["Drivetrain", "Intake", "Shooter", "Climber", "Elevator", "Frame", "Other"];
+const PRIORITIES = ["High", "Med", "Low"];
+
+const { owner: OWNER, repo: REPO } = detectRepo();
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+
+/* ---------- State ---------- */
+let data = null;        // the JSON document
+let sha = null;         // blob sha of data.json (needed to commit)
+let branch = null;
+let token = loadToken();
+let editing = false;
+let dirty = false;
+let filter = "All";
+
+const $ = id => document.getElementById(id);
+
+function detectRepo() {
+  const h = location.hostname;
+  if (h.endsWith(".github.io")) {
+    const owner = h.split(".")[0];
+    const seg = location.pathname.split("/").filter(Boolean)[0];
+    return { owner, repo: seg || h };
+  }
+  return { owner: FALLBACK_OWNER, repo: FALLBACK_REPO };
+}
+
+function loadToken() { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } }
+function saveToken(t) { try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch {} }
+
+function setStatus(msg, kind = "") { const s = $("status"); s.textContent = msg; s.className = "status " + kind; }
+
+function headers(extra = {}) {
+  const h = { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...extra };
+  if (token) h.Authorization = `Bearer ${token}`;
+  return h;
+}
+
+/* ---------- UTF-8 safe base64 ---------- */
+function toB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function fromB64(b64) {
+  const bin = atob(b64.replace(/\n/g, ""));
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+
+/* ---------- Load ---------- */
+// Read through the API (fresh, gives sha). Falls back to the Pages copy if the API is rate-limited.
+async function load() {
+  setStatus("Loading…");
+  try {
+    const r = await fetch(`${API}/contents/${DATA_PATH}${branch ? `?ref=${branch}` : ""}`, { headers: headers(), cache: "no-store" });
+    if (!r.ok) throw new Error(`API ${r.status}`);
+    const j = await r.json();
+    sha = j.sha;
+    data = JSON.parse(fromB64(j.content));
+    setStatus("");
+  } catch (e) {
+    const r = await fetch(`${DATA_PATH}?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) { setStatus("Couldn't load data.json.", "err"); return; }
+    data = await r.json();
+    sha = null;
+    setStatus("Showing the published copy (may lag the latest edit by about a minute).");
+  }
+  dirty = false;
+  render();
+}
+
+/* ---------- Auth ---------- */
+async function unlock() {
+  $("tokenInput").value = "";
+  $("tokenDlg").showModal();
+  $("tokenDlg").addEventListener("close", async function once() {
+    $("tokenDlg").removeEventListener("close", once);
+    if ($("tokenDlg").returnValue !== "ok") return;
+    const pw = $("tokenInput").value.trim();
+    if (!pw) return;
+    // A raw GitHub token still works as a fallback.
+    if (/^(github_pat_|ghp_)/.test(pw)) { await tryToken(pw, true); return; }
+    setStatus("Checking password…");
+    const t = await decryptToken(pw);
+    if (!t) { setStatus("Wrong password, or secret.json is missing.", "err"); return; }
+    await tryToken(t, true);
+  });
+}
+
+/* ---------- Password → token ----------
+   secret.json holds the GitHub token encrypted with AES-GCM, keyed by PBKDF2(password).
+   The token never appears in plain text in the repo. Make secret.json with setup.html. */
+async function decryptToken(password) {
+  try {
+    const r = await fetch(`secret.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) return null;
+    const s = await r.json();
+    const b = x => Uint8Array.from(atob(x), c => c.charCodeAt(0));
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b(s.salt), iterations: s.iterations, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(s.iv) }, key, b(s.ct));
+    return new TextDecoder().decode(pt);
+  } catch { return null; }   // AES-GCM throws on a wrong password
+}
+
+async function tryToken(t, announce) {
+  token = t;
+  setStatus("Checking access…");
+  const r = await fetch(API, { headers: headers() });
+  const j = r.ok ? await r.json() : null;
+  if (!j || !j.permissions || !j.permissions.push) {
+    token = null; saveToken(null);
+    setStatus(r.status === 401 ? "That token is invalid or expired." : "That token can't write to this repo.", "err");
+    return false;
+  }
+  saveToken(t);
+  branch = j.default_branch;
+  editing = true;
+  await load();
+  if (announce) setStatus("Editing unlocked. Click any text to change it.", "ok");
+  return true;
+}
+
+function lock() {
+  if (dirty && !confirm("Discard unsaved changes?")) return;
+  token = null; saveToken(null); editing = false; load();
+}
+
+/* ---------- Save ---------- */
+async function save() {
+  if (!dirty) return;
+  $("saveBtn").disabled = true;
+  setStatus("Saving…");
+  data.updated = new Date().toISOString();
+  const body = {
+    message: `Update tasks via site`,
+    content: toB64(JSON.stringify(data, null, 2) + "\n"),
+    branch,
+    ...(sha ? { sha } : {})
+  };
+  const r = await fetch(`${API}/contents/${DATA_PATH}`, { method: "PUT", headers: headers({ "Content-Type": "application/json" }), body: JSON.stringify(body) });
+  if (r.ok) {
+    const j = await r.json();
+    sha = j.content.sha;
+    dirty = false;
+    setStatus("Saved. Commit pushed; the public site updates in about a minute.", "ok");
+    render();
+  } else if (r.status === 409 || r.status === 422) {
+    setStatus("Someone else saved first. Reloaded their version; redo your change.", "err");
+    await load();
+  } else {
+    setStatus(`Save failed (${r.status}).`, "err");
+    $("saveBtn").disabled = false;
+  }
+}
+
+function markDirty() { dirty = true; $("saveBtn").disabled = false; setStatus("Unsaved changes."); }
+
+/* ---------- Render ---------- */
+function render() {
+  if (!data) return;
+  document.body.classList.toggle("editing", editing);
+  $("unlockBtn").hidden = editing;
+  $("addBtn").hidden = $("saveBtn").hidden = $("lockBtn").hidden = !editing;
+  $("saveBtn").disabled = !dirty;
+
+  // Top-level text fields: anything with data-field is editable.
+  document.querySelectorAll("[data-field]").forEach(el => {
+    const k = el.dataset.field;
+    el.textContent = data[k] ?? "";
+    makeEditable(el, v => { data[k] = v; });
+  });
+  document.title = data.title || "Tasks";
+
+  // Filters
+  const subs = ["All", ...new Set(data.tasks.map(t => t.subsystem))];
+  $("filters").innerHTML = "";
+  subs.forEach(s => {
+    const b = document.createElement("button");
+    b.className = "chip" + (s === filter ? " on" : "");
+    b.textContent = s;
+    b.onclick = () => { filter = s; render(); };
+    $("filters").append(b);
+  });
+
+  // Tasks
+  const list = $("list");
+  list.innerHTML = "";
+  const shown = data.tasks.filter(t => filter === "All" || t.subsystem === filter);
+  if (!shown.length) list.innerHTML = `<div class="empty">No tasks.</div>`;
+  shown.forEach(t => list.append(taskEl(t)));
+
+  $("footer").textContent = `${OWNER}/${REPO} · ${DATA_PATH}` + (data.updated ? ` · last saved ${new Date(data.updated).toLocaleString()}` : "");
+}
+
+function taskEl(t) {
+  const el = document.createElement("div");
+  el.className = "task" + (t.done ? " done" : "");
+
+  const cb = document.createElement("input");
+  cb.type = "checkbox"; cb.className = "check"; cb.checked = !!t.done; cb.disabled = !editing;
+  cb.onchange = () => { t.done = cb.checked; el.classList.toggle("done", t.done); markDirty(); };
+
+  const mid = document.createElement("div");
+  const title = div("title", t.title);
+  makeEditable(title, v => t.title = v);
+
+  const meta = div("meta");
+  meta.append(
+    field("Owner", t.owner, v => t.owner = v),
+    selectField("Subsystem", t.subsystem, SUBSYSTEMS, v => { t.subsystem = v; }),
+    dateField("Due", t.due, v => t.due = v)
+  );
+  const notes = div("notes", t.notes || "");
+  makeEditable(notes, v => t.notes = v);
+  if (!editing && !t.notes) notes.hidden = true;
+  mid.append(title, meta, notes);
+
+  const right = div("right");
+  if (editing) {
+    const sel = document.createElement("select");
+    PRIORITIES.forEach(p => sel.add(new Option(p, p, false, p === t.priority)));
+    sel.onchange = () => { t.priority = sel.value; markDirty(); };
+    const del = document.createElement("button");
+    del.className = "del"; del.textContent = "×"; del.title = "Delete";
+    del.onclick = () => { data.tasks.splice(data.tasks.indexOf(t), 1); markDirty(); render(); };
+    right.append(sel, del);
+  } else {
+    const p = document.createElement("span");
+    p.className = "pri " + t.priority; p.textContent = t.priority;
+    right.append(p);
+  }
+
+  el.append(cb, mid, right);
+  return el;
+}
+
+function div(cls, text) { const d = document.createElement("div"); d.className = cls; if (text != null) d.textContent = text; return d; }
+
+function field(label, val, set) {
+  const s = document.createElement("span");
+  const b = document.createElement("b"); b.textContent = val || "—";
+  makeEditable(b, v => set(v));
+  s.append(label + ": ", b);
+  return s;
+}
+
+function selectField(label, val, opts, set) {
+  const s = document.createElement("span");
+  if (!editing) { s.innerHTML = `${label}: <b></b>`; s.querySelector("b").textContent = val; return s; }
+  const sel = document.createElement("select");
+  opts.forEach(o => sel.add(new Option(o, o, false, o === val)));
+  sel.onchange = () => { set(sel.value); markDirty(); };
+  s.append(label + ": ", sel);
+  return s;
+}
+
+function dateField(label, val, set) {
+  const s = document.createElement("span");
+  if (!editing) { s.innerHTML = `${label}: <b></b>`; s.querySelector("b").textContent = val || "—"; return s; }
+  const inp = document.createElement("input"); inp.type = "date"; inp.value = val || "";
+  inp.onchange = () => { set(inp.value); markDirty(); };
+  s.append(label + ": ", inp);
+  return s;
+}
+
+function makeEditable(el, set) {
+  el.contentEditable = editing ? "true" : "false";
+  if (!editing) return;
+  el.oninput = () => { set(el.textContent.trim()); markDirty(); };
+  el.onkeydown = e => { if (e.key === "Enter" && !el.classList.contains("notes")) { e.preventDefault(); el.blur(); } };
+}
+
+function addTask() {
+  data.tasks.unshift({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    title: "New task", owner: "", subsystem: filter !== "All" ? filter : "Other",
+    priority: "Med", due: "", done: false, notes: ""
+  });
+  markDirty(); render();
+  const first = document.querySelector(".task .title");
+  if (first) { first.focus(); document.getSelection().selectAllChildren(first); }
+}
+
+/* ---------- Wire up ---------- */
+$("unlockBtn").onclick = unlock;
+$("lockBtn").onclick = lock;
+$("saveBtn").onclick = save;
+$("addBtn").onclick = addTask;
+document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "s" && editing) { e.preventDefault(); save(); } });
+window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+(async () => { if (token && await tryToken(token, false)) return; await load(); })();
+</script>
+</body>
+</html>
