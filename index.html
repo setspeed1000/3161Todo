@@ -4,91 +4,162 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mechanical Tasks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f4f3ef; --panel: #ffffff; --ink: #1b1d21; --muted: #6b6f78;
-    --line: #dddad2; --accent: #c2410c; --accent-ink: #ffffff;
-    --ok: #15803d; --warn: #b45309; --bad: #b91c1c; --edit: #fff7ed;
+    --bg: #e4e7ea; --panel: #f8f9fa; --sunk: #d6dade; --ink: #1f2328; --muted: #5b6570;
+    --line: #c9ced4; --yellow: #f5b700; --yellow-ink: #1f2328;
+    --high: #f5b700; --med: #7c8c9c; --low: #b9c2cb;
+    --red: #c9302c; --green: #2e7d4f; --edit: #fff8e1;
+    --plate: #1f2328; --plate-ink: #f8f9fa;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #141518; --panel: #1d1f23; --ink: #ecebe7; --muted: #9a9ea8;
-      --line: #2e3137; --accent: #f97316; --accent-ink: #141518;
-      --ok: #4ade80; --warn: #fbbf24; --bad: #f87171; --edit: #2a2219;
+      --bg: #15181b; --panel: #1e2226; --sunk: #272c31; --ink: #e8eaec; --muted: #98a2ad;
+      --line: #333a41; --yellow: #f5b700; --yellow-ink: #15181b;
+      --high: #f5b700; --med: #6f7f8f; --low: #3e4750;
+      --red: #ef6461; --green: #5cc58a; --edit: #2b2615;
+      --plate: #262b30; --plate-ink: #e8eaec;
     }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
-  header { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
-  h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
-  .sub { margin: 4px 0 0; color: var(--muted); }
+    font: 15px/1.5 "Barlow", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+  /* Header plate */
+  .plate { background: var(--plate); color: var(--plate-ink); }
+  .plate-in { max-width: 880px; margin: 0 auto; padding: 28px 16px 22px; }
+  .top { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+  h1 { margin: 0; font: 700 clamp(34px, 7vw, 52px)/0.95 "Barlow Condensed", sans-serif; letter-spacing: -0.01em; }
+  .sub { margin: 6px 0 0; color: #aab3bc; max-width: 60ch; }
+  .progress { margin-top: 20px; }
+  .progress-row { display: flex; justify-content: space-between; font-size: 14px; color: #aab3bc; margin-bottom: 6px; }
+  .progress-row strong { color: var(--plate-ink); font: 600 20px/1 "Barlow Condensed", sans-serif; }
+  .track { height: 10px; background: #343a40; border-radius: 2px; overflow: hidden; }
+  .fill { height: 100%; width: 0; border-radius: 2px;
+    background: repeating-linear-gradient(-45deg, var(--yellow) 0 10px, #e0a800 10px 20px);
+    transition: width .5s ease; }
+  @media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+
   .bar { display: flex; gap: 8px; flex-wrap: wrap; }
-  button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
-    padding: 7px 12px; border-radius: 8px; cursor: pointer; }
-  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
-  button:disabled { opacity: .5; cursor: default; }
-  .status { margin: 14px 0; font-size: 13px; color: var(--muted); min-height: 1.4em; }
-  .status.err { color: var(--bad); } .status.ok { color: var(--ok); }
-  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-  .chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; }
+  .btn { border: 1px solid #4a525a; background: transparent; color: var(--plate-ink);
+    padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: 500; }
+  .btn:hover { border-color: #8a939c; }
+  .btn.primary { background: var(--yellow); color: var(--yellow-ink); border-color: var(--yellow); font-weight: 600; }
+  .btn:disabled { opacity: .45; cursor: default; }
+
+  .wrap { max-width: 880px; margin: 0 auto; padding: 18px 16px 80px; }
+  .status { font-size: 14px; color: var(--muted); min-height: 1.5em; margin-bottom: 10px; }
+  .status.err { color: var(--red); } .status.ok { color: var(--green); }
+
+  /* Toolbar */
+  .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line); background: var(--panel); padding: 5px 11px; border-radius: 4px;
+    cursor: pointer; font-size: 14px; display: inline-flex; gap: 6px; align-items: baseline; }
+  .chip .n { color: var(--muted); font-size: 12px; }
   .chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .list { display: grid; gap: 8px; }
-  .task { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px;
-    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; }
+  .chip.on .n { color: inherit; opacity: .7; }
+  .toggle { font-size: 14px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .toggle input { accent-color: var(--ink); }
+
+  /* Tasks */
+  .list { display: grid; gap: 6px; }
+  .task { background: var(--panel); border: 1px solid var(--line); border-left: 6px solid var(--low);
+    border-radius: 4px; padding: 12px 14px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; }
+  .task.p-High { border-left-color: var(--high); }
+  .task.p-Med  { border-left-color: var(--med); }
+  .task.done { background: transparent; border-left-color: var(--line); }
   .task.done .title { text-decoration: line-through; color: var(--muted); }
-  .check { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); }
-  .title { font-weight: 600; }
-  .meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 4px; }
-  .meta span b { font-weight: 500; color: var(--ink); }
-  .pri { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid currentColor; }
-  .pri.High { color: var(--bad); } .pri.Med { color: var(--warn); } .pri.Low { color: var(--ok); }
-  .notes { font-size: 13px; margin-top: 6px; white-space: pre-wrap; }
-  [contenteditable="true"] { background: var(--edit); outline: 1px dashed var(--accent); border-radius: 4px; padding: 0 3px; }
-  .editing select, .editing input[type=date] { font: inherit; font-size: 13px; padding: 2px 4px;
-    background: var(--edit); color: var(--ink); border: 1px dashed var(--accent); border-radius: 4px; }
-  .del { border: none; background: none; color: var(--bad); font-size: 18px; padding: 0 4px; }
-  .empty { color: var(--muted); text-align: center; padding: 30px 0; }
-  footer { margin-top: 24px; font-size: 12px; color: var(--muted); }
-  dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink);
-    max-width: 420px; width: calc(100% - 32px); }
-  dialog input { width: 100%; font: inherit; padding: 8px; margin: 8px 0 12px; border-radius: 6px;
-    border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
-  dialog p { font-size: 13px; color: var(--muted); }
-  @media (max-width: 520px) { .task { grid-template-columns: auto 1fr; } .task .right { grid-column: 2; } }
+  .task.done .meta, .task.done .notes { opacity: .6; }
+  .check { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--green); cursor: pointer; }
+  .check:disabled { cursor: default; }
+  .title { font: 600 18px/1.25 "Barlow Condensed", sans-serif; letter-spacing: .005em; }
+  .meta { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 5px; align-items: center; }
+  .meta b { font-weight: 500; color: var(--ink); }
+  .tag { background: var(--sunk); color: var(--ink); padding: 1px 7px; border-radius: 3px; font-size: 12px; font-weight: 500; }
+  .due.over { color: var(--red); font-weight: 600; }
+  .due.soon { color: var(--ink); font-weight: 600; }
+  .notes { font-size: 14px; margin-top: 7px; white-space: pre-wrap; color: var(--ink); }
+  .right { display: flex; gap: 6px; align-items: center; }
+  .pri { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .p-High .pri { color: var(--ink); }
+
+  [contenteditable="true"] { background: var(--edit); outline: 1px dashed #c9a227; border-radius: 3px; padding: 0 3px; cursor: text; }
+  .editing select, .editing input[type=date] { font-size: 13px; padding: 2px 4px;
+    background: var(--edit); border: 1px dashed #c9a227; border-radius: 3px; }
+  .del { border: none; background: none; color: var(--muted); font-size: 20px; line-height: 1; padding: 0 4px; cursor: pointer; }
+  .del:hover { color: var(--red); }
+
+  .empty { color: var(--muted); padding: 36px 0; text-align: center; }
+  .donehead { margin: 22px 0 8px; font: 600 15px/1 "Barlow Condensed", sans-serif; color: var(--muted); }
+  footer { margin-top: 28px; font-size: 12px; color: var(--muted); }
+
+  dialog { border: none; border-radius: 6px; background: var(--panel); color: var(--ink);
+    max-width: 400px; width: calc(100% - 32px); padding: 22px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  dialog::backdrop { background: rgba(15,18,21,.6); }
+  dialog h2 { margin: 0; font: 700 26px/1 "Barlow Condensed", sans-serif; }
+  dialog p { font-size: 14px; color: var(--muted); margin: 8px 0 14px; }
+  .pw { display: flex; gap: 6px; }
+  .pw input { flex: 1; padding: 9px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); }
+  .pw button { border: 1px solid var(--line); background: var(--bg); border-radius: 4px; padding: 0 10px; cursor: pointer; font-size: 13px; }
+  .dlg-bar { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .dlg-bar button { padding: 8px 14px; border-radius: 4px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+  .dlg-bar .go { background: var(--yellow); color: var(--yellow-ink); border-color: var(--yellow); font-weight: 600; }
+
+  @media (max-width: 560px) {
+    .task { grid-template-columns: auto 1fr; }
+    .right { grid-column: 2; }
+  }
 </style>
 </head>
 <body>
+<div class="plate">
+  <div class="plate-in">
+    <div class="top">
+      <div>
+        <h1 data-field="title">Loading</h1>
+        <p class="sub" data-field="subtitle"></p>
+      </div>
+      <div class="bar">
+        <button class="btn" id="unlockBtn">Unlock editing</button>
+        <button class="btn" id="addBtn" hidden>Add task</button>
+        <button class="btn primary" id="saveBtn" hidden disabled>Save</button>
+        <button class="btn" id="lockBtn" hidden>Lock</button>
+      </div>
+    </div>
+    <div class="progress" id="progress" hidden>
+      <div class="progress-row"><span id="progLabel"></span><strong id="progPct"></strong></div>
+      <div class="track"><div class="fill" id="progFill"></div></div>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
-  <header>
-    <div>
-      <h1 data-field="title">Loading…</h1>
-      <p class="sub" data-field="subtitle"></p>
-    </div>
-    <div class="bar">
-      <button id="unlockBtn">Unlock editing</button>
-      <button id="addBtn" hidden>+ Task</button>
-      <button id="saveBtn" class="primary" hidden disabled>Save</button>
-      <button id="lockBtn" hidden>Lock</button>
-    </div>
-  </header>
-
-  <div id="status" class="status"></div>
-  <div class="filters" id="filters"></div>
+  <div id="status" class="status" role="status"></div>
+  <div class="tools">
+    <div class="filters" id="filters"></div>
+    <label class="toggle"><input type="checkbox" id="hideDone"> Hide done</label>
+  </div>
   <div class="list" id="list"></div>
-
   <footer id="footer"></footer>
 </div>
 
 <dialog id="tokenDlg">
   <form method="dialog">
-    <strong>Editor password</strong>
-    <p id="pwHint">Enter the editor password, or paste a GitHub token directly (no setup needed).</p>
-    <input id="tokenInput" type="password" autocomplete="off" placeholder="Password or github_pat_…">
-    <div class="bar">
+    <h2>Unlock editing</h2>
+    <p id="pwHint">Enter the editor password, or paste a GitHub token directly.</p>
+    <div class="pw">
+      <input id="tokenInput" type="password" autocomplete="off" placeholder="Password" aria-label="Password">
+      <button type="button" id="showPw">Show</button>
+    </div>
+    <div class="dlg-bar">
       <button value="cancel">Cancel</button>
-      <button id="tokenOk" class="primary" value="ok">Unlock</button>
+      <button class="go" id="tokenOk" value="ok">Unlock</button>
     </div>
   </form>
 </dialog>
@@ -100,9 +171,11 @@ const FALLBACK_OWNER = "setspeed1000";
 const FALLBACK_REPO  = "3161todo";
 const DATA_PATH      = "data.json";
 const TOKEN_KEY      = "pages-edit-token";
+const HIDE_KEY       = "pages-edit-hide-done";
 
 const SUBSYSTEMS = ["Drivetrain", "Intake", "Shooter", "Climber", "Elevator", "Frame", "Other"];
 const PRIORITIES = ["High", "Med", "Low"];
+const PRI_RANK   = { High: 0, Med: 1, Low: 2 };
 
 const { owner: OWNER, repo: REPO } = detectRepo();
 const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
@@ -115,6 +188,7 @@ let token = loadToken();
 let editing = false;
 let dirty = false;
 let filter = "All";
+let hideDone = (() => { try { return localStorage.getItem(HIDE_KEY) === "1"; } catch { return false; } })();
 
 const $ = id => document.getElementById(id);
 
@@ -164,10 +238,10 @@ async function load() {
     setStatus("");
   } catch (e) {
     const r = await fetch(`${DATA_PATH}?t=${Date.now()}`, { cache: "no-store" });
-    if (!r.ok) { setStatus("Couldn't load data.json.", "err"); return; }
+    if (!r.ok) { setStatus("Couldn't load the task list. Reload the page to try again.", "err"); return; }
     data = await r.json();
     sha = null;
-    setStatus("Showing the published copy (may lag the latest edit by about a minute).");
+    setStatus("Showing the published copy. It can lag the latest save by about a minute.");
   }
   dirty = false;
   render();
@@ -176,6 +250,8 @@ async function load() {
 /* ---------- Auth ---------- */
 async function unlock() {
   $("tokenInput").value = "";
+  $("tokenInput").type = "password";
+  $("showPw").textContent = "Show";
   $("tokenDlg").showModal();
   $("tokenDlg").addEventListener("close", async function once() {
     $("tokenDlg").removeEventListener("close", once);
@@ -186,7 +262,7 @@ async function unlock() {
     if (/^(github_pat_|ghp_)/.test(pw)) { await tryToken(pw, true); return; }
     setStatus("Checking password…");
     const t = await decryptToken(pw);
-    if (!t) { setStatus("Wrong password, or secret.json is missing.", "err"); return; }
+    if (!t) { setStatus("Wrong password. Check capitals and trailing spaces.", "err"); return; }
     await tryToken(t, true);
   });
 }
@@ -216,14 +292,14 @@ async function tryToken(t, announce) {
   const j = r.ok ? await r.json() : null;
   if (!j || !j.permissions || !j.permissions.push) {
     token = null; saveToken(null);
-    setStatus(r.status === 401 ? "That token is invalid or expired." : "That token can't write to this repo.", "err");
+    setStatus(r.status === 401 ? "The saved token is invalid or expired. Rerun setup.html with a new token." : "That token can't write to this repo.", "err");
     return false;
   }
   saveToken(t);
   branch = j.default_branch;
   editing = true;
   await load();
-  if (announce) setStatus("Editing unlocked. Click any text to change it.", "ok");
+  if (announce) setStatus("Editing unlocked. Tap any text to change it.", "ok");
   return true;
 }
 
@@ -249,10 +325,10 @@ async function save() {
     const j = await r.json();
     sha = j.content.sha;
     dirty = false;
-    setStatus("Saved. Commit pushed; the public site updates in about a minute.", "ok");
+    setStatus("Saved. The public page updates in about a minute.", "ok");
     render();
   } else if (r.status === 409 || r.status === 422) {
-    setStatus("Someone else saved first. Reloaded their version; redo your change.", "err");
+    setStatus("Someone else saved first. Their version is loaded; redo your change.", "err");
     await load();
   } else {
     setStatus(`Save failed (${r.status}).`, "err");
@@ -262,13 +338,36 @@ async function save() {
 
 function markDirty() { dirty = true; $("saveBtn").disabled = false; setStatus("Unsaved changes."); }
 
+/* ---------- Dates ---------- */
+function parseDate(s) { if (!s) return null; const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
+function today() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+function dueInfo(t) {
+  const d = parseDate(t.due);
+  if (!d) return { text: "No due date", cls: "" };
+  const days = Math.round((d - today()) / 86400000);
+  const label = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  if (t.done) return { text: `Due ${label}`, cls: "" };
+  if (days < 0) return { text: `Overdue ${-days} day${days === -1 ? "" : "s"}`, cls: "over" };
+  if (days === 0) return { text: "Due today", cls: "soon" };
+  if (days === 1) return { text: "Due tomorrow", cls: "soon" };
+  return { text: `Due ${label}`, cls: "" };
+}
+
+function sortTasks(arr) {
+  return [...arr].sort((a, b) =>
+    (PRI_RANK[a.priority] ?? 3) - (PRI_RANK[b.priority] ?? 3) ||
+    (a.due || "9999") .localeCompare(b.due || "9999") ||
+    (a.title || "").localeCompare(b.title || ""));
+}
+
 /* ---------- Render ---------- */
-function render() {
+function render(focusId) {
   if (!data) return;
   document.body.classList.toggle("editing", editing);
   $("unlockBtn").hidden = editing;
   $("addBtn").hidden = $("saveBtn").hidden = $("lockBtn").hidden = !editing;
   $("saveBtn").disabled = !dirty;
+  $("hideDone").checked = hideDone;
 
   // Top-level text fields: anything with data-field is editable.
   document.querySelectorAll("[data-field]").forEach(el => {
@@ -278,45 +377,85 @@ function render() {
   });
   document.title = data.title || "Tasks";
 
-  // Filters
-  const subs = ["All", ...new Set(data.tasks.map(t => t.subsystem))];
+  // Progress
+  const total = data.tasks.length, done = data.tasks.filter(t => t.done).length;
+  $("progress").hidden = !total;
+  $("progLabel").textContent = `${done} of ${total} done`;
+  $("progPct").textContent = total ? Math.round(done / total * 100) + "%" : "";
+  requestAnimationFrame(() => { $("progFill").style.width = total ? (done / total * 100) + "%" : "0"; });
+
+  // Filters, with open-task counts
+  const open = data.tasks.filter(t => !t.done);
+  const subs = ["All", ...SUBSYSTEMS.filter(s => data.tasks.some(t => t.subsystem === s))];
+  data.tasks.forEach(t => { if (!subs.includes(t.subsystem)) subs.push(t.subsystem); });
+  if (!subs.includes(filter)) filter = "All";
   $("filters").innerHTML = "";
   subs.forEach(s => {
+    const n = s === "All" ? open.length : open.filter(t => t.subsystem === s).length;
     const b = document.createElement("button");
     b.className = "chip" + (s === filter ? " on" : "");
-    b.textContent = s;
+    b.innerHTML = `<span></span><span class="n">${n}</span>`;
+    b.firstChild.textContent = s;
+    b.setAttribute("aria-pressed", s === filter);
     b.onclick = () => { filter = s; render(); };
     $("filters").append(b);
   });
 
-  // Tasks
+  // Tasks: open first (priority, then due date), done grouped below
   const list = $("list");
   list.innerHTML = "";
-  const shown = data.tasks.filter(t => filter === "All" || t.subsystem === filter);
-  if (!shown.length) list.innerHTML = `<div class="empty">No tasks.</div>`;
-  shown.forEach(t => list.append(taskEl(t)));
+  const inView = data.tasks.filter(t => filter === "All" || t.subsystem === filter);
+  const openTasks = sortTasks(inView.filter(t => !t.done));
+  const doneTasks = sortTasks(inView.filter(t => t.done));
+  if (!openTasks.length) {
+    list.innerHTML = `<div class="empty"></div>`;
+    list.firstChild.textContent = editing ? "Nothing open here. Add a task to get started." : "Nothing open here.";
+  }
+  openTasks.forEach(t => list.append(taskEl(t)));
+  if (doneTasks.length && !hideDone) {
+    const h = div("donehead", `Done (${doneTasks.length})`);
+    list.append(h);
+    doneTasks.forEach(t => list.append(taskEl(t)));
+  }
 
-  $("footer").textContent = `${OWNER}/${REPO} · ${DATA_PATH}` + (data.updated ? ` · last saved ${new Date(data.updated).toLocaleString()}` : "");
+  $("footer").textContent = data.updated ? `Last saved ${new Date(data.updated).toLocaleString()}` : "";
+
+  if (focusId) {
+    const el = list.querySelector(`[data-id="${CSS.escape(focusId)}"] .title`);
+    if (el) { el.focus(); document.getSelection().selectAllChildren(el); }
+  }
 }
 
 function taskEl(t) {
   const el = document.createElement("div");
-  el.className = "task" + (t.done ? " done" : "");
+  el.className = `task p-${t.priority}` + (t.done ? " done" : "");
+  el.dataset.id = t.id;
 
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.className = "check"; cb.checked = !!t.done; cb.disabled = !editing;
-  cb.onchange = () => { t.done = cb.checked; el.classList.toggle("done", t.done); markDirty(); };
+  cb.setAttribute("aria-label", "Done");
+  cb.onchange = () => { t.done = cb.checked; markDirty(); render(); };
 
   const mid = document.createElement("div");
   const title = div("title", t.title);
   makeEditable(title, v => t.title = v);
 
   const meta = div("meta");
-  meta.append(
-    field("Owner", t.owner, v => t.owner = v),
-    selectField("Subsystem", t.subsystem, SUBSYSTEMS, v => { t.subsystem = v; }),
-    dateField("Due", t.due, v => t.due = v)
-  );
+  if (editing) {
+    meta.append(
+      field("Owner", t.owner, v => t.owner = v),
+      selectField(t.subsystem, SUBSYSTEMS, v => { t.subsystem = v; }),
+      dateField(t.due, v => t.due = v)
+    );
+  } else {
+    const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = t.subsystem;
+    const who = document.createElement("span"); who.innerHTML = "<b></b>";
+    who.firstChild.textContent = t.owner || "Unassigned";
+    const due = dueInfo(t);
+    const ds = document.createElement("span"); ds.className = "due " + due.cls; ds.textContent = due.text;
+    meta.append(tag, who, ds);
+  }
+
   const notes = div("notes", t.notes || "");
   makeEditable(notes, v => t.notes = v);
   if (!editing && !t.notes) notes.hidden = true;
@@ -325,15 +464,16 @@ function taskEl(t) {
   const right = div("right");
   if (editing) {
     const sel = document.createElement("select");
+    sel.setAttribute("aria-label", "Priority");
     PRIORITIES.forEach(p => sel.add(new Option(p, p, false, p === t.priority)));
-    sel.onchange = () => { t.priority = sel.value; markDirty(); };
+    sel.onchange = () => { t.priority = sel.value; markDirty(); render(); };
     const del = document.createElement("button");
-    del.className = "del"; del.textContent = "×"; del.title = "Delete";
+    del.className = "del"; del.textContent = "×"; del.title = "Delete task"; del.setAttribute("aria-label", "Delete task");
     del.onclick = () => { data.tasks.splice(data.tasks.indexOf(t), 1); markDirty(); render(); };
     right.append(sel, del);
   } else {
     const p = document.createElement("span");
-    p.className = "pri " + t.priority; p.textContent = t.priority;
+    p.className = "pri"; p.textContent = t.priority;
     right.append(p);
   }
 
@@ -345,47 +485,43 @@ function div(cls, text) { const d = document.createElement("div"); d.className =
 
 function field(label, val, set) {
   const s = document.createElement("span");
-  const b = document.createElement("b"); b.textContent = val || "—";
+  const b = document.createElement("b"); b.textContent = val || "";
+  b.dataset.placeholder = "Unassigned";
   makeEditable(b, v => set(v));
-  s.append(label + ": ", b);
+  s.append(label + " ", b);
   return s;
 }
 
-function selectField(label, val, opts, set) {
-  const s = document.createElement("span");
-  if (!editing) { s.innerHTML = `${label}: <b></b>`; s.querySelector("b").textContent = val; return s; }
+function selectField(val, opts, set) {
   const sel = document.createElement("select");
+  sel.setAttribute("aria-label", "Subsystem");
   opts.forEach(o => sel.add(new Option(o, o, false, o === val)));
   sel.onchange = () => { set(sel.value); markDirty(); };
-  s.append(label + ": ", sel);
-  return s;
+  return sel;
 }
 
-function dateField(label, val, set) {
-  const s = document.createElement("span");
-  if (!editing) { s.innerHTML = `${label}: <b></b>`; s.querySelector("b").textContent = val || "—"; return s; }
+function dateField(val, set) {
   const inp = document.createElement("input"); inp.type = "date"; inp.value = val || "";
+  inp.setAttribute("aria-label", "Due date");
   inp.onchange = () => { set(inp.value); markDirty(); };
-  s.append(label + ": ", inp);
-  return s;
+  return inp;
 }
 
 function makeEditable(el, set) {
   el.contentEditable = editing ? "true" : "false";
   if (!editing) return;
+  if (!el.textContent) el.style.minWidth = "3em";
   el.oninput = () => { set(el.textContent.trim()); markDirty(); };
   el.onkeydown = e => { if (e.key === "Enter" && !el.classList.contains("notes")) { e.preventDefault(); el.blur(); } };
 }
 
 function addTask() {
-  data.tasks.unshift({
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-    title: "New task", owner: "", subsystem: filter !== "All" ? filter : "Other",
-    priority: "Med", due: "", done: false, notes: ""
+  const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+  data.tasks.push({
+    id, title: "New task", owner: "", subsystem: filter !== "All" ? filter : "Other",
+    priority: "High", due: "", done: false, notes: ""
   });
-  markDirty(); render();
-  const first = document.querySelector(".task .title");
-  if (first) { first.focus(); document.getSelection().selectAllChildren(first); }
+  markDirty(); render(id);
 }
 
 /* ---------- Wire up ---------- */
@@ -393,6 +529,15 @@ $("unlockBtn").onclick = unlock;
 $("lockBtn").onclick = lock;
 $("saveBtn").onclick = save;
 $("addBtn").onclick = addTask;
+$("showPw").onclick = () => {
+  const i = $("tokenInput"); const show = i.type === "password";
+  i.type = show ? "text" : "password"; $("showPw").textContent = show ? "Hide" : "Show"; i.focus();
+};
+$("hideDone").onchange = e => {
+  hideDone = e.target.checked;
+  try { localStorage.setItem(HIDE_KEY, hideDone ? "1" : "0"); } catch {}
+  render();
+};
 document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "s" && editing) { e.preventDefault(); save(); } });
 window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
