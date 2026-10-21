@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
   "subtitle": "",
-  "updated": "2026-10-21T02:27:43.019Z",
+  "updated": "2026-10-21T02:46:10.456Z",
   "teams": [
     {
       "id": "mechanical",
@@ -141,5 +141,11 @@
       ]
     }
   ],
-  "deadlines": []
+  "deadlines": [
+    {
+      "id": "b17bd775-80df-455b-ba48-eae61d0a5f1b",
+      "date": "2026-10-22",
+      "title": "Test1"
+    }
+  ]
 }
