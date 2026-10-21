@@ -414,6 +414,75 @@
     .ord-for { grid-column: 1 / -1; order: 3; white-space: normal; }
   }
 
+  /* Shop display (TV) */
+  body.display-mode .app, body.display-mode .scrim { display: none !important; }
+  body.display-mode { overflow: hidden; }
+  body.display-mode.idle, body.display-mode.idle * { cursor: none; }
+  .disp { position: fixed; inset: 0; z-index: 50; background: #121519; color: #eef0f2; display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto; font-size: clamp(14px, 1.15vw, 26px); overflow: hidden; }
+  .disp::before { content: ""; position: absolute; inset: 0 0 auto 0; height: .45em;
+    background: repeating-linear-gradient(-45deg, #f5b700 0 1.1em, #121519 1.1em 2.2em); }
+  .d-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 1em; padding: 1.4em 2em .6em; }
+  .d-team { font: 700 2.1em/1 "Barlow Condensed", sans-serif; }
+  .d-date { color: #9aa4ae; font-size: 1.05em; margin-top: .25em; }
+  .d-clock { font: 700 4.6em/.85 "Barlow Condensed", sans-serif; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .d-ctrl { justify-self: end; display: flex; gap: .5em; transition: opacity .3s; }
+  .d-ctrl button, .d-ctrl a { font: 500 .8em "Barlow", sans-serif; color: #c4cbd2; background: #22272d; border: 1px solid #3a4148;
+    border-radius: 4px; padding: .45em .9em; text-decoration: none; cursor: pointer; }
+  .d-ctrl button:hover, .d-ctrl a:hover { color: #fff; border-color: #6a737c; }
+  body.idle .d-ctrl { opacity: 0; }
+  .d-body { display: grid; grid-template-columns: minmax(0, 26%) minmax(0, 1fr); gap: 2em; padding: .8em 2em 1em; min-height: 0; }
+  .d-side { min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: .5em; border-right: 1px solid #2a3037; padding-right: 2em; }
+  .d-label { font-size: .85em; font-weight: 600; color: #9aa4ae; margin-top: .6em; }
+  .d-big { font: 700 2.4em/1.02 "Barlow Condensed", sans-serif; }
+  .d-sub { color: #c4cbd2; }
+  .d-dls { display: grid; gap: .4em; margin-top: .6em; }
+  .d-dl { display: grid; grid-template-columns: 6.5em 1fr; gap: .6em; padding: .55em .8em; border-left: .3em solid #ef6461;
+    background: rgba(239, 100, 97, .1); border-radius: 3px; }
+  .d-dl.soon { background: rgba(239, 100, 97, .22); }
+  .d-dl-when { color: #ef6461; font-weight: 700; }
+  .d-dl-what { font-weight: 600; }
+  .d-agenda { white-space: pre-line; line-height: 1.5; font-size: 1.05em; color: #dfe3e7; overflow: hidden; min-height: 0; flex: 1 1 auto; }
+  .d-agenda.clip { -webkit-mask-image: linear-gradient(to bottom, #000 85%, transparent); mask-image: linear-gradient(to bottom, #000 85%, transparent); }
+  .d-main { min-height: 0; display: flex; flex-direction: column; }
+  .d-cols { --n: 3; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 1em; margin-top: .6em; min-height: 0; flex: 1; }
+  .d-col { background: #1b1f24; border-radius: 6px; padding: .9em; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: .45em; border-top: .3em solid #f5b700; }
+  .d-col-h { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .5em; margin-bottom: .2em; }
+  .d-col-name { font: 700 1.7em/1 "Barlow Condensed", sans-serif; }
+  .d-col-n { color: #9aa4ae; font-size: .85em; white-space: nowrap; }
+  .d-col-wait { font-size: .8em; font-weight: 700; color: #ef6461; }
+  .d-task { background: #23282e; border-radius: 4px; padding: .55em .7em; border-left: .28em solid #3e4750; }
+  .d-task.p-High { border-left-color: #f5b700; }
+  .d-task.p-Med { border-left-color: #6f7f8f; }
+  .d-task.s-blocked { background: repeating-linear-gradient(-45deg, #23282e 0 .9em, #2a2426 .9em 1.8em); }
+  .d-task-top { display: flex; gap: .5em; align-items: baseline; justify-content: space-between; }
+  .d-title { font-weight: 600; line-height: 1.25; }
+  .d-task .stp { font-size: .7em; flex: none; }
+  .d-task .stp-doing { background: rgba(245, 183, 0, .25); color: #f5d36a; }
+  .d-task .stp-blocked { background: rgba(239, 100, 97, .2); color: #ef8a87; }
+  .d-meta { display: flex; gap: .3em .9em; flex-wrap: wrap; align-items: baseline; font-size: .78em; color: #9aa4ae; margin-top: .25em; }
+  .d-meta .stp { font-size: .9em; }
+  .d-due.over { color: #ef6461; font-weight: 700; }
+  .d-due.soon { color: #f5d36a; font-weight: 600; }
+  .d-wait { color: #ef8a87; }
+  .d-more { color: #9aa4ae; font-size: .8em; margin-top: auto; }
+  .d-empty { font: 600 1.6em/1.2 "Barlow Condensed", sans-serif; color: #9aa4ae; margin-top: 1em; }
+  .d-foot { display: flex; justify-content: space-between; gap: 1em; padding: .7em 2em 1em; border-top: 1px solid #2a3037; font-size: .85em; color: #9aa4ae; }
+  .d-foot-l { display: flex; gap: 1.4em; }
+  .d-foot .bad { color: #ef6461; font-weight: 700; }
+  @media (max-width: 900px) {
+    .disp { display: block; overflow-y: auto; font-size: 15px; }
+    .d-bar { grid-template-columns: 1fr auto; padding: 1.2em 1em .5em; }
+    .d-ctrl { grid-column: 1 / -1; justify-self: start; }
+    .d-body { grid-template-columns: 1fr; padding: .5em 1em; }
+    .d-side { border-right: none; padding-right: 0; }
+    .d-cols { grid-template-columns: 1fr !important; flex: none; }
+    .d-col, .d-side, .d-main, .d-body { overflow: visible; min-height: auto; }
+    .d-clock { font-size: 3em; }
+    .d-team { font-size: 1.6em; }
+    .d-foot { flex-direction: column; padding: .7em 1em 1em; }
+  }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -490,6 +559,7 @@
 </style>
 </head>
 <body>
+<div class="disp" id="disp" hidden></div>
 <div class="scrim" id="scrim"></div>
 <div class="app">
   <aside class="side" id="side">
@@ -1026,6 +1096,7 @@ function currentPage() {
   if (id === "captain") return editing ? "captain" : "calendar";
   if (id === "settings") return "settings";
   if (id === "history") return "history";
+  if (id === "display") return "display";
   if (data.teams.some(t => t.id === id)) return null;
   return "home";   // empty or unknown link: the landing page
 }
@@ -1047,6 +1118,11 @@ function navLink(href, label, count, current, cls) {
 
 function render(focusId) {
   if (!data) return;
+  const isDisplay = currentPage() === "display";
+  document.body.classList.toggle("display-mode", isDisplay);
+  $("disp").hidden = !isDisplay;
+  if (isDisplay) return renderDisplay();
+  releaseWake();
   document.body.classList.toggle("editing", editing);
   $("unlockBtn").hidden = editing;
   $("saveBtn").hidden = $("lockBtn").hidden = !editing;
@@ -1068,6 +1144,7 @@ function render(focusId) {
   nav.innerHTML = "";
   nav.append(navLink("#home", "Home", "", page === "home"));
   nav.append(navLink("#calendar", "Calendar", "", page === "calendar"));
+  nav.append(navLink("#display", "Shop display", "", false));
   if (editing) nav.append(navLink("#captain", "Captain stuff", "", page === "captain", "hidden-tab"));
   nav.append(div("nav-sep"));
   const navTail = () => {
@@ -1371,6 +1448,160 @@ function renderSettings() {
   box.prepend(ng);
   list.append(box, reset);
 }
+
+/* ---------- Shop display: full-screen board for a TV in the shop ----------
+   Refreshes itself every minute. Without editing unlocked it reads the published
+   copy of data.json, so it never runs into GitHub's hourly limit. */
+let dispUpdated = null, dispError = false, wakeLock = null, idleTimer = null;
+
+async function keepAwake() {
+  try { if (!wakeLock && navigator.wakeLock && !document.hidden) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } } catch {}
+}
+function releaseWake() { try { wakeLock && wakeLock.release(); } catch {} wakeLock = null; }
+
+async function refreshDisplay() {
+  if (currentPage() !== "display" || dirty) return;
+  try {
+    let doc;
+    if (editing) { const l = await fetchLatest(); sha = l.sha; doc = l.doc; }
+    else {
+      const r = await fetch(`${DATA_PATH}?t=${Date.now()}`, { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      doc = normalize(await r.json());
+    }
+    data = doc; base = structuredClone(doc); dispUpdated = new Date(); dispError = false;
+  } catch { dispError = true; }
+  render();
+}
+
+function dTask(t, ts) {
+  const st = stOf(t);
+  const r = el("div", "d-task p-" + t.priority + " s-" + st);
+  r.append(el("div", "d-title", t.title));
+  const meta = el("div", "d-meta");
+  if (st === "doing" || st === "blocked") meta.append(el("span", "stp stp-" + st, ST_LABEL[st]));
+  if (t.owner) meta.append(el("span", "", t.owner));
+  if (t.due) {
+    const d = dueInfo(t);
+    if (d.cls) meta.append(el("span", "d-due " + d.cls, d.text));
+  }
+  if (st === "blocked") meta.append(el("span", "d-wait", t.blockedBy ? `Waiting on ${teamName(t.blockedBy)}` : "Blocked"));
+  const need = (t.parts || []).filter(p => (p.status || "need") !== "arrived").length;
+  if (need) meta.append(el("span", "", `${need} part${need === 1 ? "" : "s"} not here`));
+  if (meta.childNodes.length) r.append(meta);
+  return r;
+}
+
+function renderDisplay() {
+  const box = $("disp");
+  const now = new Date(), ts = iso(today());
+  const m = meetingOn(ts);
+  const next = data.meetings.filter(x => x.date > ts).sort((a, b) => a.date.localeCompare(b.date))[0];
+  box.innerHTML = "";
+
+  // Top bar: team, clock, date, controls
+  const bar = el("header", "d-bar");
+  const left = el("div", "d-brand");
+  left.append(el("div", "d-team", data.title || "Team 3161"),
+    el("div", "d-date", now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })));
+  const clock = el("div", "d-clock"); clock.id = "dClock";
+  clock.textContent = now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const ctr = el("div", "d-ctrl");
+  const fs = el("button", "", document.fullscreenElement ? "Exit full screen" : "Full screen");
+  fs.onclick = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); };
+  const ex = el("a", "", "Exit display"); ex.href = "#home";
+  ctr.append(fs, ex);
+  bar.append(left, clock, ctr);
+  box.append(bar);
+
+  const body = el("div", "d-body");
+
+  // Left column: today's meeting, deadlines, agenda
+  const side = el("section", "d-side");
+  if (m) {
+    side.append(el("div", "d-label", "Today"), el("div", "d-big", m.note || "Meeting"));
+  } else {
+    side.append(el("div", "d-label", "No meeting today"));
+    if (next) side.append(el("div", "d-big", `Next: ${niceDate(next.date, { weekday: "short", month: "short", day: "numeric" })}`),
+      ...(next.note ? [el("div", "d-sub", next.note)] : []));
+  }
+  const dls = data.deadlines.filter(d => d.date >= ts).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
+  if (dls.length) {
+    const dl = el("div", "d-dls");
+    dls.forEach(d => {
+      const days = Math.round((parseDate(d.date) - today()) / 86400000);
+      const r = el("div", "d-dl" + (days <= 1 ? " soon" : ""));
+      r.append(el("span", "d-dl-when", days === 0 ? "Today" : days === 1 ? "Tomorrow" : `${days} days`), el("span", "d-dl-what", d.title));
+      dl.append(r);
+    });
+    side.append(dl);
+  }
+  if (m && m.agenda) {
+    side.append(el("div", "d-label", "Agenda"), el("div", "d-agenda", m.agenda));
+  }
+  body.append(side);
+
+  // Main: one column per subteam active today (or every subteam with open work)
+  const main = el("section", "d-main");
+  let teams = m && activeOf(m).length ? activeOf(m) : data.teams.map(t => t.id).filter(id => data.tasks.some(t => t.team === id && !t.done));
+  const heading = el("div", "d-label", m && activeOf(m).length ? "Active subteams" : "Open work");
+  main.append(heading);
+  if (!teams.length) main.append(el("div", "d-empty", m ? "No subteams marked active yet." : "No open tasks. Nice."));
+  const cols = el("div", "d-cols");
+  cols.style.setProperty("--n", Math.min(Math.max(teams.length, 1), 5));
+  const perCol = teams.length > 5 ? 4 : 7;
+  teams.forEach(id => {
+    const open = sortTasks(data.tasks.filter(t => t.team === id && !t.done))
+      .sort((a, b) => (stOf(a) === "doing" ? 0 : 1) - (stOf(b) === "doing" ? 0 : 1));   // in progress floats to the top
+    const col = el("div", "d-col");
+    const h = el("div", "d-col-h");
+    h.append(el("span", "d-col-name", teamName(id)), el("span", "d-col-n", open.length ? `${open.length} open` : "All clear"));
+    col.append(h);
+    const waiting = data.tasks.filter(t => !t.done && stOf(t) === "blocked" && t.blockedBy === id).length;
+    if (waiting) col.append(el("div", "d-col-wait", `${waiting} task${waiting === 1 ? " is" : "s are"} waiting on ${teamName(id)}`));
+    open.slice(0, perCol).forEach(t => col.append(dTask(t, ts)));
+    if (open.length > perCol) col.append(el("div", "d-more", `+${open.length - perCol} more`));
+    cols.append(col);
+  });
+  main.append(cols);
+  body.append(main);
+  box.append(body);
+
+  // Footer: parts and freshness
+  const foot = el("footer", "d-foot");
+  const toOrder = allParts().filter(x => (x.pt.status || "need") === "need").length;
+  const ordered = allParts().filter(x => x.pt.status === "ordered").length;
+  const fl = el("div", "d-foot-l");
+  if (toOrder) fl.append(el("span", "bad", `${toOrder} part${toOrder === 1 ? "" : "s"} to order`));
+  if (ordered) fl.append(el("span", "", `${ordered} on the way`));
+  const blocked = data.tasks.filter(t => !t.done && stOf(t) === "blocked").length;
+  if (blocked) fl.append(el("span", "", `${blocked} blocked`));
+  const fr = el("div", "d-foot-r" + (dispError ? " bad" : ""),
+    dispError ? `Can't reach the site. Showing data from ${(dispUpdated || now).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`
+      : `Updated ${(dispUpdated || now).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}. Refreshes every minute.`);
+  foot.append(fl, fr);
+  box.append(foot);
+
+  if (!dispUpdated) dispUpdated = now;
+  // Fade the agenda's last line only when it doesn't fit
+  requestAnimationFrame(() => { const a = box.querySelector(".d-agenda"); if (a) a.classList.toggle("clip", a.scrollHeight > a.clientHeight + 2); });
+  keepAwake();
+}
+
+// Clock tick, minute refresh, and hide the cursor and controls when idle
+setInterval(() => {
+  const c = document.getElementById("dClock");
+  if (c && currentPage && data && currentPage() === "display") c.textContent = new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}, 1000);
+setInterval(refreshDisplay, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && data && currentPage() === "display") { keepAwake(); refreshDisplay(); } });
+document.addEventListener("fullscreenchange", () => { if (data && currentPage() === "display") render(); });
+document.addEventListener("mousemove", () => {
+  if (!document.body.classList.contains("display-mode")) return;
+  document.body.classList.remove("idle");
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => document.body.classList.add("idle"), 3000);
+});
 
 /* ---------- Home: the landing page ---------- */
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
