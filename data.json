@@ -274,7 +274,7 @@
   "meetings": [
     {
       "date": "2026-10-21",
-      "note": "",
+      "note": "- Drive team applications due tomorrow- Mech: continuing robot repairs- Electrical: fixing wiring- Programming: working on code",
       "agenda": "October 21st Meeting Agenda \n- 2:45 - 4:30 PM\n- Drive team applications due tomorrow\n- Mech: continuing robot repairs\n- Electrical: fixing wiring\n- Programming: working on code",
       "active": [
         "mechanical",
@@ -426,7 +426,6 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T16:19:41.085Z",
   "events": [
     {
       "id": "53da8034-bf96-4981-932b-69a7260e917e",
@@ -584,5 +583,6 @@
       ]
     }
   ],
-  "runs": []
+  "runs": [],
+  "updated": "2026-10-21T16:19:43.781Z"
 }
