@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
   "subtitle": "",
-  "updated": "2026-10-21T12:24:17.991Z",
+  "updated": "2026-10-21T12:34:07.286Z",
   "teams": [
     {
       "id": "mechanical",
@@ -127,6 +127,41 @@
     }
   ],
   "tasks": [],
-  "meetings": [],
+  "meetings": [
+    {
+      "date": "2026-10-21",
+      "note": "",
+      "agenda": "October 21st Meeting Agenda \n- 2:45 - 4:30 PM\n- Drive team applications due tomorrow\n- Mech: continuing robot repairs\n- Electrical: fixing wiring\n- Programming: working on code",
+      "active": [
+        "mechanical",
+        "programming",
+        "electrical"
+      ]
+    },
+    {
+      "date": "2026-10-22",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-10-26",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-10-29",
+      "note": "",
+      "agenda": "",
+      "active": []
+    },
+    {
+      "date": "2026-10-31",
+      "note": "STEMley",
+      "agenda": "",
+      "active": []
+    }
+  ],
   "deadlines": []
 }
