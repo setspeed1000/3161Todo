@@ -302,17 +302,6 @@
       ]
     },
     {
-      "date": "2026-10-31",
-      "note": "STEMley",
-      "agenda": "- 7 AM - 7 PM\n- Please wear competition polos\n- Media take photos of event",
-      "active": [
-        "mechanical",
-        "programming",
-        "electrical",
-        "media"
-      ]
-    },
-    {
       "date": "2026-11-02",
       "note": "",
       "agenda": "November 2nd Meeting Agenda\n- Media work on STEMly Post",
@@ -424,14 +413,26 @@
       "notes": ""
     }
   ],
-  "updated": "2026-10-21T16:06:21.380Z",
+  "updated": "2026-10-21T16:13:13.176Z",
   "events": [
     {
       "id": "53da8034-bf96-4981-932b-69a7260e917e",
       "name": "Stemley",
       "start": "2026-10-31",
       "end": "",
-      "location": "St. Mary's"
+      "location": "St. Mary's",
+      "reminders": [
+        {
+          "id": "4d6472e8-0e36-440c-91f7-deac824a25f3",
+          "text": "Wear Competition Polos",
+          "days": 7
+        },
+        {
+          "id": "3efa5dbb-68f9-4f7f-ad22-fa750f02794e",
+          "text": "Media Document Event",
+          "days": 0
+        }
+      ]
     }
   ],
   "checklists": [
