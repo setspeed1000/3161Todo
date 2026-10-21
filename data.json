@@ -172,7 +172,7 @@
       "team": "captains",
       "title": "STIMs Workshop",
       "owner": "Daniel",
-      "subsystem": "Other",
+      "subsystem": "Planning",
       "priority": "Med",
       "due": "",
       "done": false,
@@ -185,7 +185,7 @@
       "team": "captains",
       "title": "Update Online Spreadsheet",
       "owner": "Zoe",
-      "subsystem": "Other",
+      "subsystem": "Admin",
       "priority": "Med",
       "due": "",
       "done": false,
@@ -206,7 +206,7 @@
       "team": "captains",
       "title": "STIMs Roster",
       "owner": "Zoe + Daniel",
-      "subsystem": "Other",
+      "subsystem": "Admin",
       "priority": "Low",
       "due": "",
       "done": false,
@@ -219,7 +219,7 @@
       "team": "captains",
       "title": "New Members Pres - Divide Slides + Practice",
       "owner": "Zoe + Daniel",
-      "subsystem": "Other",
+      "subsystem": "Admin",
       "priority": "High",
       "due": "",
       "done": false,
@@ -366,15 +366,6 @@
       "notes": ""
     },
     {
-      "id": "45168e08-6f06-49a6-bb43-d5e286d469d8",
-      "team": "scouting",
-      "date": "2026-10-22",
-      "title": "Stemly Scouting Workshop",
-      "time": "3-4pm",
-      "where": "Upstairs classroom",
-      "notes": ""
-    },
-    {
       "id": "d83dbf3b-bd09-434b-adaf-8a0d02671393",
       "team": "design",
       "date": "2026-10-29",
@@ -391,7 +382,16 @@
       "time": "4",
       "where": "Shop",
       "notes": ""
+    },
+    {
+      "id": "b2bd0585-9319-493e-8188-2afffcd3e7ea",
+      "team": "scouting",
+      "date": "2026-10-22",
+      "title": "STEMly Scouting Workshop",
+      "time": "3:00 PM - 4:00 PM",
+      "where": "Room 209",
+      "notes": ""
     }
   ],
-  "updated": "2026-10-21T13:52:47.310Z"
+  "updated": "2026-10-21T14:53:05.002Z"
 }
