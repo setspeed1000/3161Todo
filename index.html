@@ -155,6 +155,53 @@
     .mrow .note-cell { grid-column: 1 / -1; order: 3; }
   }
 
+  /* Calendar zoom levels */
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .seg a { padding: 5px 12px; color: var(--ink); text-decoration: none; background: var(--panel); font-size: 14px; }
+  .seg a + a { border-left: 1px solid var(--line); }
+  .seg a[aria-current] { background: var(--ink); color: var(--bg); font-weight: 600; }
+  .cal-sub { margin: -4px 0 10px; }
+  .day { cursor: pointer; }
+  .boxes { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .sbox { display: block; background: var(--sunk); border-left: 3px solid var(--yellow); color: var(--ink);
+    text-decoration: none; font-size: 11.5px; font-weight: 600; line-height: 1.3; padding: 2px 6px; border-radius: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sbox:hover { background: var(--yellow); color: var(--yellow-ink); }
+  .sbox.more { border-left-color: var(--line); font-weight: 500; color: var(--muted); }
+  .boxes.lg { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  .sbox.lg { font-size: 16px; padding: 10px 14px; border-left-width: 5px; min-width: 150px; white-space: normal; }
+  .sbox.lg small { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-top: 2px; }
+  .sbox.lg:hover small { color: inherit; }
+  .small { font-size: 12px; }
+
+  .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .wk { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 8px; min-height: 260px;
+    display: flex; flex-direction: column; gap: 6px; cursor: pointer; min-width: 0; }
+  .wk:hover { border-color: var(--muted); }
+  .wk.meet { border-top: 4px solid var(--yellow); padding-top: 5px; }
+  .wk.sel { outline: 2px solid var(--ink); outline-offset: -1px; }
+  .wk-head { display: flex; align-items: baseline; gap: 6px; }
+  .wk-dow { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .wk-num { font: 700 22px/1 "Barlow Condensed", sans-serif; }
+  .wk.today .wk-num { background: var(--ink); color: var(--bg); border-radius: 3px; padding: 1px 5px; }
+  .wk-note { font-size: 12px; color: var(--muted); }
+  .wk-due { display: grid; gap: 3px; margin-top: auto; border-top: 1px dashed var(--line); padding-top: 6px; }
+  .wk-due a { font-size: 12px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wk-due a.over { color: var(--red); }
+
+  @media (max-width: 700px) {
+    .cal-bar { flex-wrap: wrap; }
+    .cal-bar .month { font-size: 20px; min-width: 0; }
+    .cal-bar .spacer { flex-basis: 100%; height: 0; }
+    .week { grid-template-columns: 1fr; }
+    .wk { min-height: 0; display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 6px 12px; align-content: start; }
+    .wk.meet { border-top-width: 1px; border-left: 4px solid var(--yellow); padding-top: 8px; }
+    .wk-head { grid-row: 1 / span 4; flex-direction: column; gap: 0; }
+    .wk > :not(.wk-head) { grid-column: 2; }
+    .wk-due { margin-top: 2px; }
+    .sbox.lg { min-width: 0; flex: 1 1 140px; }
+  }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -506,8 +553,6 @@ function sortTasks(arr) {
 
 /* ---------- Render ---------- */
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-let calMonth = null;     // first day of the month shown in the calendar
-let selDate = null;      // "YYYY-MM-DD" selected in the calendar
 
 function iso(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
 function niceDate(s, opts = { weekday: "long", month: "long", day: "numeric" }) { return parseDate(s).toLocaleDateString(undefined, opts); }
@@ -517,7 +562,7 @@ const teamName = id => (data.teams.find(t => t.id === id) || {}).name || id;
 // Pages: a subteam id, "calendar", or "meetings" (captains' tab, only while editing)
 function currentPage() {
   const id = decodeURIComponent(location.hash.slice(1));
-  if (id === "calendar") return "calendar";
+  if (id.split("/")[0] === "calendar") return "calendar";
   if (id === "meetings") return editing ? "meetings" : "calendar";
   return null;
 }
@@ -623,84 +668,177 @@ function render(focusId) {
   }
 }
 
-/* ---------- Calendar ---------- */
+/* ---------- Calendar: month, week and day views ----------
+   The view lives in the URL (#calendar/week/2026-10-22) so links and the back button work. */
+function calState() {
+  const [, v, d] = decodeURIComponent(location.hash.slice(1)).split("/");
+  return {
+    view: ["month", "week", "day"].includes(v) ? v : "month",
+    date: /^\d{4}-\d{2}-\d{2}$/.test(d || "") && parseDate(d) ? d : iso(today())
+  };
+}
+const calHref = (view, date) => `#calendar/${view}/${date}`;
+const goCal = (view, date) => { location.hash = calHref(view, date); };
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const openCount = id => data.tasks.filter(t => t.team === id && !t.done).length;
+
+// A subteam box: links to that subteam's to-do list
+function sbox(id, cls = "") {
+  const a = document.createElement("a");
+  a.className = "sbox " + cls;
+  a.href = "#" + encodeURIComponent(id);
+  a.textContent = teamName(id);
+  a.title = `Open ${teamName(id)} tasks`;
+  a.onclick = e => e.stopPropagation();
+  return a;
+}
+const activeOf = m => m ? (m.active || []).filter(id => data.teams.some(t => t.id === id)) : [];
+
 function renderCalendar() {
-  const t0 = today();
-  if (!calMonth) calMonth = new Date(t0.getFullYear(), t0.getMonth(), 1);
-  if (!selDate) {
-    const next = data.meetings.map(m => m.date).filter(d => d >= iso(t0)).sort()[0];
-    selDate = next && parseDate(next).getMonth() === calMonth.getMonth() ? next : iso(t0);
-  }
+  const { view, date } = calState();
+  const D = parseDate(date), t0 = iso(today());
 
   const head = div("page-head");
   const h2 = document.createElement("h2"); h2.className = "page-title"; h2.textContent = "Calendar";
-  const y = calMonth.getFullYear(), mo = calMonth.getMonth();
-  const inMonth = data.meetings.filter(m => { const d = parseDate(m.date); return d.getFullYear() === y && d.getMonth() === mo; });
-  const sub = div("muted", inMonth.length ? `${inMonth.length} meeting${inMonth.length === 1 ? "" : "s"} this month` : "No meetings scheduled this month");
-  sub.style.marginTop = "8px";
-  head.append(h2, sub);
+  head.append(h2);
   $("pageHead").replaceChildren(head);
 
   const list = $("list");
   list.innerHTML = "";
 
+  // Toolbar: previous / label / next, view switch, today
   const bar = div("cal-bar");
-  const prev = document.createElement("button"); prev.textContent = "‹"; prev.setAttribute("aria-label", "Previous month");
-  const nextB = document.createElement("button"); nextB.textContent = "›"; nextB.setAttribute("aria-label", "Next month");
-  const month = div("month", calMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" }));
+  const step = { month: d => new Date(d.getFullYear(), d.getMonth() + 1, 1), week: d => addDays(d, 7), day: d => addDays(d, 1) }[view];
+  const back = { month: d => new Date(d.getFullYear(), d.getMonth() - 1, 1), week: d => addDays(d, -7), day: d => addDays(d, -1) }[view];
+  const wkStart = addDays(D, -D.getDay()), wkEnd = addDays(wkStart, 6);
+  const label = view === "month" ? D.toLocaleDateString(undefined, { month: "long", year: "numeric" })
+    : view === "week" ? `${wkStart.toLocaleDateString(undefined, { month: "short", day: "numeric" })} to ${wkEnd.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
+    : D.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const prev = document.createElement("button"); prev.textContent = "‹"; prev.setAttribute("aria-label", "Previous");
+  const next = document.createElement("button"); next.textContent = "›"; next.setAttribute("aria-label", "Next");
+  prev.onclick = () => goCal(view, iso(back(D)));
+  next.onclick = () => goCal(view, iso(step(D)));
+  const seg = div("seg");
+  ["month", "week", "day"].forEach(v => {
+    const a = document.createElement("a");
+    a.href = calHref(v, date); a.textContent = v[0].toUpperCase() + v.slice(1);
+    if (v === view) a.setAttribute("aria-current", "true");
+    seg.append(a);
+  });
   const todayB = document.createElement("button"); todayB.textContent = "Today";
-  prev.onclick = () => { calMonth = new Date(y, mo - 1, 1); render(); };
-  nextB.onclick = () => { calMonth = new Date(y, mo + 1, 1); render(); };
-  todayB.onclick = () => { calMonth = new Date(t0.getFullYear(), t0.getMonth(), 1); selDate = iso(t0); render(); };
-  bar.append(prev, month, nextB, div("spacer"), todayB);
+  todayB.onclick = () => goCal(view, t0);
+  bar.append(prev, div("month", label), next, div("spacer"), seg, todayB);
   list.append(bar);
 
-  const grid = div("cal");
-  WEEKDAYS.forEach(w => grid.append(div("dow", w)));
-  const start = new Date(y, mo, 1 - calMonth.getDay());
-  const weeks = Math.ceil((calMonth.getDay() + new Date(y, mo + 1, 0).getDate()) / 7);
-  for (let i = 0; i < weeks * 7; i++) {
-    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-    const ds = iso(d);
-    const m = meetingOn(ds);
-    const due = data.tasks.filter(t => t.due === ds && !t.done);
-    const cell = document.createElement("button");
-    cell.className = "day" + (d.getMonth() !== mo ? " out" : "") + (ds === iso(t0) ? " today" : "")
-      + (m ? " meet" : "") + (ds === selDate ? " sel" : "");
-    cell.setAttribute("aria-label", d.toDateString() + (m ? ", meeting" : ""));
-    cell.append(div("num", d.getDate()));
-    if (m) {
-      const n = (m.active || []).length;
-      cell.append(div("m txt", n ? `${n} subteam${n === 1 ? "" : "s"}` : "Meeting"));
-    }
-    if (due.length) cell.append(div("due txt" + (ds < iso(t0) ? " over" : ""), `${due.length} due`));
-    cell.onclick = () => {
-      selDate = ds;
-      if (d.getMonth() !== mo) calMonth = new Date(d.getFullYear(), d.getMonth(), 1);
-      render();
-    };
-    grid.append(cell);
-  }
-  list.append(grid);
-  list.append(dayDetail(selDate));
+  if (view === "month") list.append(monthView(D, date, t0));
+  else if (view === "week") list.append(weekView(wkStart, date, t0));
+  else list.append(dayView(date, t0));
 }
 
-function dayDetail(ds) {
+function monthView(D, sel, t0) {
+  const y = D.getFullYear(), mo = D.getMonth();
+  const first = new Date(y, mo, 1);
+  const wrap = div("");
+  const inMonth = data.meetings.filter(m => { const d = parseDate(m.date); return d.getFullYear() === y && d.getMonth() === mo; });
+  wrap.append(div("muted cal-sub", inMonth.length
+    ? `${inMonth.length} meeting${inMonth.length === 1 ? "" : "s"} this month. Tap a day to zoom into its week.`
+    : "No meetings scheduled this month."));
+  const grid = div("cal");
+  WEEKDAYS.forEach(w => grid.append(div("dow", w)));
+  const start = addDays(first, -first.getDay());
+  const weeks = Math.ceil((first.getDay() + new Date(y, mo + 1, 0).getDate()) / 7);
+  for (let i = 0; i < weeks * 7; i++) {
+    const d = addDays(start, i), ds = iso(d), m = meetingOn(ds), act = activeOf(m);
+    const due = data.tasks.filter(t => t.due === ds && !t.done);
+    const cell = div("day" + (d.getMonth() !== mo ? " out" : "") + (ds === t0 ? " today" : "") + (m ? " meet" : ""));
+    cell.tabIndex = 0; cell.setAttribute("role", "link");
+    cell.setAttribute("aria-label", `${d.toDateString()}${m ? ", meeting" : ""}. Open week`);
+    cell.onclick = () => goCal("week", ds);
+    cell.onkeydown = e => { if (e.key === "Enter") goCal("week", ds); };
+    cell.append(div("num", d.getDate()));
+    if (m && !act.length) cell.append(div("m txt", "Meeting"));
+    const boxes = div("boxes txt");
+    act.slice(0, 3).forEach(id => boxes.append(sbox(id)));
+    if (act.length > 3) {
+      const more = document.createElement("a"); more.className = "sbox more"; more.href = calHref("day", ds);
+      more.textContent = `+${act.length - 3} more`; more.onclick = e => e.stopPropagation();
+      boxes.append(more);
+    }
+    if (act.length) cell.append(boxes);
+    if (due.length) cell.append(div("due txt" + (ds < t0 ? " over" : ""), `${due.length} due`));
+    grid.append(cell);
+  }
+  wrap.append(grid);
+  return wrap;
+}
+
+function weekView(start, sel, t0) {
+  const wrap = div("");
+  wrap.append(div("muted cal-sub", "Tap a day to zoom in. Tap a subteam to open its to-do list."));
+  const grid = div("week");
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(start, i), ds = iso(d), m = meetingOn(ds), act = activeOf(m);
+    const due = sortTasks(data.tasks.filter(t => t.due === ds && !t.done));
+    const col = div("wk" + (ds === t0 ? " today" : "") + (m ? " meet" : "") + (ds === sel ? " sel" : ""));
+    col.tabIndex = 0; col.setAttribute("role", "link");
+    col.setAttribute("aria-label", `${d.toDateString()}. Open day`);
+    col.onclick = () => goCal("day", ds);
+    col.onkeydown = e => { if (e.key === "Enter") goCal("day", ds); };
+    const hd = div("wk-head");
+    hd.append(div("wk-dow", WEEKDAYS[d.getDay()]), div("wk-num", d.getDate()));
+    col.append(hd);
+    if (m) {
+      col.append(div("wk-note", m.note || "Meeting"));
+      const boxes = div("boxes");
+      act.forEach(id => boxes.append(sbox(id)));
+      if (!act.length) boxes.append(div("muted small", "No subteams yet"));
+      col.append(boxes);
+    } else {
+      col.append(div("muted small", "No meeting"));
+    }
+    if (due.length) {
+      const dl = div("wk-due");
+      due.forEach(t => {
+        const a = document.createElement("a"); a.href = "#" + encodeURIComponent(t.team);
+        a.textContent = t.title; a.onclick = e => e.stopPropagation();
+        a.className = ds < t0 ? "over" : "";
+        dl.append(a);
+      });
+      col.append(dl);
+    }
+    grid.append(col);
+  }
+  wrap.append(grid);
+  return wrap;
+}
+
+function dayView(ds, t0) {
   const box = div("detail");
   const m = meetingOn(ds);
-  const h = document.createElement("h3"); h.textContent = niceDate(ds);
-  box.append(h);
+  const act = activeOf(m);
 
   if (m) {
     const note = div("note", m.note || "Meeting");
     makeEditable(note, v => m.note = v);
     box.append(note);
-    const h4 = document.createElement("h4");
-    h4.textContent = editing ? "Subteams active at this meeting (tap to toggle)" : "Subteams active";
+
+    const h4 = document.createElement("h4"); h4.textContent = "Active subteams";
     box.append(h4);
-    const g = div("teams-grid");
-    const active = m.active || (m.active = []);
+    const boxes = div("boxes lg");
+    act.forEach(id => {
+      const a = sbox(id, "lg");
+      const n = openCount(id);
+      const sm = document.createElement("small"); sm.textContent = n ? `${n} open` : "Nothing open";
+      a.append(sm);
+      boxes.append(a);
+    });
+    if (!act.length) boxes.append(div("muted", "No subteams have marked themselves active yet."));
+    box.append(boxes);
+
     if (editing) {
+      const h5 = document.createElement("h4"); h5.textContent = "Mark subteams active (tap to toggle)";
+      const g = div("teams-grid");
+      const active = m.active || (m.active = []);
       data.teams.forEach(t => {
         const b = document.createElement("button");
         const on = active.includes(t.id);
@@ -715,17 +853,19 @@ function dayDetail(ds) {
         };
         g.append(b);
       });
-    } else if (active.length) {
-      active.forEach(id => g.append(Object.assign(document.createElement("span"), { className: "tchip on", textContent: teamName(id) })));
-    } else {
-      g.append(div("muted", "No subteams have marked themselves active yet."));
+      box.append(h5, g);
     }
-    box.append(g);
   } else {
     box.append(div("muted", "No meeting scheduled."));
+    if (editing) {
+      const add = document.createElement("button"); add.className = "tbtn"; add.textContent = "Add a meeting on this day";
+      add.style.marginTop = "10px";
+      add.onclick = () => { addMeeting(ds, ""); markDirty(); render(); };
+      box.append(add);
+    }
   }
 
-  const due = data.tasks.filter(t => t.due === ds && !t.done);
+  const due = sortTasks(data.tasks.filter(t => t.due === ds && !t.done));
   if (due.length) {
     const h4 = document.createElement("h4"); h4.textContent = "Tasks due";
     const dl = div("due-list");
@@ -737,7 +877,9 @@ function dayDetail(ds) {
     });
     box.append(h4, dl);
   }
-  return box;
+  const wrap = div("");
+  wrap.append(box);
+  return wrap;
 }
 
 /* ---------- Meeting dates (captains, edit mode only) ---------- */
