@@ -1,7 +1,7 @@
 {
   "title": "Team 3161 Tasks",
   "subtitle": "Unlock to edit. Every save is a commit.",
-  "updated": "2026-10-21T02:07:55.511Z",
+  "updated": "2026-10-21T02:12:16.198Z",
   "teams": [
     {
       "id": "mechanical",
@@ -214,6 +214,13 @@
       "due": "2026-11-19",
       "done": false,
       "notes": "GTA 6 BABYYYY"
+    }
+  ],
+  "meetings": [
+    {
+      "date": "2026-10-21",
+      "note": "2:30-4:30",
+      "active": []
     }
   ]
 }
