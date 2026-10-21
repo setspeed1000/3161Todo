@@ -143,7 +143,7 @@
       "id": "07497821-d0d0-4e1f-b11d-03ddcb472523",
       "team": "mechanical",
       "title": "Swap intake back to pinion gears",
-      "owner": "",
+      "owner": "Max",
       "subsystem": "Intake",
       "priority": "High",
       "due": "",
@@ -276,5 +276,5 @@
       "title": "Complete STIMS"
     }
   ],
-  "updated": "2026-10-21T13:03:15.749Z"
+  "updated": "2026-10-21T13:03:58.936Z"
 }
