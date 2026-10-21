@@ -1,7 +1,7 @@
 {
   "title": "Design Tasks",
   "subtitle": "Unlock with a token to edit. Every save is a commit.",
-  "updated": "2026-10-21T01:49:31.909Z",
+  "updated": "2026-10-21T01:56:53.509Z",
   "tasks": [
     {
       "id": "9c384603-8a2f-4af0-ad11-bf38b0dc05b1",
@@ -41,6 +41,16 @@
       "priority": "Low",
       "due": "",
       "done": true,
+      "notes": ""
+    },
+    {
+      "id": "85e0f923-cbf3-439f-ae93-327ca8ab91a2",
+      "title": "Add calender view for peak efficency",
+      "owner": "",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "2026-10-21",
+      "done": false,
       "notes": ""
     }
   ]
