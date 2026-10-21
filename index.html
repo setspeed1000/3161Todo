@@ -9,11 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #e4e7ea; --panel: #f8f9fa; --sunk: #d6dade; --ink: #1f2328; --muted: #5b6570;
+    --bg: #eceef0; --panel: #f8f9fa; --sunk: #d6dade; --ink: #1f2328; --muted: #5b6570;
     --line: #c9ced4; --yellow: #f5b700; --yellow-ink: #1f2328;
     --high: #f5b700; --med: #7c8c9c; --low: #b9c2cb;
     --red: #c9302c; --green: #2e7d4f; --edit: #fff8e1;
-    --plate: #1f2328; --plate-ink: #f8f9fa;
+    --plate: #cdd2d7; --plate-ink: #1f2328; --nav-ink: #39414a; --nav-muted: #5b6570; --nav-hover: rgba(0,0,0,.06); --nav-active: #f8f9fa; --btn-line: #98a1aa;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -21,7 +21,7 @@
       --line: #333a41; --yellow: #f5b700; --yellow-ink: #15181b;
       --high: #f5b700; --med: #6f7f8f; --low: #3e4750;
       --red: #ef6461; --green: #5cc58a; --edit: #2b2615;
-      --plate: #262b30; --plate-ink: #e8eaec;
+      --plate: #2a2f35; --plate-ink: #e8eaec; --nav-ink: #b9c1c9; --nav-muted: #8a939c; --nav-hover: rgba(255,255,255,.06); --nav-active: #3a4148; --btn-line: #59626b;
     }
   }
   * { box-sizing: border-box; }
@@ -30,34 +30,54 @@
   button, input, select { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 
-  /* Layout: sidebar + page */
-  .app { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; }
+  /* Layout: grey sidebar + one page per subteam */
+  .app { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; }
   .side { background: var(--plate); color: var(--plate-ink); position: sticky; top: 0; height: 100vh;
-    display: flex; flex-direction: column; padding: 24px 14px 20px; overflow-y: auto; }
-  .brand { padding: 0 8px 20px; }
-  h1 { margin: 0; font: 700 30px/1 "Barlow Condensed", sans-serif; letter-spacing: -0.005em; }
-  .sub { margin: 6px 0 0; color: #aab3bc; font-size: 13px; }
+    display: flex; flex-direction: column; padding: 24px 12px 20px; overflow-y: auto;
+    border-right: 1px solid var(--line); }
+  .brand { padding: 0 10px 20px; }
+  h1 { margin: 0; font: 700 28px/1 "Barlow Condensed", sans-serif; letter-spacing: -0.005em; }
+  .sub { margin: 6px 0 0; color: var(--nav-muted); font-size: 13px; }
   .nav { display: flex; flex-direction: column; gap: 2px; }
   .nav a { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
-    padding: 8px 10px; border-radius: 3px; color: #c4cbd2; text-decoration: none; font-weight: 500;
-    border-left: 3px solid transparent; }
-  .nav a:hover { background: rgba(255,255,255,.06); color: var(--plate-ink); }
-  .nav a[aria-current="page"] { background: rgba(245,183,0,.13); color: var(--plate-ink); border-left-color: var(--yellow); }
-  .nav .n { font-size: 13px; color: #8a939c; font-variant-numeric: tabular-nums; }
-  .nav a[aria-current="page"] .n { color: var(--yellow); }
-  .side-foot { margin-top: auto; padding: 20px 8px 0; }
-  .overall { margin: 12px 0 0; font-size: 12px; color: #8a939c; }
+    padding: 9px 10px; border-radius: 4px; color: var(--nav-ink); text-decoration: none; font-weight: 500;
+    border-left: 4px solid transparent; }
+  .nav a:hover { background: var(--nav-hover); color: var(--plate-ink); }
+  .nav a[aria-current="page"] { background: var(--nav-active); color: var(--plate-ink); font-weight: 600;
+    border-left-color: var(--yellow); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .nav .n { font-size: 13px; color: var(--nav-muted); font-variant-numeric: tabular-nums; font-weight: 500; }
+  .side-foot { margin-top: auto; padding: 20px 10px 0; }
+  .overall { margin: 12px 0 0; font-size: 12px; color: var(--nav-muted); }
 
   .bar { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btn { border: 1px solid #4a525a; background: transparent; color: var(--plate-ink);
+  .btn { border: 1px solid var(--btn-line); background: transparent; color: var(--plate-ink);
     padding: 7px 13px; border-radius: 4px; cursor: pointer; font-weight: 500; }
-  .btn:hover { border-color: #8a939c; }
+  .btn:hover { background: var(--nav-hover); }
   .btn.primary { background: var(--yellow); color: var(--yellow-ink); border-color: var(--yellow); font-weight: 600; }
   .btn:disabled { opacity: .45; cursor: default; }
 
-  .wrap { max-width: 860px; margin: 0 auto; padding: 30px 28px 80px; }
+  .wrap { max-width: 860px; width: 100%; margin: 0 auto; padding: 30px 28px 80px; }
   .status { font-size: 14px; color: var(--muted); min-height: 1.5em; margin-bottom: 8px; }
   .status.err { color: var(--red); } .status.ok { color: var(--green); }
+
+  /* Phone: the sidebar slides in from the left */
+  .mtop { display: none; }
+  .scrim { display: none; }
+  @media (max-width: 700px) {
+    .app { grid-template-columns: 1fr; }
+    .side { position: fixed; z-index: 20; left: 0; top: 0; bottom: 0; width: 250px; height: auto;
+      transform: translateX(-100%); transition: transform .2s ease; box-shadow: 4px 0 24px rgba(0,0,0,.2); }
+    .side.open { transform: none; }
+    .scrim.open { display: block; position: fixed; inset: 0; z-index: 15; background: rgba(15,18,21,.45); }
+    .mtop { display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10;
+      background: var(--plate); border-bottom: 1px solid var(--line); padding: 10px 16px; }
+    .menu { border: 1px solid var(--btn-line); background: transparent; color: var(--plate-ink); border-radius: 4px;
+      padding: 6px 10px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; font-weight: 500; }
+    .menu svg { width: 18px; height: 18px; }
+    .mtop-title { font: 700 20px/1 "Barlow Condensed", sans-serif; color: var(--plate-ink); }
+    .wrap { padding: 18px 16px 80px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .side { transition: none; } }
 
   /* Subteam page header */
   .page-head { margin-bottom: 18px; }
@@ -70,21 +90,6 @@
     background: repeating-linear-gradient(-45deg, var(--yellow) 0 10px, #e0a800 10px 20px);
     transition: width .5s ease; }
   @media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
-
-  @media (max-width: 760px) {
-    .app { grid-template-columns: 1fr; }
-    .side { position: static; height: auto; padding: 14px 12px 10px; }
-    .brand { padding: 0 4px 10px; }
-    h1 { font-size: 24px; }
-    .sub { display: none; }
-    .nav { flex-direction: row; overflow-x: auto; gap: 4px; scrollbar-width: none; margin: 0 -12px; padding: 0 12px; }
-    .nav::-webkit-scrollbar { display: none; }
-    .nav a { white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; border-radius: 3px 3px 0 0; padding: 7px 10px; }
-    .nav a[aria-current="page"] { border-bottom-color: var(--yellow); }
-    .side-foot { margin: 0; padding: 10px 4px 0; }
-    .overall { display: none; }
-    .wrap { padding: 20px 16px 80px; }
-  }
 
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
@@ -162,8 +167,9 @@
 </style>
 </head>
 <body>
+<div class="scrim" id="scrim"></div>
 <div class="app">
-  <aside class="side">
+  <aside class="side" id="side">
     <div class="brand">
       <h1 data-field="title">Loading</h1>
       <p class="sub" data-field="subtitle"></p>
@@ -179,6 +185,14 @@
     </div>
   </aside>
 
+  <div>
+  <header class="mtop">
+    <button class="menu" id="menuBtn" aria-expanded="false" aria-controls="side">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      Subteams
+    </button>
+    <span class="mtop-title" id="mtopTitle"></span>
+  </header>
   <main class="wrap">
     <div id="status" class="status" role="status"></div>
     <div id="pageHead"></div>
@@ -189,6 +203,7 @@
     <div id="list"></div>
     <footer id="footer"></footer>
   </main>
+  </div>
 </div>
 
 <dialog id="tokenDlg">
@@ -460,8 +475,7 @@ function render(focusId) {
     if (t.id === team.id) a.setAttribute("aria-current", "page");
     nav.append(a);
   });
-  const cur = nav.querySelector('[aria-current="page"]');
-  if (cur && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = cur.offsetLeft - 12;   // keep the active tab visible on phones
+  $("mtopTitle").textContent = team.name;
   const allOpen = data.tasks.filter(t => !t.done).length;
   $("overall").textContent = `${allOpen} open across all subteams`;
 
@@ -627,7 +641,14 @@ $("showPw").onclick = () => {
   const i = $("tokenInput"); const show = i.type === "password";
   i.type = show ? "text" : "password"; $("showPw").textContent = show ? "Hide" : "Show"; i.focus();
 };
-window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
+function setMenu(open) {
+  $("side").classList.toggle("open", open); $("scrim").classList.toggle("open", open);
+  $("menuBtn").setAttribute("aria-expanded", open);
+}
+$("menuBtn").onclick = () => setMenu(!$("side").classList.contains("open"));
+$("scrim").onclick = () => setMenu(false);
+document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
+window.addEventListener("hashchange", () => { setMenu(false); render(); window.scrollTo(0, 0); });
 $("hideDone").onchange = e => {
   hideDone = e.target.checked;
   try { localStorage.setItem(HIDE_KEY, hideDone ? "1" : "0"); } catch {}
