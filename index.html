@@ -468,7 +468,14 @@
   .d-dl-what { font-weight: 600; }
   .d-agenda { white-space: pre-line; line-height: 1.5; font-size: 1.05em; color: #e6e6e6; overflow: hidden; min-height: 0; flex: 1 1 auto; }
   .d-agenda.clip { -webkit-mask-image: linear-gradient(to bottom, #000 85%, transparent); mask-image: linear-gradient(to bottom, #000 85%, transparent); }
-  .d-ag-open { display: flex; flex-direction: column; gap: .5em; flex: 1 1 auto; min-height: 0; text-align: left; font: inherit; color: inherit;
+  .d-side > :not(.d-side-mid):not(.d-ag-open) { flex: none; }
+  .d-side-mid { display: flex; flex-direction: column; gap: .4em; flex: 0 1 auto; min-height: 0; overflow: hidden; }
+  .d-ag-open.none .d-agenda, .d-ag-txt.none { color: #8c8c8c; font-style: italic; }
+  .d-ag-open .d-label { display: flex; flex-wrap: wrap; align-items: center; gap: .3em .6em; }
+  .d-ag-hint { white-space: nowrap; margin-left: 0 !important; }
+  .d-side-more { color: #b3b3b3; font-size: .85em; flex: none; }
+  .d-side-mid > * { flex: none; }
+  .d-ag-open { display: flex; flex-direction: column; gap: .5em; flex: 1 1000 auto; min-height: 4.4em; text-align: left; font: inherit; color: inherit;
     background: none; border: 1px solid transparent; border-radius: 6px; padding: 0 .6em .6em; margin: 0 -.6em; cursor: pointer; }
   .d-ag-open:hover, .d-ag-open:focus-visible { border-color: #3a3a3a; background: #161616; outline: none; }
   .d-ag-hint { margin-left: .6em; padding: .1em .5em; border: 1px solid #595959; border-radius: 3px; font-size: .85em; letter-spacing: .05em; color: #cccccc; }
@@ -725,7 +732,10 @@
   .day-rem h4 { margin: 0 0 2px; }
   .ev-rems { display: grid; gap: 4px; margin: -2px 0 10px 24px; padding-left: 12px; border-left: 2px solid var(--line); }
   .rem-when { display: flex; gap: 6px; align-items: center; }
+  .rem-when { flex-wrap: wrap; }
   .rem-when input { width: 4.5em; flex: none; }
+  .rem-lead { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .rem-lead input { width: 3.6em; }
   .rem-mode { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; flex: none; }
   .rem-mode button { border: none; background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; padding: 5px 9px; cursor: pointer; white-space: nowrap; }
   .rem-mode button + button { border-left: 1px solid var(--line); }
@@ -1616,9 +1626,19 @@ function remWhenCtl(rm, onChange) {
   bMeet.onclick = () => { if (rm.meeting) return; rm.meeting = true; delete rm.days; sync(); onChange(); };
   dn.oninput = () => { rm.days = Math.max(0, parseInt(dn.value) || 0); onChange(); };
   mode.append(bDays, bMeet);
-  sync(); w.append(dn, mode);
+  // How many days ahead of the reminder date it starts showing (0 = only on the day)
+  const lw = el("label", "rem-lead", "show ");
+  const ld = document.createElement("input"); ld.type = "number"; ld.min = "0"; ld.max = "60"; ld.value = rm.lead || 0; ld.className = "rem-lead-n";
+  ld.setAttribute("aria-label", "Start showing this many days early");
+  ld.oninput = () => { const v = Math.max(0, parseInt(ld.value) || 0); v ? rm.lead = v : delete rm.lead; onChange(); };
+  lw.append(ld, " days early");
+  sync(); w.append(dn, mode, lw);
   return w;
 }
+// Reminders show from their start day up to and including their date, then drop off
+const remStart = (e, r) => iso(addDays(parseDate(remDate(e, r)), -(r.lead || 0)));
+const remindersActive = ts => allReminders().filter(x => !x.r.done && remStart(x.e, x.r) <= ts && ts <= x.date);
+const remDue = date => { const w = remWhen(date); return w === "Today" ? "due today" : w === "Tomorrow" ? "due tomorrow" : `due ${w.toLowerCase()}`; };
 function allReminders() {
   const out = [];
   (data.events || []).forEach(e => (e.reminders || []).forEach(r => { if (e.start) out.push({ e, r, date: remDate(e, r) }); }));
@@ -1626,7 +1646,6 @@ function allReminders() {
 }
 const remindersOn = ds => allReminders().filter(x => x.date === ds);
 // Open reminders whose date has come, for events that haven't finished yet
-const remindersDue = ts => allReminders().filter(x => !x.r.done && x.date <= ts && (x.e.end || x.e.start) >= ts);
 function remWhen(date) {
   const n = Math.round((parseDate(date) - today()) / 86400000);
   return n === 0 ? "Today" : n === 1 ? "Tomorrow" : n === -1 ? "Yesterday" : n < 0 ? `${-n} days ago` : `In ${n} days`;
@@ -2210,6 +2229,8 @@ function renderDisplay() {
   const now = new Date(), ts = iso(today());
   const m = meetingOn(ts);
   const next = data.meetings.filter(x => x.date > ts).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const hasAg = x => x && (x.agenda || "").trim();
+  const agM = hasAg(m) ? m : data.meetings.filter(x => x.date > ts && hasAg(x)).sort((a, b) => a.date.localeCompare(b.date))[0] || null;
   box.innerHTML = "";
 
   // Top bar: team, clock, date, controls
@@ -2220,7 +2241,7 @@ function renderDisplay() {
   const nev = nextEvent();
   if (nev) { const cd = countdown(nev); left.append(el("div", "d-ev", `${nev.name}: ${cd.n === "Now" ? (cd.unit === "today" ? "today" : cd.unit) : `${cd.n} ${cd.unit}`}`)); }
   const wk = iso(addDays(today(), 7));
-  const dueRem = allReminders().filter(x => !x.r.done && x.date <= wk && (x.e.end || x.e.start) >= iso(today()));
+  const dueRem = remindersActive(ts);
   const clock = el("div", "d-clock"); clock.id = "dClock";
   clock.textContent = now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   const ctr = el("div", "d-ctrl");
@@ -2251,20 +2272,20 @@ function renderDisplay() {
     if (bits.length) nb.append(el("div", "d-next-a", bits.join(". ")));
   } else nb.append(el("div", "d-next-n", "None scheduled yet"));
   side.append(nb);
+  const mid = el("div", "d-side-mid");
   const dls = data.deadlines.filter(d => d.date >= ts && d.date <= wk).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
   if (dls.length) {
-    const dl = el("div", "d-dls");
+    mid.append(el("div", "d-label", dls.length === 1 ? "Deadline" : "Deadlines"));
     dls.forEach(d => {
       const days = Math.round((parseDate(d.date) - today()) / 86400000);
       const r = el("div", "d-dl" + (days <= 1 ? " soon" : ""));
       r.append(el("span", "d-dl-when", days === 0 ? "Today" : days === 1 ? "Tomorrow" : `${days} days`), el("span", "d-dl-what", d.title));
-      dl.append(r);
+      mid.append(r);   // one item each, so a full panel hides whole rows
     });
-    side.append(dl);
   }
   if (dueRem.length) {
-    side.append(el("div", "d-label", "Reminders"));
-    dueRem.slice(0, 4).forEach(x => { const r = el("div", "d-rem" + (x.date <= iso(today()) ? " due" : "")); r.append(el("span", "d-ws-t", x.r.text), el("span", "d-ws-m", `${x.e.name}, ${remWhen(x.date).toLowerCase()}`)); side.append(r); });
+    mid.append(el("div", "d-label", "Reminders"));
+    dueRem.slice(0, 4).forEach(x => { const r = el("div", "d-rem" + (x.date <= iso(today()) ? " due" : "")); r.append(el("span", "d-ws-t", x.r.text), el("span", "d-ws-m", `${x.e.name}, ${remDue(x.date)}`)); mid.append(r); });
   }
   // Which subteams get a column: active today, with tasks planned for today, or running a workshop today
   const wksAll = workshopsOn(ts);
@@ -2275,18 +2296,21 @@ function renderDisplay() {
   // Workshops show in their subteam's column; only ones without a column (e.g. General) stay here
   const wks = wksAll.filter(w => !teams.includes(w.team));
   if (wks.length) {
-    side.append(el("div", "d-label", wks.length === 1 ? "Workshop today" : "Workshops today"));
+    mid.append(el("div", "d-label", wks.length === 1 ? "Workshop today" : "Workshops today"));
     wks.forEach(w => {
       const r = el("div", "d-ws"); r.append(el("span", "d-ws-t", w.title || "Workshop"), el("span", "d-ws-m", [teamName(w.team), w.time, w.where].filter(Boolean).join(", ")));
       if (w.needed) { const f = Math.min(w.filled || 0, w.needed); r.append(el("span", f >= w.needed ? "d-full" : "d-need", f >= w.needed ? "Full" : `${w.needed - f} spot${w.needed - f === 1 ? "" : "s"} left`)); }
-      side.append(r);
+      mid.append(r);
     });
   }
-  if (m && m.agenda) {
-    const ag = el("button", "d-ag-open"); ag.type = "button"; ag.setAttribute("aria-label", "Enlarge the meeting agenda");
-    const lab = el("div", "d-label", "Agenda "); lab.append(el("span", "d-ag-hint", "Tap to enlarge"));
-    ag.append(lab, el("div", "d-agenda", m.agenda));
-    ag.onclick = () => openAgenda(m);
+  side.append(mid);
+  // Agenda is always shown: today's, otherwise the next meeting's, otherwise a button that still opens the due-dates view
+  {
+    const ag = el("button", "d-ag-open" + (agM ? "" : " none")); ag.type = "button"; ag.setAttribute("aria-label", "Enlarge the meeting agenda");
+    const lab = el("div", "d-label", agM && agM !== m ? `Agenda for ${niceDate(agM.date, { weekday: "short", month: "short", day: "numeric" })} ` : "Agenda ");
+    lab.append(el("span", "d-ag-hint", "Tap to enlarge"));
+    ag.append(lab, el("div", "d-agenda", agM ? agM.agenda : "No agenda posted yet."));
+    ag.onclick = () => openAgenda(agM);
     side.append(ag);
   }
   body.append(side);
@@ -2352,9 +2376,22 @@ function renderDisplay() {
   if (!dispUpdated) dispUpdated = now;
   // Keep an open agenda in step with the minute refresh, without losing its scroll position
   if (agendaDlg) {
-    if (m && m.agenda) { const b = document.getElementById("dAgBig"); if (b && b.textContent !== m.agenda) b.textContent = m.agenda; fillAgendaSide(); }
-    else closeAgenda();
+    if ((agendaDlg.dataset.date || "") !== (agM ? agM.date : "")) openAgenda(agM);
+    else { const b = document.getElementById("dAgBig"), t = agM ? agM.agenda : "No agenda posted yet."; if (b && b.textContent !== t) b.textContent = t; fillAgendaSide(); }
   }
+  // Left panel: hide whole items that don't fit (never half an item) so the agenda keeps its space
+  requestAnimationFrame(() => {
+    const mid = box.querySelector(".d-side-mid"); if (!mid) return;
+    const items = [...mid.children];
+    let hidden = 0;
+    for (let i = items.length - 1; i >= 0 && mid.scrollHeight > mid.clientHeight + 1; i--) { items[i].hidden = true; if (!items[i].classList.contains("d-label")) hidden++; }
+    // Drop a heading left with nothing under it
+    items.forEach((x, i) => { if (!x.hidden && x.classList.contains("d-label") && (!items[i + 1] || items[i + 1].hidden)) x.hidden = true; });
+    if (hidden) {
+      const more = el("div", "d-side-more", `+${hidden} more (tap the agenda to see everything)`); mid.append(more);
+      for (let i = items.length - 1; i >= 0 && mid.scrollHeight > mid.clientHeight + 1; i--) if (!items[i].hidden) { items[i].hidden = true; if (!items[i].classList.contains("d-label")) more.textContent = `+${++hidden} more (tap the agenda to see everything)`; }
+    }
+  });
   // Fade the agenda's last line only when it doesn't fit
   requestAnimationFrame(() => { const a = box.querySelector(".d-agenda"); if (a) a.classList.toggle("clip", a.scrollHeight > a.clientHeight + 2); });
   keepAwake();
@@ -2368,12 +2405,13 @@ function openAgenda(m) {
   o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Meeting agenda");
   const card = el("div", "d-ag-card");
   const top = el("div", "d-ag-top");
-  top.append(el("div", "d-ag-h", `Agenda, ${niceDate(m.date, { weekday: "long", month: "long", day: "numeric" })}`));
+  top.append(el("div", "d-ag-h", m ? `Agenda, ${niceDate(m.date, { weekday: "long", month: "long", day: "numeric" })}` : "Agenda"));
   const x = el("button", "d-ag-x", "Close"); x.type = "button"; x.onclick = closeAgenda;
   top.append(x);
   const main = el("div", "d-ag-main");
   const body = el("div", "d-ag-body"); body.tabIndex = 0;
-  const txt = el("div", "d-ag-txt", m.agenda); txt.id = "dAgBig";
+  const txt = el("div", "d-ag-txt" + (m ? "" : " none"), m ? m.agenda : "No agenda posted yet."); txt.id = "dAgBig";
+  o.dataset.date = m ? m.date : "";
   body.append(txt);
   const side = el("div", "d-ag-side");
   side.append(el("div", "d-ag-sh", "Due dates and reminders"), Object.assign(el("div", "d-up-list"), { id: "dAgUp" }));
@@ -2387,7 +2425,7 @@ function openAgenda(m) {
 function upcomingDue(ts) {
   const dl = (data.deadlines || []).filter(d => d.date >= ts)
     .map(d => ({ date: d.date, kind: "dl", title: d.title, sub: d.event ? `Deadline for ${eventName(d.event)}` : "Team deadline" }));
-  const rm = allReminders().filter(x => !x.r.done && (x.e.end || x.e.start) >= ts)
+  const rm = remindersActive(ts)
     .map(x => ({ date: x.date, kind: "rm", title: x.r.text || "Reminder", sub: `Reminder for ${x.e.name}` }));
   return [...dl, ...rm].sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -2733,8 +2771,7 @@ function renderHome() {
   }
 
   // Reminders: due ones first, then what's coming in the next two weeks
-  const horizon = iso(addDays(t0, 14));
-  const due = remindersDue(ts), soon = allReminders().filter(x => !x.r.done && x.date > ts && x.date <= horizon && (x.e.end || x.e.start) >= ts);
+  const due = remindersActive(ts), soon = [];
   if (due.length || soon.length) {
     const rc = el("div", "card remcard");
     rc.append(el("p", "card-label", "Reminders"));
@@ -3202,7 +3239,8 @@ function renderCaptain() {
       const when = div("c", "");
       const sync = () => {
         const d = niceDate(remDate(e, rm), { weekday: "short", month: "short", day: "numeric" });
-        when.textContent = rm.meeting && !meetingBefore(e.start) ? `No meeting before it, shows ${d}` : `Shows ${d}`;
+        const f = rm.lead ? `${niceDate(remStart(e, rm), { month: "short", day: "numeric" })} to ` : "";
+        when.textContent = rm.meeting && !meetingBefore(e.start) ? `No meeting before it, shows ${f}${d}` : `Shows ${f}${d}`;
       };
       const dn = remWhenCtl(rm, () => { sync(); markDirty(); });
       sync();
