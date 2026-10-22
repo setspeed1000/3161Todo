@@ -594,6 +594,13 @@
   .ws-n { grid-column: 2 / -1; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
   .ws-n:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: .7; }
   .ws-form { margin-top: 6px; }
+  .d-wsc { background: #f2f2f2; color: #0d0d0d; border-radius: 4px; padding: .55em .75em; border-left: .3em solid #cc991f; flex: none;
+    box-shadow: 0 0 0 1px #ffffff inset; }
+  .d-wsc-l { font: 700 .72em/1 "Rajdhani", sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #8a6714; margin-bottom: .2em; }
+  .d-wsc-t { font-weight: 700; font-size: 1.12em; line-height: 1.2; }
+  .d-wsc-m { font-size: .85em; color: #333333; margin-top: .1em; }
+  .d-wsc-s { font-size: .85em; font-weight: 700; color: #8a6714; margin-top: .15em; }
+  .d-wsc-s.full { color: #b8452a; }
   .d-ws { display: grid; padding: .5em .8em; border-left: .3em solid #e6ac22; background: #262626; border-radius: 3px; margin-bottom: .4em; }
   .d-ws-t { font-weight: 700; font-size: 1.15em; }
   .d-ws-m { color: #b3b3b3; font-size: .85em; }
@@ -2077,7 +2084,14 @@ function renderDisplay() {
     side.append(el("div", "d-label", "Reminders"));
     dueRem.slice(0, 4).forEach(x => { const r = el("div", "d-rem" + (x.date <= iso(today()) ? " due" : "")); r.append(el("span", "d-ws-t", x.r.text), el("span", "d-ws-m", `${x.e.name}, ${remWhen(x.date).toLowerCase()}`)); side.append(r); });
   }
-  const wks = workshopsOn(ts);
+  // Which subteams get a column: active today, with tasks planned for today, or running a workshop today
+  const wksAll = workshopsOn(ts);
+  const planTeams = plannedOn(ts).filter(t => !t.done).map(t => t.team);
+  const wsTeams = wksAll.map(w => w.team).filter(inCal);
+  const onToday = data.teams.map(t => t.id).filter(id => (m && (activeOf(m).includes(id) || planTeams.includes(id))) || wsTeams.includes(id));
+  let teams = onToday.length ? onToday : data.teams.map(t => t.id).filter(id => inCal(id) && data.tasks.some(t => t.team === id && !t.done));
+  // Workshops show in their subteam's column; only ones without a column (e.g. General) stay here
+  const wks = wksAll.filter(w => !teams.includes(w.team));
   if (wks.length) {
     side.append(el("div", "d-label", wks.length === 1 ? "Workshop today" : "Workshops today"));
     wks.forEach(w => {
@@ -2097,9 +2111,6 @@ function renderDisplay() {
 
   // Main: one column per subteam active today (or every subteam with open work)
   const main = el("section", "d-main");
-  const planTeams = plannedOn(ts).filter(t => !t.done).map(t => t.team);
-  const onToday = m ? data.teams.map(t => t.id).filter(id => activeOf(m).includes(id) || planTeams.includes(id)) : [];
-  let teams = onToday.length ? onToday : data.teams.map(t => t.id).filter(id => inCal(id) && data.tasks.some(t => t.team === id && !t.done));
   const heading = el("div", "d-label", onToday.length ? "Active subteams" : "Open work");
   main.append(heading);
   if (!teams.length) main.append(el("div", "d-empty", m ? "No subteams marked active yet." : "No open tasks. Nice."));
@@ -2114,6 +2125,14 @@ function renderDisplay() {
     const h = el("div", "d-col-h");
     h.append(el("span", "d-col-name", teamName(id)), el("span", "d-col-n", open.length ? `${open.length} open` : "All clear"));
     col.append(h);
+    wksAll.filter(w => w.team === id).forEach(w => {
+      const c = el("div", "d-wsc");
+      c.append(el("div", "d-wsc-l", "Workshop"), el("div", "d-wsc-t", w.title || "Workshop"));
+      const meta = [w.time, w.where].filter(Boolean).join(", ");
+      if (meta) c.append(el("div", "d-wsc-m", meta));
+      if (w.needed) { const f = Math.min(w.filled || 0, w.needed); c.append(el("div", "d-wsc-s" + (f >= w.needed ? " full" : ""), f >= w.needed ? "Full" : `${w.needed - f} spot${w.needed - f === 1 ? "" : "s"} left`)); }
+      col.append(c);
+    });
     const waiting = waitingOn(id).length;
     if (waiting) col.append(el("div", "d-col-wait", `${waiting} task${waiting === 1 ? " is" : "s are"} waiting on ${teamName(id)}`));
     open.slice(0, perCol).forEach(t => col.append(dTask(t, ts)));
