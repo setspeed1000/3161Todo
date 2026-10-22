@@ -342,7 +342,7 @@
     {
       "date": "2026-10-22",
       "note": "",
-      "agenda": "October 22nd Meeting Agenda \n- 2:45 - 4:30 PM\n- Drive team applications due today (11:59 PM)\n- Mech: continuing robot repairs\n- Electrical: fixing wiring\n- Programming: working on code\n- Scouting Workshop\n- Business: keep working towards sponsorships\n- Outreach: planning Christmas event\n- Clean / Organise shop",
+      "agenda": "October 22nd Meeting Agenda \n- 2:45 - 4:30 PM\n- Drive team applications due today (11:59 PM)\n- STEMLY Forms due no later than monday\n- Mech: continuing robot repairs\n- Electrical: fixing wiring\n- Programming: working on code\n- Scouting Workshop\n- Business: keep working towards sponsorships\n- Outreach: planning Christmas event\n- Clean / Organise shop",
       "active": [
         "mechanical",
         "programming",
@@ -649,6 +649,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-22T16:21:45.071Z",
+  "updated": "2026-10-22T18:31:55.525Z",
   "archive": []
 }
