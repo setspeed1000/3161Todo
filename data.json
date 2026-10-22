@@ -502,12 +502,12 @@
         {
           "id": "4d6472e8-0e36-440c-91f7-deac824a25f3",
           "text": "Wear Competition Polos",
-          "days": 0
+          "meeting": true
         },
         {
           "id": "3efa5dbb-68f9-4f7f-ad22-fa750f02794e",
           "text": "Media Document Event",
-          "days": 1
+          "meeting": true
         }
       ]
     }
@@ -649,6 +649,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-22T16:19:35.274Z",
+  "updated": "2026-10-22T16:21:45.071Z",
   "archive": []
 }
