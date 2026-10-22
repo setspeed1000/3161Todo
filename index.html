@@ -598,6 +598,10 @@
   .ws-n { grid-column: 2 / -1; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
   .ws-n:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: .7; }
   .ws-form { margin-top: 6px; }
+  .d-wsc, .d-task, .d-ws, .d-rem, .d-dl, .d-up { min-width: 0; overflow-wrap: anywhere; }
+  /* Subteam names never break mid-word: they shrink to fit narrow columns instead */
+  .d-col { container-type: inline-size; }
+  .d-col-name { font-size: min(1.7em, 13.5cqi) !important; overflow-wrap: normal; }
   .d-wsc { background: #f2f2f2; color: #0d0d0d; border-radius: 4px; padding: .55em .75em; border-left: .3em solid #cc991f; flex: none;
     box-shadow: 0 0 0 1px #ffffff inset; }
   .d-wsc-l { font: 700 .72em/1 "Rajdhani", sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #8a6714; margin-bottom: .2em; }
@@ -2014,10 +2018,12 @@ async function refreshDisplay() {
   render();
 }
 
+// Let long names like "Repository/Subsystem" break at the slash on the TV
+const slashBreaks = s => String(s).replace(/([\/_])(?=\S)/g, "$1\u200B");
 function dTask(t, ts) {
   const st = stOf(t);
   const r = el("div", "d-task p-" + t.priority + " s-" + st);
-  r.append(el("div", "d-title", t.title));
+  r.append(el("div", "d-title", slashBreaks(t.title)));
   const meta = el("div", "d-meta");
   if ((t.plan || []).includes(ts)) meta.append(el("span", "d-plan", "Today"));
   if (st === "doing" || st === "blocked") meta.append(el("span", "stp stp-" + st, ST_LABEL[st]));
@@ -2140,7 +2146,7 @@ function renderDisplay() {
     col.append(h);
     wksAll.filter(w => w.team === id).forEach(w => {
       const c = el("div", "d-wsc");
-      c.append(el("div", "d-wsc-l", "Workshop"), el("div", "d-wsc-t", w.title || "Workshop"));
+      c.append(el("div", "d-wsc-l", "Workshop"), el("div", "d-wsc-t", slashBreaks(w.title || "Workshop")));
       const meta = [w.time, w.where].filter(Boolean).join(", ");
       if (meta) c.append(el("div", "d-wsc-m", meta));
       if (w.needed) { const f = Math.min(w.filled || 0, w.needed); c.append(el("div", "d-wsc-s" + (f >= w.needed ? " full" : ""), f >= w.needed ? "Full" : `${w.needed - f} spot${w.needed - f === 1 ? "" : "s"} left`)); }
