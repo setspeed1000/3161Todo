@@ -324,6 +324,21 @@
       "plan": [
         "2026-10-21"
       ]
+    },
+    {
+      "id": "fd81b247-a3fb-404c-8ae7-ecb08f47616b",
+      "team": "mechanical",
+      "title": "Bring max a waterbottle at the football field",
+      "owner": "",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "",
+      "done": false,
+      "status": "todo",
+      "notes": "",
+      "parts": [],
+      "needed": 1,
+      "filled": 0
     }
   ],
   "meetings": [
@@ -649,6 +664,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-22T18:31:55.525Z",
+  "updated": "2026-10-22T18:36:44.368Z",
   "archive": []
 }
