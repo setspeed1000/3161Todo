@@ -781,6 +781,27 @@
     a { color: #000 !important; text-decoration: none !important; }
   }
 
+  /* Debug mode */
+  .set-adv { margin-top: 22px; }
+  .set-adv summary { font-size: 13px; }
+  .dbg { position: fixed; right: 12px; bottom: 12px; z-index: 45; max-width: min(360px, calc(100vw - 24px)); font: 12px/1.4 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color: var(--ink); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .dbg-pill { font: inherit; font-weight: 700; padding: 5px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .15); order: 2; }
+  body.sim-date .dbg-pill { background: #cd7f2f; color: #0d0d0d; border-color: #cd7f2f; }
+  .dbg-body { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, .2);
+    display: grid; gap: 4px; max-height: 70vh; overflow: auto; width: 100%; }
+  .dbg-row { display: grid; grid-template-columns: 7.5em minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+  .dbg-k { color: var(--muted); }
+  .dbg-v { overflow-wrap: anywhere; }
+  .dbg-row input[type=date] { font: inherit; padding: 2px 4px; border: 1px solid var(--line); border-radius: 3px; background: var(--bg); color: var(--ink); min-width: 0; }
+  .dbg-chk { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .dbg-err { margin: 0; padding-left: 16px; color: var(--red); }
+  .dbg-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .dbg-btn { font: inherit; padding: 3px 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--bg); color: var(--ink); cursor: pointer; }
+  .dbg-id { font-size: 11px; color: var(--muted); }
+  body.sim-date .wrap { outline: 3px dashed #cd7f2f; outline-offset: -3px; }
+
   /* Toolbar */
   .tools { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -1048,6 +1069,27 @@ let editing = false;
 let dirty = false;
 let hideDone = (() => { try { return localStorage.getItem(HIDE_KEY) === "1"; } catch { return false; } })();
 
+/* ---------- Debug mode: per-device, only while editing. Never changes the team's data. ---------- */
+const DEBUG_KEY = "pages-edit-debug";
+let debugOn = (() => { try { return localStorage.getItem(DEBUG_KEY) === "1"; } catch { return false; } })();
+let simDate = "", showIds = false, dbgOpen = false;
+const dbg = { loadedAt: null, source: "", rate: null, rateLimit: null, rateReset: null, errors: [] };
+const debugActive = () => debugOn && editing;
+// Note GitHub's hourly API allowance from every API response
+const _fetch = window.fetch.bind(window);
+window.fetch = async (...a) => {
+  const r = await _fetch(...a);
+  try {
+    if (String(a[0]).startsWith("https://api.github.com")) {
+      const rem = r.headers.get("x-ratelimit-remaining");
+      if (rem != null) { dbg.rate = +rem; dbg.rateLimit = +r.headers.get("x-ratelimit-limit"); dbg.rateReset = +r.headers.get("x-ratelimit-reset"); }
+    }
+  } catch {}
+  return r;
+};
+window.addEventListener("error", e => { dbg.errors.push(`${new Date().toLocaleTimeString()} ${e.message}${e.lineno ? ` (line ${e.lineno})` : ""}`); });
+window.addEventListener("unhandledrejection", e => { dbg.errors.push(`${new Date().toLocaleTimeString()} ${(e.reason && e.reason.message) || e.reason}`); });
+
 const $ = id => document.getElementById(id);
 
 function detectRepo() {
@@ -1102,6 +1144,7 @@ async function load() {
     note = "Showing the published copy. It can lag the latest save by about a minute.";
   }
   data = raw;
+  dbg.loadedAt = new Date(); dbg.source = sha ? "GitHub API" : "Published copy (API unavailable)";
   setStatus(note);
   normalize(data);
   base = structuredClone(data);
@@ -1422,6 +1465,7 @@ function commitMessage(who, changes) {
 
 async function save(opts) {
   opts = opts && opts.message ? opts : {};
+  if (simDate && debugActive()) return setStatus("Saving is off while debug mode is simulating a date. Clear the date first.", "err");
   if (opts.message) dirty = true;
   if (!dirty) return;
   const who = await askName();
@@ -1477,7 +1521,7 @@ function markDirty() { dirty = true; $("saveBtn").disabled = false; setStatus("U
 
 /* ---------- Dates ---------- */
 function parseDate(s) { if (!s) return null; const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
-function today() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+function today() { if (simDate && debugActive()) return parseDate(simDate); const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
 function dueInfo(t) {
   const d = parseDate(t.due);
   if (!d) return { text: "No due date", cls: "" };
@@ -1668,6 +1712,7 @@ function navLink(href, label, count, current, cls) {
 
 function render(focusId) {
   if (!data) return;
+  renderDebug();
   const isDisplay = currentPage() === "display";
   document.body.classList.toggle("display-mode", isDisplay);
   $("disp").hidden = !isDisplay;
@@ -2013,6 +2058,85 @@ function renderSettings() {
   ng.append(nn, ni);
   box.prepend(ng);
   list.append(box, reset);
+  if (editing) {
+    const adv = document.createElement("details"); adv.className = "set-adv"; adv.open = debugOn;
+    adv.append(Object.assign(document.createElement("summary"), { textContent: "Advanced" }));
+    const g = div("set-group");
+    const n = div("set-name", "Debug mode");
+    const sm = document.createElement("small"); sm.textContent = "Adds a diagnostics panel on this device while editing: data version, API allowance, errors, a simulated date and other test tools. It never changes the team's data."; n.append(sm);
+    const seg = div("seg"); seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "Debug mode");
+    [["off", "Off"], ["on", "On"]].forEach(([v, label]) => {
+      const b = document.createElement("button"); b.textContent = label; b.setAttribute("aria-pressed", (v === "on") === debugOn);
+      b.onclick = () => {
+        debugOn = v === "on";
+        if (!debugOn) { if (simDate && dirty) { data = structuredClone(base); dirty = false; } simDate = ""; showIds = false; } else dbgOpen = true;
+        try { debugOn ? localStorage.setItem(DEBUG_KEY, "1") : localStorage.removeItem(DEBUG_KEY); } catch {}
+        render();
+      };
+      seg.append(b);
+    });
+    g.append(n, seg); adv.append(g); list.append(adv);
+  }
+}
+
+function renderDebug() {
+  let p = document.getElementById("dbgPanel");
+  if (!debugActive() || currentPage() === "display") { if (p) p.remove(); document.body.classList.remove("sim-date"); return; }
+  if (!p) { p = document.createElement("aside"); p.id = "dbgPanel"; p.className = "dbg"; document.body.append(p); }
+  document.body.classList.toggle("sim-date", !!simDate);
+  p.replaceChildren();
+  const pill = el("button", "dbg-pill", simDate ? `Debug: simulating ${niceDate(simDate, { month: "short", day: "numeric" })}` : `Debug${dbg.errors.length ? ` (${dbg.errors.length} error${dbg.errors.length === 1 ? "" : "s"})` : ""}`);
+  pill.type = "button"; pill.setAttribute("aria-expanded", dbgOpen);
+  pill.onclick = () => { dbgOpen = !dbgOpen; renderDebug(); };
+  p.append(pill);
+  if (!dbgOpen) return;
+  const body = div("dbg-body");
+  const row = (k, v) => { const r = div("dbg-row"); r.append(el("span", "dbg-k", k), el("span", "dbg-v", v)); body.append(r); };
+  row("Page", location.hash || "#home");
+  row("Build", pageBase ? pageBase.slice(0, 10) : "not checked");
+  row("Data sha", sha ? sha.slice(0, 10) : "none");
+  row("Loaded", dbg.loadedAt ? `${dbg.loadedAt.toLocaleTimeString()} from ${dbg.source}` : "not yet");
+  row("Last save", data.updated ? new Date(data.updated).toLocaleString() : "never");
+  row("Unsaved", dirty ? "yes" : "no");
+  row("Repo", `${OWNER}/${REPO}${branch ? ` @ ${branch}` : ""}`);
+  row("API left", dbg.rate == null ? "unknown" : `${dbg.rate} of ${dbg.rateLimit}, resets ${new Date(dbg.rateReset * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
+  row("Counts", `${data.tasks.length} tasks, ${data.meetings.length} meetings, ${data.events.length} events, ${(data.archive || []).length} archived`);
+  row("Size", `${(JSON.stringify(data).length / 1024).toFixed(1)} KB`);
+
+  // Simulated date: preview reminders, countdowns and the log as of another day. Saving is off meanwhile.
+  const sd = div("dbg-row");
+  const si = document.createElement("input"); si.type = "date"; si.value = simDate; si.setAttribute("aria-label", "Simulate today's date");
+  // Changes made while simulating are a preview only: they're thrown away when the date is cleared
+  const endSim = () => {
+    if (dirty) { data = structuredClone(base); dirty = false; setStatus("Changes made while simulating a date were discarded.", "ok"); }
+    simDate = ""; render();
+  };
+  si.onchange = () => {
+    if (!si.value) return endSim();
+    if (!simDate && dirty) { si.value = ""; return setStatus("Save or discard your changes before simulating a date.", "err"); }
+    simDate = si.value; setStatus("Simulating a date. Changes now are a preview and won't be saved.", "ok"); render();
+  };
+  const sc = el("button", "dbg-btn", "Clear"); sc.type = "button"; sc.onclick = endSim;
+  sd.append(el("span", "dbg-k", "Pretend today"), si, sc); body.append(sd);
+
+  const ids = document.createElement("label"); ids.className = "dbg-row dbg-chk";
+  const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = showIds; cb.onchange = () => { showIds = cb.checked; render(); };
+  ids.append(cb, " Show task ids"); body.append(ids);
+
+  if (dbg.errors.length) {
+    body.append(el("div", "dbg-k", "Errors"));
+    const ul = document.createElement("ul"); ul.className = "dbg-err";
+    dbg.errors.slice(-5).forEach(x => ul.append(Object.assign(document.createElement("li"), { textContent: x })));
+    body.append(ul);
+  }
+  const acts = div("dbg-acts");
+  const b = (label, fn) => { const x = el("button", "dbg-btn", label); x.type = "button"; x.onclick = fn; acts.append(x); };
+  b("Copy data", async () => { try { await navigator.clipboard.writeText(JSON.stringify(data, null, 2)); setStatus("Copied the data as JSON.", "ok"); } catch { setStatus("Couldn't copy. Use Download instead.", "err"); } });
+  b("Download data.json", () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" })); a.download = `data-${new Date().toISOString().slice(0, 16).replace(":", "")}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); });
+  b("Reload from GitHub", () => { if (dirty && !confirm("Discard unsaved changes and reload?")) return; dirty = false; load(); });
+  if (dbg.errors.length) b("Clear errors", () => { dbg.errors = []; renderDebug(); });
+  body.append(acts);
+  p.append(body);
 }
 
 /* ---------- Shop display: full-screen board for a TV in the shop ----------
@@ -3290,6 +3414,7 @@ function taskEl(t) {
     const pn = !t.done && planNext(t);
     if (pn) meta.append(Object.assign(document.createElement("span"), { className: "plan-chip" + (pn === iso(today()) ? " now" : ""), textContent: planLabel(pn) }));
   }
+  if (showIds && debugActive()) meta.append(Object.assign(document.createElement("code"), { className: "dbg-id", textContent: t.id, title: "Task id (debug)" }));
   mid.append(title, meta);
   if (t.needed) mid.append(slotsEl(t));
 
