@@ -520,6 +520,10 @@
   .d-due.soon { color: #e6ac22; font-weight: 600; }
   .d-wait { color: #e07a62; }
   .d-more { color: #b3b3b3; font-size: .8em; margin-top: auto; }
+  .d-quiet { display: flex; flex-wrap: wrap; gap: .5em; margin-top: .6em; }
+  .d-qchip { display: flex; align-items: baseline; gap: .6em; background: #1c1c1c; border-top: .2em solid #e6ac22; border-radius: 4px; padding: .4em .8em; }
+  .d-q-name { font: 700 1.15em/1 "Rajdhani", sans-serif; }
+  .d-q-st { color: #b3b3b3; font-size: .8em; }
   .d-empty { font: 600 1.6em/1.2 "Rajdhani", sans-serif; color: #b3b3b3; margin-top: 1em; }
   .d-foot { display: flex; justify-content: space-between; gap: 1em; padding: .7em 2em 1em; border-top: 1px solid #333333; font-size: .85em; color: #b3b3b3; }
   .d-foot-l { display: flex; gap: 1.4em; }
@@ -2114,10 +2118,19 @@ function renderDisplay() {
   const heading = el("div", "d-label", onToday.length ? "Active subteams" : "Open work");
   main.append(heading);
   if (!teams.length) main.append(el("div", "d-empty", m ? "No subteams marked active yet." : "No open tasks. Nice."));
+  // Active subteams with no open tasks and no workshop today shrink to a chip, leaving room for the rest
+  const quiet = teams.filter(id => !data.tasks.some(t => t.team === id && !t.done) && !wksAll.some(w => w.team === id));
+  const full = teams.filter(id => !quiet.includes(id));
+  if (quiet.length) {
+    const q = el("div", "d-quiet");
+    quiet.forEach(id => { const c = el("div", "d-qchip"); c.append(el("span", "d-q-name", teamName(id)), el("span", "d-q-st", "Active, all clear")); q.append(c); });
+    main.append(q);
+  }
+  if (teams.length && !full.length) main.append(el("div", "d-empty", "Nothing open for today's subteams."));
   const cols = el("div", "d-cols");
-  cols.style.setProperty("--n", Math.min(Math.max(teams.length, 1), 5));
-  const perCol = teams.length > 5 ? 4 : 7;
-  teams.forEach(id => {
+  cols.style.setProperty("--n", Math.min(Math.max(full.length, 1), 5));
+  const perCol = full.length > 5 ? 4 : 7;
+  full.forEach(id => {
     const open = sortTasks(data.tasks.filter(t => t.team === id && !t.done))
       .sort((a, b) => (stOf(a) === "doing" ? 0 : 1) - (stOf(b) === "doing" ? 0 : 1))    // in progress floats to the top
       .sort((a, b) => ((b.plan || []).includes(ts) ? 1 : 0) - ((a.plan || []).includes(ts) ? 1 : 0));   // today's plan above that
