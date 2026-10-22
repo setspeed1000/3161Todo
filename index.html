@@ -724,7 +724,11 @@
   .day-rem { margin-bottom: 12px; }
   .day-rem h4 { margin: 0 0 2px; }
   .ev-rems { display: grid; gap: 4px; margin: -2px 0 10px 24px; padding-left: 12px; border-left: 2px solid var(--line); }
-  .ev-rem { display: grid; grid-template-columns: minmax(0, 1fr) 5em auto auto; gap: 10px; align-items: center; font-size: 14px; }
+  .rem-when { display: flex; gap: 6px; align-items: center; }
+  .rem-when input { width: 4.5em; flex: none; }
+  .rem-when select { min-width: 0; max-width: 13em; }
+  .rem-when select { padding: 5px 6px; border: 1px dashed #b3861b; border-radius: 3px; background: var(--edit); color: var(--ink); font: inherit; font-size: 13px; }
+  .ev-rem { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; font-size: 14px; }
   .ev-rem .c { color: var(--muted); font-size: 13px; white-space: nowrap; }
   .ev-rem input { padding: 5px 8px; border: 1px dashed #b3861b; border-radius: 3px; background: var(--edit); color: var(--ink); font: inherit; font-size: 13px; min-width: 0; }
   .ev-rem.add input.rem-in { border-style: solid; border-color: var(--line); background: var(--panel); }
@@ -732,7 +736,7 @@
   .d-rem { display: grid; padding: .5em .8em; border-left: .3em solid #cc991f; border: 1px solid #cc991f; border-left-width: .3em; border-radius: 3px; margin-bottom: .4em; }
   @media (max-width: 700px) {
     .ev-rems { margin-left: 4px; }
-    .ev-rem { grid-template-columns: 4.5em minmax(0, 1fr) auto; grid-template-areas: "t t t" "n c x"; row-gap: 4px; padding-bottom: 6px; }
+    .ev-rem { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "t t" "n x" "c c"; row-gap: 4px; padding-bottom: 6px; }
     .ev-rem > :nth-child(1) { grid-area: t; } .ev-rem > :nth-child(2) { grid-area: n; }
     .ev-rem > :nth-child(3) { grid-area: c; } .ev-rem > :nth-child(4) { grid-area: x; }
   }
@@ -1541,7 +1545,28 @@ function eventDates(e) {
   return e.end && e.end !== e.start ? `${niceDate(e.start, o)} to ${niceDate(e.end, o)}` : niceDate(e.start, o);
 }
 /* ---------- Event reminders: "N days before" an event, shown on that date until ticked off ---------- */
-const remDate = (e, r) => iso(addDays(parseDate(e.start), -(r.days || 0)));
+// A reminder lands N days before the event, or at the last meeting before it starts (the event day if there is none)
+const meetingBefore = ds => data.meetings.map(m => m.date).filter(d => d < ds).sort().pop() || "";
+const remDate = (e, r) => r.meeting ? (meetingBefore(e.start) || e.start) : iso(addDays(parseDate(e.start), -(r.days || 0)));
+const remRule = r => r.meeting ? "at the meeting before" : r.days ? `${r.days} day${r.days === 1 ? "" : "s"} before` : "on the day";
+// "7 [days before]" or "[At the meeting before]"
+function remWhenCtl(rm, onChange) {
+  const w = div("rem-when");
+  const dn = document.createElement("input"); dn.type = "number"; dn.min = "0"; dn.max = "365"; dn.className = "rem-days";
+  dn.value = rm.days || 0; dn.setAttribute("aria-label", "Days before the event");
+  const mode = document.createElement("select"); mode.className = "rem-mode"; mode.setAttribute("aria-label", "When");
+  mode.add(new Option("days before", "days")); mode.add(new Option("At the meeting before", "meeting"));
+  mode.value = rm.meeting ? "meeting" : "days";
+  const sync = () => { dn.hidden = mode.value === "meeting"; };
+  mode.onchange = () => {
+    if (mode.value === "meeting") { rm.meeting = true; delete rm.days; }
+    else { delete rm.meeting; rm.days = Math.max(0, parseInt(dn.value) || 0); }
+    sync(); onChange();
+  };
+  dn.oninput = () => { rm.days = Math.max(0, parseInt(dn.value) || 0); onChange(); };
+  sync(); w.append(dn, mode);
+  return w;
+}
 function allReminders() {
   const out = [];
   (data.events || []).forEach(e => (e.reminders || []).forEach(r => { if (e.start) out.push({ e, r, date: remDate(e, r) }); }));
@@ -2859,7 +2884,7 @@ function dayView(ds, t0) {
       ln.append(remTick(x));
       const tx = div("rem-tx");
       tx.append(Object.assign(document.createElement("span"), { className: "rem-t", textContent: x.r.text }),
-        Object.assign(document.createElement("span"), { className: "rem-m", textContent: `For ${x.e.name}, ${x.r.days ? `${x.r.days} day${x.r.days === 1 ? "" : "s"} before` : "on the day"}` }));
+        Object.assign(document.createElement("span"), { className: "rem-m", textContent: `For ${x.e.name}, ${remRule(x.r)}` }));
       ln.append(tx);
       rl.append(ln);
     });
@@ -3038,15 +3063,16 @@ function renderCaptain() {
 
     // Reminders for this event
     const rw = div("ev-rems");
-    (e.reminders || []).slice().sort((a, b) => (b.days || 0) - (a.days || 0)).forEach(rm => {
+    (e.reminders || []).slice().sort((a, b) => remDate(e, a).localeCompare(remDate(e, b))).forEach(rm => {
       const row = div("ev-rem");
       const tx = div("note-cell", rm.text);
       makeEditable(tx, v => rm.text = v);
-      const dn = document.createElement("input"); dn.type = "number"; dn.min = "0"; dn.max = "365"; dn.value = rm.days || 0; dn.className = "rem-days";
-      dn.setAttribute("aria-label", "Days before the event");
       const when = div("c", "");
-      const sync = () => { when.textContent = `${dn.value === "0" ? "on the day" : `${dn.value} day${dn.value === "1" ? "" : "s"} before`}, ${niceDate(remDate(e, rm), { month: "short", day: "numeric" })}`; };
-      dn.oninput = () => { rm.days = Math.max(0, parseInt(dn.value) || 0); sync(); markDirty(); };
+      const sync = () => {
+        const d = niceDate(remDate(e, rm), { weekday: "short", month: "short", day: "numeric" });
+        when.textContent = rm.meeting && !meetingBefore(e.start) ? `No meeting before it, shows ${d}` : `Shows ${d}`;
+      };
+      const dn = remWhenCtl(rm, () => { sync(); markDirty(); });
       sync();
       const x = document.createElement("button"); x.className = "del"; x.textContent = "×"; x.setAttribute("aria-label", "Remove reminder");
       x.onclick = () => { e.reminders.splice(e.reminders.indexOf(rm), 1); if (!e.reminders.length) delete e.reminders; markDirty(); render(); };
@@ -3054,13 +3080,14 @@ function renderCaptain() {
       rw.append(row);
     });
     const add = div("ev-rem add");
-    add.innerHTML = `<input type="text" class="rem-in" placeholder="Add a reminder, e.g. Submit the inspection form">
-      <input type="number" class="rem-days" min="0" max="365" value="7" aria-label="Days before the event">
-      <span class="c">days before</span><button class="tbtn small rem-add">Add</button>`;
+    add.innerHTML = `<input type="text" class="rem-in" placeholder="Add a reminder, e.g. Submit the inspection form">`;
+    const draft = { days: 7 };
+    add.append(remWhenCtl(draft, () => {}), Object.assign(document.createElement("span"), { className: "c" }));
+    add.insertAdjacentHTML("beforeend", `<button class="tbtn small rem-add">Add</button>`);
     const doAdd = () => {
       const t = add.querySelector(".rem-in").value.trim();
       if (!t) return setStatus("Type the reminder first.", "err");
-      (e.reminders = e.reminders || []).push({ id: newId(), text: t, days: Math.max(0, parseInt(add.querySelector(".rem-days").value) || 0) });
+      (e.reminders = e.reminders || []).push({ id: newId(), text: t, ...(draft.meeting ? { meeting: true } : { days: draft.days || 0 }) });
       markDirty(); render(); setStatus(`Added a reminder to ${e.name}. Save to publish it.`);
     };
     add.querySelector(".rem-add").onclick = doAdd;
