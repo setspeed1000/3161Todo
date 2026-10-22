@@ -453,6 +453,12 @@
   .d-side { min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: .5em; border-right: 1px solid #333333; padding-right: 2em; }
   .d-label { font: 600 .9em/1.2 "Rajdhani", sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #b3b3b3; margin-top: .6em; }
   .d-big { font: 700 2.4em/1.02 "Rajdhani", sans-serif; }
+  .d-next { background: #1c1c1c; border-top: .25em solid #cc991f; border-radius: 4px; padding: .6em .85em .7em; margin-top: .4em; flex: none; }
+  .d-next-l { font: 600 .8em/1.2 "Rajdhani", sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #b3b3b3; }
+  .d-next-d { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .6em; font: 700 1.5em/1.15 "Rajdhani", sans-serif; margin-top: .1em; }
+  .d-next-in { font: 600 .6em "Roboto", sans-serif; color: #cc991f; }
+  .d-next-n { color: #e6e6e6; }
+  .d-next-a { color: #b3b3b3; font-size: .85em; margin-top: .15em; }
   .d-sub { color: #cccccc; }
   .d-dls { display: grid; gap: .4em; margin-top: .6em; }
   .d-dl { display: grid; grid-template-columns: 6.5em 1fr; gap: .6em; padding: .55em .8em; border-left: .3em solid #d5573b;
@@ -2072,13 +2078,22 @@ function renderDisplay() {
 
   // Left column: today's meeting, deadlines, agenda
   const side = el("section", "d-side");
-  if (m) {
-    side.append(el("div", "d-label", "Today"), el("div", "d-big", m.note || "Meeting"));
-  } else {
-    side.append(el("div", "d-label", "No meeting today"));
-    if (next) side.append(el("div", "d-big", `Next: ${niceDate(next.date, { weekday: "short", month: "short", day: "numeric" })}`),
-      ...(next.note ? [el("div", "d-sub", next.note)] : []));
-  }
+  if (m) side.append(el("div", "d-label", "Today"), el("div", "d-big", m.note || "Meeting"));
+  else side.append(el("div", "d-label", "No meeting today"));
+  // Next scheduled meeting after today
+  const nb = el("div", "d-next");
+  nb.append(el("div", "d-next-l", "Next meeting"));
+  if (next) {
+    const n = Math.round((parseDate(next.date) - today()) / 86400000);
+    const top = el("div", "d-next-d");
+    top.append(el("span", "", niceDate(next.date, { weekday: "long", month: "short", day: "numeric" })), el("span", "d-next-in", n === 1 ? "Tomorrow" : `In ${n} days`));
+    nb.append(top);
+    if (next.note) nb.append(el("div", "d-next-n", next.note));
+    const act = activeOf(next), np = plannedOn(next.date).filter(t => !t.done).length;
+    const bits = [act.length ? act.map(teamName).join(", ") : "", np ? `${np} task${np === 1 ? "" : "s"} planned` : ""].filter(Boolean);
+    if (bits.length) nb.append(el("div", "d-next-a", bits.join(". ")));
+  } else nb.append(el("div", "d-next-n", "None scheduled yet"));
+  side.append(nb);
   const dls = data.deadlines.filter(d => d.date >= ts && d.date <= wk).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
   if (dls.length) {
     const dl = el("div", "d-dls");
