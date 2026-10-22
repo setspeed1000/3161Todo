@@ -726,8 +726,12 @@
   .ev-rems { display: grid; gap: 4px; margin: -2px 0 10px 24px; padding-left: 12px; border-left: 2px solid var(--line); }
   .rem-when { display: flex; gap: 6px; align-items: center; }
   .rem-when input { width: 4.5em; flex: none; }
-  .rem-when select { min-width: 0; max-width: 13em; }
-  .rem-when select { padding: 5px 6px; border: 1px dashed #b3861b; border-radius: 3px; background: var(--edit); color: var(--ink); font: inherit; font-size: 13px; }
+  .rem-mode { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; flex: none; }
+  .rem-mode button { border: none; background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; padding: 5px 9px; cursor: pointer; white-space: nowrap; }
+  .rem-mode button + button { border-left: 1px solid var(--line); }
+  .rem-mode button.on { background: #333333; color: #ffffff; font-weight: 600; }
+  :root[data-theme="dark"] .rem-mode button.on { background: #cc991f; color: #0d0d0d; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rem-mode button.on { background: #cc991f; color: #0d0d0d; } }
   .ev-rem { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; font-size: 14px; }
   .ev-rem .c { color: var(--muted); font-size: 13px; white-space: nowrap; }
   .ev-rem input { padding: 5px 8px; border: 1px dashed #b3861b; border-radius: 3px; background: var(--edit); color: var(--ink); font: inherit; font-size: 13px; min-width: 0; }
@@ -1554,16 +1558,20 @@ function remWhenCtl(rm, onChange) {
   const w = div("rem-when");
   const dn = document.createElement("input"); dn.type = "number"; dn.min = "0"; dn.max = "365"; dn.className = "rem-days";
   dn.value = rm.days || 0; dn.setAttribute("aria-label", "Days before the event");
-  const mode = document.createElement("select"); mode.className = "rem-mode"; mode.setAttribute("aria-label", "When");
-  mode.add(new Option("days before", "days")); mode.add(new Option("At the meeting before", "meeting"));
-  mode.value = rm.meeting ? "meeting" : "days";
-  const sync = () => { dn.hidden = mode.value === "meeting"; };
-  mode.onchange = () => {
-    if (mode.value === "meeting") { rm.meeting = true; delete rm.days; }
-    else { delete rm.meeting; rm.days = Math.max(0, parseInt(dn.value) || 0); }
-    sync(); onChange();
+  // Two visible buttons rather than a dropdown, so the meeting option is easy to find
+  const mode = div("rem-mode"); mode.setAttribute("role", "group"); mode.setAttribute("aria-label", "When");
+  const bDays = el("button", "", "days before"), bMeet = el("button", "", "Meeting before");
+  bDays.type = bMeet.type = "button"; bMeet.title = "Shows at the last meeting before the event starts";
+  const sync = () => {
+    const meet = !!rm.meeting;
+    dn.hidden = meet;
+    bDays.classList.toggle("on", !meet); bMeet.classList.toggle("on", meet);
+    bDays.setAttribute("aria-pressed", !meet); bMeet.setAttribute("aria-pressed", meet);
   };
+  bDays.onclick = () => { if (!rm.meeting) return; delete rm.meeting; rm.days = Math.max(0, parseInt(dn.value) || 0); sync(); onChange(); };
+  bMeet.onclick = () => { if (rm.meeting) return; rm.meeting = true; delete rm.days; sync(); onChange(); };
   dn.oninput = () => { rm.days = Math.max(0, parseInt(dn.value) || 0); onChange(); };
+  mode.append(bDays, bMeet);
   sync(); w.append(dn, mode);
   return w;
 }
