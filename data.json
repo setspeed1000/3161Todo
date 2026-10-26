@@ -371,7 +371,7 @@
     {
       "date": "2026-10-26",
       "note": "",
-      "agenda": "October 26th Meeting Agenda \n- 2:45 - 4:30 PM\n- STEMly forms due\n- all registration forms should be handed in\n- Mechanical intro workshop\n- programming: tune kicker\n- business: WCP + REV sponsorships",
+      "agenda": "October 26th Meeting Agenda \n- 2:45 - 4:30 PM\n- STEMly forms due\n- all registration forms should be handed in\n- Mechanical intro workshop\n- Repair bumpers: Use last years fabric and put on current bumpers\n- programming: tune kicker\n- business: WCP + REV sponsorships",
       "active": [
         "mechanical",
         "programming",
@@ -668,6 +668,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-26T12:11:07.789Z",
+  "updated": "2026-10-26T15:50:30.625Z",
   "archive": []
 }
