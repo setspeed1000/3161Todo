@@ -381,12 +381,13 @@
     {
       "date": "2026-10-29",
       "note": "",
-      "agenda": "October 29th Meeting Agenda:\n- 2:45 - 8:00 PM (Late meeting)\n- STEMly on Saturday (31st)\n- Make sure robot is ready\n- CAD and Design Workshop\n-",
+      "agenda": "October 29th Meeting Agenda:\n- 2:45 - 8:00 PM (Late meeting)\n- STEMly on Saturday (31st)\n- Make sure robot is ready",
       "active": [
         "mechanical",
         "design",
         "programming",
-        "electrical"
+        "electrical",
+        "business"
       ]
     },
     {
@@ -668,6 +669,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-26T15:50:30.625Z",
+  "updated": "2026-10-28T12:23:10.266Z",
   "archive": []
 }
