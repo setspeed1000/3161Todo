@@ -381,7 +381,7 @@
     {
       "date": "2026-10-29",
       "note": "",
-      "agenda": "October 29th Meeting Agenda:\n2:45 - 8:00 PM (Late Meeting)\nSTEMly this weekend\nCAD Workshop\nMechanical + programming + electrical make sure bot works (see leads for details)\nrebuild kicker with new parts\nclean robot\ncharge batteries (including camera batteries)\nrebuild bumpers\nreinstall skid plate on bottom of robot\ngive robot a check over for loose bolts, wires, etc\nsystems check with programming (driver station should be able to pull elastic dashboard off the robot now)\nmake buttons",
+      "agenda": "October 29th Meeting Agenda:\n2:45-4:30 | 6:00-8:00 PM (Late Meeting)\nSTEMly this weekend\nCAD Workshop\nMechanical + programming + electrical make sure bot works (see leads for details)\nrebuild kicker with new parts\nclean robot\ncharge batteries (including camera batteries)\nrebuild bumpers\nreinstall skid plate on bottom of robot\ngive robot a check over for loose bolts, wires, etc\nsystems check with programming (driver station should be able to pull elastic dashboard off the robot now)\nmake buttons",
       "active": [
         "mechanical",
         "design",
@@ -669,6 +669,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-29T18:45:56.372Z",
+  "updated": "2026-10-29T18:48:01.500Z",
   "archive": []
 }
