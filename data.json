@@ -479,9 +479,9 @@
       "team": "design",
       "date": "2026-10-29",
       "title": "Design and CAD Workshop",
-      "time": "3:00PM",
+      "time": "3:50PM",
       "where": "",
-      "notes": ""
+      "notes": "Please Bring a Laptop and Mouse"
     },
     {
       "id": "b2bd0585-9319-493e-8188-2afffcd3e7ea",
@@ -508,6 +508,15 @@
       "title": "Repository/Subsystem Logic Workshop",
       "time": "2:45- 3:45",
       "where": "Shop",
+      "notes": ""
+    },
+    {
+      "id": "aa4d30b1-2adf-4425-80a2-abfab191291e",
+      "team": "design",
+      "date": "2026-10-29",
+      "title": "Intro to CAD and Design",
+      "time": "",
+      "where": "",
       "notes": ""
     }
   ],
@@ -669,6 +678,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-28T12:23:10.266Z",
+  "updated": "2026-10-29T03:00:32.840Z",
   "archive": []
 }
