@@ -509,15 +509,6 @@
       "time": "2:45- 3:45",
       "where": "Shop",
       "notes": ""
-    },
-    {
-      "id": "aa4d30b1-2adf-4425-80a2-abfab191291e",
-      "team": "design",
-      "date": "2026-10-29",
-      "title": "Intro to CAD and Design",
-      "time": "",
-      "where": "",
-      "notes": ""
     }
   ],
   "events": [
@@ -678,6 +669,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-29T03:00:32.840Z",
+  "updated": "2026-10-29T03:00:46.354Z",
   "archive": []
 }
