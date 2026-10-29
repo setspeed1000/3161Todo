@@ -475,15 +475,6 @@
       "notes": ""
     },
     {
-      "id": "d83dbf3b-bd09-434b-adaf-8a0d02671393",
-      "team": "design",
-      "date": "2026-10-29",
-      "title": "Intro to CAD and Design",
-      "time": "3:50PM",
-      "where": "",
-      "notes": "Please Bring a Laptop and Mouse"
-    },
-    {
       "id": "b2bd0585-9319-493e-8188-2afffcd3e7ea",
       "team": "scouting",
       "date": "2026-10-22",
@@ -678,6 +669,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-10-29T03:01:31.773Z",
+  "updated": "2026-10-29T03:01:37.713Z",
   "archive": []
 }
