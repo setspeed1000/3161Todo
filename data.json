@@ -340,6 +340,24 @@
       "parts": [],
       "needed": 1,
       "filled": 0
+    },
+    {
+      "id": "119ab1ba-bc5f-4b6f-b180-f7dcd7df68e2",
+      "team": "programming",
+      "title": "Organize Robot Code",
+      "owner": "Mathias",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "2026-11-12",
+      "done": false,
+      "status": "doing",
+      "notes": "Create a separate branch and begin organizing and compartmentalizing code",
+      "parts": [],
+      "plan": [
+        "2026-11-09"
+      ],
+      "needed": 2,
+      "filled": 1
     }
   ],
   "meetings": [
@@ -522,6 +540,15 @@
       "time": "2:45",
       "where": "Shop/Upstairs room",
       "notes": "Code overview and at home work"
+    },
+    {
+      "id": "e72662aa-ba38-4563-b1a9-e9cb69c79a74",
+      "team": "programming",
+      "date": "2026-11-12",
+      "title": "Workshop 4: Driving Code and Robot Projects",
+      "time": "2:45-4:30",
+      "where": "Classroom",
+      "notes": "VSCode with WPILib installed (most recent 2026 version)Github accountGit installed (please message me on slack or talk to me at the next workshop if you're on a Mac)"
     }
   ],
   "events": [
@@ -682,6 +709,17 @@
     }
   ],
   "runs": [],
-  "updated": "2026-11-02T21:22:28.082Z",
-  "archive": []
+  "updated": "2026-11-09T20:31:07.983Z",
+  "archive": [
+    {
+      "id": "af0aa8ac-df93-4f14-b8b9-f27affc7cfde",
+      "title": "Organize Robot Code",
+      "team": "programming",
+      "owner": "Mathias",
+      "plan": [
+        "2026-11-09"
+      ],
+      "deleted": "2026-11-09"
+    }
+  ]
 }
