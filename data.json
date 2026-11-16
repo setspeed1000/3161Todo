@@ -549,6 +549,24 @@
       "time": "2:45-4:30",
       "where": "Classroom",
       "notes": "VSCode with WPILib installed (most recent 2026 version)Github accountGit installed (please message me on slack or talk to me at the next workshop if you're on a Mac)"
+    },
+    {
+      "id": "70d7bd4b-692c-41b8-a71e-fb5eecef2f9d",
+      "team": "electrical",
+      "date": "2026-11-23",
+      "title": "Wiring Workshop",
+      "time": "",
+      "where": "Classroom",
+      "notes": ""
+    },
+    {
+      "id": "de09b77c-069f-438a-a1d7-fcfc5a849566",
+      "team": "electrical",
+      "date": "2026-11-30",
+      "title": "Crimping Workshop",
+      "time": "",
+      "where": "Shop",
+      "notes": ""
     }
   ],
   "events": [
@@ -709,7 +727,7 @@
     }
   ],
   "runs": [],
-  "updated": "2026-11-09T20:31:07.983Z",
+  "updated": "2026-11-16T02:48:53.426Z",
   "archive": [
     {
       "id": "af0aa8ac-df93-4f14-b8b9-f27affc7cfde",
