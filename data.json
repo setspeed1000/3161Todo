@@ -188,8 +188,8 @@
       "subsystem": "Admin",
       "priority": "Med",
       "due": "",
-      "done": false,
-      "status": "todo",
+      "done": true,
+      "status": "done",
       "notes": "",
       "parts": [
         {
@@ -199,7 +199,8 @@
           "status": "need",
           "link": ""
         }
-      ]
+      ],
+      "doneOn": "2026-11-16"
     },
     {
       "id": "4ebb9439-c47c-48d4-b8e9-ea58134de5be",
@@ -222,10 +223,11 @@
       "subsystem": "Admin",
       "priority": "High",
       "due": "",
-      "done": false,
-      "status": "todo",
+      "done": true,
+      "status": "done",
       "notes": "",
-      "parts": []
+      "parts": [],
+      "doneOn": "2026-11-16"
     },
     {
       "id": "9329bf84-a64f-487a-8d8a-50509f140ac3",
@@ -727,7 +729,7 @@
     }
   ],
   "runs": [],
-  "updated": "2026-11-16T02:48:53.426Z",
+  "updated": "2026-11-17T00:49:23.546Z",
   "archive": [
     {
       "id": "af0aa8ac-df93-4f14-b8b9-f27affc7cfde",
