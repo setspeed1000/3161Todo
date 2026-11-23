@@ -162,10 +162,11 @@
       "subsystem": "Other",
       "priority": "High",
       "due": "2026-10-29",
-      "done": false,
-      "status": "todo",
+      "done": true,
+      "status": "done",
       "notes": "",
-      "parts": []
+      "parts": [],
+      "doneOn": "2026-11-23"
     },
     {
       "id": "f687b5c3-fc85-4716-87c0-6f75c84dd890",
@@ -175,10 +176,11 @@
       "subsystem": "Planning",
       "priority": "Med",
       "due": "",
-      "done": false,
-      "status": "todo",
+      "done": true,
+      "status": "done",
       "notes": "",
-      "parts": []
+      "parts": [],
+      "doneOn": "2026-11-23"
     },
     {
       "id": "073ad609-d9be-4e26-9ce1-9646c5c3d90f",
@@ -201,19 +203,6 @@
         }
       ],
       "doneOn": "2026-11-16"
-    },
-    {
-      "id": "4ebb9439-c47c-48d4-b8e9-ea58134de5be",
-      "team": "captains",
-      "title": "STIMs Roster",
-      "owner": "Zoe + Daniel",
-      "subsystem": "Admin",
-      "priority": "Low",
-      "due": "",
-      "done": false,
-      "status": "todo",
-      "notes": "",
-      "parts": []
     },
     {
       "id": "1a0d063b-84f8-41ce-8250-deb096121077",
@@ -360,6 +349,32 @@
       ],
       "needed": 2,
       "filled": 1
+    },
+    {
+      "id": "e5326b9f-36bc-4df5-9574-f71cae2e6b6d",
+      "team": "captains",
+      "title": "Re-write all parent Emails",
+      "owner": "Zoe + Daniel",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "",
+      "done": false,
+      "status": "todo",
+      "notes": "",
+      "parts": []
+    },
+    {
+      "id": "0e09735f-1595-482e-a9cb-16201fd63f15",
+      "team": "captains",
+      "title": "Update spreadsheet",
+      "owner": "Zoe + Daniel",
+      "subsystem": "Other",
+      "priority": "High",
+      "due": "",
+      "done": false,
+      "status": "todo",
+      "notes": "",
+      "parts": []
     }
   ],
   "meetings": [
@@ -494,6 +509,11 @@
       "id": "214fd867-2726-4659-a48c-25f5c06f2226",
       "date": "2026-11-26",
       "title": "Uniform Order Due"
+    },
+    {
+      "id": "8cad5e74-10e6-4464-b9ca-5a0eeee51a9f",
+      "date": "2026-11-26",
+      "title": "Team Fee Due"
     }
   ],
   "workshops": [
@@ -763,7 +783,6 @@
     }
   ],
   "runs": [],
-  "updated": "2026-11-23T13:51:34.868Z",
   "archive": [
     {
       "id": "af0aa8ac-df93-4f14-b8b9-f27affc7cfde",
@@ -775,5 +794,6 @@
       ],
       "deleted": "2026-11-09"
     }
-  ]
+  ],
+  "updated": "2026-11-23T14:25:19.487Z"
 }
