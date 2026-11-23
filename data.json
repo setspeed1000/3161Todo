@@ -455,8 +455,11 @@
     {
       "date": "2026-11-23",
       "note": "",
-      "agenda": "",
-      "active": []
+      "agenda": "November 23rd Meeting Agenda\n- 2:45 - 4:30\n- Uniform order form due Thursday (November 26th)\n- Parent Network and Parent Emails \n- Girls Night (November 26th)\n- Docoumentation has been lacking, leads please step up\n- Media: start taking photos/videos of shop activities\n- Make buttons (if button maker working)\n- Volunteer for FLL if interested\n- Electrical Wiriing Worshop",
+      "active": [
+        "electrical",
+        "media"
+      ]
     },
     {
       "date": "2026-11-26",
@@ -486,6 +489,11 @@
       "id": "e7c6fa70-f7dc-49ae-bf39-ba1abb18fb85",
       "date": "2026-11-05",
       "title": "Complete STIMS"
+    },
+    {
+      "id": "214fd867-2726-4659-a48c-25f5c06f2226",
+      "date": "2026-11-26",
+      "title": "Uniform Order Due"
     }
   ],
   "workshops": [
@@ -590,6 +598,41 @@
           "meeting": true
         }
       ]
+    },
+    {
+      "id": "1d46be97-daa8-45e4-9717-6a6916012f96",
+      "name": "Girls Night",
+      "start": "2026-11-26",
+      "end": "",
+      "location": "Holy Trinity"
+    },
+    {
+      "id": "332396cb-de95-4d46-a602-06abd092b989",
+      "name": "Centennial District Event",
+      "start": "2027-03-12",
+      "end": "2027-03-14",
+      "location": "Centennial College"
+    },
+    {
+      "id": "88b5b947-d421-405e-bf4c-9443053f3edc",
+      "name": "McMaster District Event",
+      "start": "2027-04-02",
+      "end": "2027-04-04",
+      "location": "McMaster University"
+    },
+    {
+      "id": "7af0ed10-8b0a-40a5-b7e7-80c092c0786f",
+      "name": "Ontario DCMP",
+      "start": "2027-04-14",
+      "end": "2027-04-17",
+      "location": "Mississauga Sports and Entertainment Complex"
+    },
+    {
+      "id": "212527f7-b7ce-41fa-8de4-5bb656e0a3c3",
+      "name": "Kickoff",
+      "start": "2027-01-09",
+      "end": "",
+      "location": "Holy Trinity"
     }
   ],
   "checklists": [
@@ -729,7 +772,7 @@
     }
   ],
   "runs": [],
-  "updated": "2026-11-17T00:49:23.546Z",
+  "updated": "2026-11-23T13:46:58.733Z",
   "archive": [
     {
       "id": "af0aa8ac-df93-4f14-b8b9-f27affc7cfde",
