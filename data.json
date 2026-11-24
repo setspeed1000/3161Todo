@@ -644,6 +644,13 @@
       "start": "2027-01-09",
       "end": "",
       "location": "Holy Trinity"
+    },
+    {
+      "id": "1f98e17f-6add-4b62-8638-6f66e11a7769",
+      "name": "Mock Kickoff",
+      "start": "2026-12-14",
+      "end": "",
+      "location": "Holy Trinity"
     }
   ],
   "checklists": [
@@ -795,5 +802,5 @@
       "deleted": "2026-11-09"
     }
   ],
-  "updated": "2026-11-23T14:47:32.838Z"
+  "updated": "2026-11-24T12:57:12.055Z"
 }
